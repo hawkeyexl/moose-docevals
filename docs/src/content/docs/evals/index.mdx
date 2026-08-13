@@ -4,7 +4,7 @@ description: Declare evals in page frontmatter — the contract, the three entry
 ---
 
 Every eval declaration lives under the `evals` key in page frontmatter. This page is the contract;
-[Frontmatter reference](/docevals/reference/frontmatter/) is the exhaustive field list.
+[Frontmatter reference](/moose-docevals/reference/frontmatter/) is the exhaustive field list.
 
 ## The minimum
 
@@ -42,7 +42,7 @@ evals:
 
 ## Three ways to name an eval
 
-**Reference a named eval** from `docevals.config.yaml` by bare string:
+**Reference a named eval** from `moose.config.yaml` by bare string:
 
 ```yaml
 evals:
@@ -77,7 +77,7 @@ Inline evals need a `name`. Everything else is optional — `grader` defaults to
 
 An assertion pasted into twelve pages drifts into twelve slightly different assertions, and nobody
 can then say what a how-to page is checked for. Move anything used more than once into the config and
-reference it. See [Named evals and suites](/docevals/evals/named-evals-and-suites/).
+reference it. See [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/).
 
 Inline is right for something genuinely specific to one page — like the exact install command above.
 
@@ -90,7 +90,7 @@ That is the correct default and completely invisible until it surprises you, so 
 guess:
 
 ```bash
-npx docevals list docs/installation.mdx
+npx moose-docevals list docs/installation.mdx
 ```
 
 ```console
@@ -114,17 +114,17 @@ schema-invalid frontmatter are reported as page errors with a source line; dupli
 inline llm evals missing `examples` are warnings.
 
 Validate the declarations themselves as an eval, so bad frontmatter fails like any other check —
-see [Frontmatter reference](/docevals/reference/frontmatter/#validating-the-frontmatter-itself).
+see [Frontmatter reference](/moose-docevals/reference/frontmatter/#validating-the-frontmatter-itself).
 
 ## Next
 
-- [Write good assertions](/docevals/evals/write-good-assertions/) — the wording that decides whether
+- [Write good assertions](/moose-docevals/evals/write-good-assertions/) — the wording that decides whether
   an eval is worth having
-- [Deterministic checks](/docevals/evals/deterministic-checks/) — the graders to prefer
-- [Named evals and suites](/docevals/evals/named-evals-and-suites/) — turning this into a library
+- [Deterministic checks](/moose-docevals/evals/deterministic-checks/) — the graders to prefer
+- [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/) — turning this into a library
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"`list` prints name, grader, type, and source for each resolved eval.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":", regression, config]"}} */}
+{/* step {"description":"`list` prints name, grader, type, and source for each resolved eval.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":", regression, config]"}} */}
 
-{/* step {"description":"A page-level skip is honored.","runShell":{"command":"npx docevals run test/fixtures/pages/index.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"A page-level skip is honored.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/index.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}

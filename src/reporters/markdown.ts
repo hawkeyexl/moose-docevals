@@ -10,7 +10,7 @@ const OUTCOME_ICON: Record<string, string> = {
 };
 
 export function renderMarkdown(report: EngineReport): string {
-  const lines: string[] = ["## docevals results", ""];
+  const lines: string[] = ["## moose-docevals results", ""];
 
   lines.push("| Suite | Passed | Failed | Review | Pass rate | Target | |");
   lines.push("|---|---|---|---|---|---|---|");

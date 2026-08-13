@@ -10,7 +10,7 @@ relationship_stages: [prospect, customer]
 personas: [persona-corpus-owner]
 features_emphasized:
   [named-evals, suites, target-pass-rates, tool-graders, severity, ci-integration, response-cache]
-evidence_basis: [docmeta-content-strategy, doc-detective-user-base, docevals-surface]
+evidence_basis: [docmeta-content-strategy, doc-detective-user-base, moose-docevals-surface]
 ---
 
 # Audience: Docs platform team
@@ -75,4 +75,4 @@ apply them consistently by page type; and get a signal in CI when a page stops m
   or JSON Schema authoring beyond copy-and-adapt.
 - **Subject dependencies:** the eval → grader → verdict model, and the grader hierarchy, must be
   understood before any page about suites, severity, or CI output will make sense. That is why
-  `get-started/how-docevals-works.mdx` is a P0 page rather than a nice-to-have explainer.
+  `get-started/how-moose-docevals-works.mdx` is a P0 page rather than a nice-to-have explainer.

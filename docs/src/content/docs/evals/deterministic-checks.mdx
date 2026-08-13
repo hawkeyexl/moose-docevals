@@ -1,43 +1,44 @@
 ---
 title: Deterministic checks
-description: Wrap the linters you already run, add the native checks, and let docevals write scripts for plain-language rules.
+description: Wrap the linters you already run, add the native checks, and let moose-docevals write scripts for plain-language rules.
 ---
 
 Deterministic graders are free, fast, and arguable in a pull request. Prefer them. This page covers
 folding in the tools you already run, the three native checks, and arbitrary `command` evals —
-including the ones docevals writes for you.
+including the ones moose-docevals writes for you.
 
-## docevals orchestrates; it does not reimplement
+## moose-docevals orchestrates; it does not reimplement
 
-If you expect docevals to replace Vale, you will evaluate it against the wrong competitors. Vale
+If you expect moose-docevals to replace Vale, you will evaluate it against the wrong competitors. Vale
 keeps doing what Vale does — its findings arrive as a named eval with a severity, alongside a
 freshness check and an LLM verdict, in one report with one exit code.
 
 ```yaml
-evals:
-  style:
-    assertion: Page passes our Vale style rules.
-    grader: tool:vale
-    severity: warning
-  markdownlint:
-    assertion: Page passes markdownlint rules.
-    grader: tool:markdownlint
-    severity: warning
-  frontmatter-valid:
-    assertion: Page frontmatter validates against our schema.
-    grader: tool:docmeta
-    options:
-      schemas: ["schemas/frontmatter-0.1.json"]
-    severity: error
-  structure:
-    assertion: How-to pages follow the how-to template.
-    grader: tool:doc-structure-lint
-    options:
-      template: how-to
+docevals:
+  evals:
+    style:
+      assertion: Page passes our Vale style rules.
+      grader: tool:vale
+      severity: warning
+    markdownlint:
+      assertion: Page passes markdownlint rules.
+      grader: tool:markdownlint
+      severity: warning
+    frontmatter-valid:
+      assertion: Page frontmatter validates against our schema.
+      grader: tool:docmeta
+      options:
+        schemas: ["schemas/frontmatter-0.1.json"]
+      severity: error
+    structure:
+      assertion: How-to pages follow the how-to template.
+      grader: tool:doc-structure-lint
+      options:
+        template: how-to
 ```
 
 Five CI steps and five output formats become one. Full option tables in
-[Graders](/docevals/reference/graders/).
+[Graders](/moose-docevals/reference/graders/).
 
 ### Severity is what makes consolidation safe
 
@@ -91,17 +92,17 @@ Any executable. `{file}` expands to the page's absolute path.
 Exit code decides: `0` (or anything in `successExitCodes`) passes; anything else fails with the
 output tail as the message. Timeouts are reported distinctly.
 
-## Plain-language checks docevals writes for you
+## Plain-language checks moose-docevals writes for you
 
 A `command` eval with an assertion and **no** `command` is a deterministic check you have described
-but not implemented. `docevals run` — or `docevals generate` — has your configured LLM write a small
+but not implemented. `moose-docevals run` — or `moose-docevals generate` — has your configured LLM write a small
 Node script for it, saves it beside the doc, and records the command back into frontmatter:
 
 ```yaml
     - name: install-command-present
       assertion: The page contains a bash code block with `npm i -g doc-detective`.
       grader: command
-      command: [node, docevals/installation.install-command-present.mjs, "{file}"]
+      command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
         assertionHash: aefaa89e…
 ```
@@ -119,17 +120,17 @@ Three consequences worth internalising:
 - **`--no-generate` turns it off**, which is what you want in CI where generation should not happen
   implicitly.
 
-Already have llm evals that should have been code? [`promote`](/docevals/adopt/promote-to-deterministic/)
+Already have llm evals that should have been code? [`promote`](/moose-docevals/adopt/promote-to-deterministic/)
 finds them.
 
 ## Test the commands your docs present
 
 `tool:doc-detective` runs procedure tests embedded in a page, so a documented command that drifts
 from the code fails the build. That is how this site checks itself — see
-[Test your commands](/docevals/evals/test-your-commands/).
+[Test your commands](/moose-docevals/evals/test-your-commands/).
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"A page with a pre-generated check script passes deterministically.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"A page with a pre-generated check script passes deterministically.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
 
-{/* step {"description":"A stale review date fails at error severity with a rule id and line.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"/freshness\\/stale/"}} */}
+{/* step {"description":"A stale review date fails at error severity with a rule id and line.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"/freshness\\/stale/"}} */}

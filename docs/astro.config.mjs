@@ -7,10 +7,10 @@ import starlight from "@astrojs/starlight";
 // this config is its implementation.
 export default defineConfig({
   site: "https://hawkeyexl.github.io",
-  base: "/docevals",
+  base: "/moose-docevals",
   integrations: [
     starlight({
-      title: "docevals",
+      title: "moose-docevals",
       description:
         "Deterministic and LLM-as-judge evals for documentation pages, driven by frontmatter.",
       sidebar: [

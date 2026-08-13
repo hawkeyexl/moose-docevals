@@ -12,7 +12,7 @@ the default grader and `fill` proposes llm-graded evals by construction, so "lef
 ## Find them
 
 ```bash
-npx docevals promote docs/
+npx moose-docevals promote docs/
 ```
 
 ```console
@@ -34,7 +34,7 @@ assertion changes *what is being checked*, and that deserves a human decision ra
 someone set once and forgot.
 
 ```bash
-npx docevals promote --write docs/
+npx moose-docevals promote --write docs/
 ```
 
 This writes a check script per promoted eval and rewrites the eval to reference it.
@@ -45,7 +45,7 @@ This writes a check script per promoted eval and rewrites the eval to reference 
     - name: install-command-present
       assertion: The page contains a bash code block with `npm i -g doc-detective`.
       grader: command
-      command: [node, docevals/installation.install-command-present.mjs, "{file}"]
+      command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
         assertionHash: aefaa89e…
 ```
@@ -55,13 +55,13 @@ instead of a model, at zero marginal cost and with no variance.
 
 `generate` does the same for `command` evals you wrote with an assertion and no command; `promote` is
 for evals that are currently `llm` and should not be. See
-[Deterministic checks](/docevals/evals/deterministic-checks/).
+[Deterministic checks](/moose-docevals/evals/deterministic-checks/).
 
 ## Review the scripts
 
 The step people skip, and the one that decides whether this was worth doing. A generated script that
 passes for the wrong reason is **worse** than the llm eval it replaced, because it is now silent and
-free. See [Review generated scripts](/docevals/adopt/review-generated-scripts/).
+free. See [Review generated scripts](/moose-docevals/adopt/review-generated-scripts/).
 
 ## What should stay an llm eval
 
@@ -81,7 +81,7 @@ replaced it with a different, worse check that happens to be fast. `promote` rep
 
 Run with `--format json` before and after and compare `cost.judgedEvals` and `cost.totalUsd`. The
 second run should also show more `cachedEvals` — see
-[Cost and caching](/docevals/ci/cost-and-caching/).
+[Cost and caching](/moose-docevals/ci/cost-and-caching/).
 
 ## Make it a habit
 

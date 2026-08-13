@@ -7,7 +7,7 @@ trigger: "The same assertion has been pasted into a dozen pages and one copy has
 entry_point: docs/src/content/docs/evals/named-evals-and-suites.mdx
 success_criteria: >
   Page frontmatter names a suite and a few eval names; the assertions themselves live in
-  docevals.config.yaml, and changing one changes every page that uses it.
+  moose.config.yaml, and changing one changes every page that uses it.
 steps:
   - { stage: "Move a repeated assertion into a named eval", doc: docs/src/content/docs/evals/named-evals-and-suites.mdx, exists: true }
   - { stage: "Group evals into a suite per page type", doc: docs/src/content/docs/evals/named-evals-and-suites.mdx, exists: true }
@@ -28,7 +28,7 @@ steps:
 pages with three slightly different wordings, and nobody can answer "what do we actually check on a
 how-to?"
 
-**Narrative.** This is the journey where docevals stops being a linter and becomes a standard. The
+**Narrative.** This is the journey where moose-docevals stops being a linter and becomes a standard. The
 mechanics are small — named evals under `evals:` in the config, suites that group them, a page
 referencing an eval by name instead of inlining it — but the shift is conceptual: quality rules become
 a *shared, versioned artifact* rather than page decoration.
@@ -38,7 +38,7 @@ Two things reliably surprise readers here and both must be documented rather tha
 First, **resolution order**. A page can reference a named eval, inline its own, and name a suite that
 expands to more, all at once — and on a name collision the page wins. That is the right default
 (local override beats global default) but it is invisible until it bites, and the fix is that
-`docevals list` shows the resolved plan per page without running anything. Teaching `list` as the
+`moose-docevals list` shows the resolved plan per page without running anything. Teaching `list` as the
 dry-run for this journey saves readers from debugging by running.
 
 Second, **`targetPassRate` is a suite property, not a page one**. The nuance that binary verdicts seem

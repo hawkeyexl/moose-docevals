@@ -1,0 +1,104 @@
+# moose config for the moose-docevals dogfood run — the tool against its own
+# test fixtures.
+#
+# One file per repo, one top-level key per tool in the moose family.
+# moose-docevals reads `docevals:` and ignores every sibling key.
+docevals:
+  version: 1
+
+  files:
+    include:
+      - "test/fixtures/pages/**/*.{md,mdx}"
+    exclude:
+      - "**/node_modules/**"
+
+  defaults:
+    suite: null
+    failFast: false
+    concurrency: 4
+
+  provider:
+    default: anthropic
+    anthropic:
+      model: claude-sonnet-4-5
+      apiKeyEnv: ANTHROPIC_API_KEY
+    claude-cli:
+      model: claude-sonnet-4-5
+
+  judge:
+    ensembleRuns: 3
+    temperature: 0
+    zones:
+      autoPass: 0.8
+      autoFail: 0.8
+    falsePositiveAlert: 0.15
+    cacheDir: .moose-docevals/cache
+
+  scripts:
+    dir: "{docDir}/moose-docevals"
+    configDir: moose-docevals-scripts
+    allowFrontmatterCommands: true
+    timeoutMs: 30000
+
+  evals:
+    no-future-promises:
+      type: regression
+      assertion: The page makes no claims about unreleased or future functionality.
+      grader: llm
+      evidence: All prose sections
+      examples:
+        pass: Describes only shipped behavior.
+        fail: Says "coming soon" or references an unreleased version.
+    explains-why-before-how:
+      type: capability
+      assertion: >
+        The page explains why a reader would use the feature before explaining
+        how to use it.
+      grader: llm
+      evidence: Introduction and first section
+      examples:
+        pass: Opens with the problem the feature solves, then gives steps.
+        fail: Jumps straight into syntax with no motivation.
+    frontmatter-valid:
+      assertion: Page frontmatter validates against the moose-docevals built-in schema.
+      grader: tool:docmeta
+      options:
+        schemas: ["schemas/frontmatter-0.1.json"]
+      severity: error
+    markdownlint:
+      assertion: Page passes markdownlint style rules.
+      grader: tool:markdownlint
+      severity: warning
+    fresh-enough:
+      assertion: Page was reviewed within the last year.
+      grader: tool:freshness
+      options:
+        field: last-reviewed
+        maxAgeDays: 365
+      severity: warning
+    readable:
+      assertion: Page prose reads below grade 12.
+      grader: tool:reading-level
+      options:
+        maxGrade: 12
+      severity: warning
+    distinct-action-pages:
+      assertion: >
+        Action reference pages describe behaviors unique to their action,
+        distinct from related actions.
+      grader: tool:differentiation
+      options:
+        scope: "test/fixtures/pages/docs/actions/**"
+        maxSimilarity: 0.85
+      severity: error
+
+  suites:
+    reference:
+      targetPassRate: 1.0
+      evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
+    tutorial:
+      targetPassRate: 0.7
+      evals: [explains-why-before-how, no-future-promises]
+    how-to:
+      targetPassRate: 1.0
+      evals: [no-future-promises, readable]

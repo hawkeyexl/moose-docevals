@@ -14,7 +14,7 @@ import { valeGrader } from "../../src/graders/tools/vale.js";
 import { renderMarkdown } from "../../src/reporters/markdown.js";
 import { renderGithub } from "../../src/reporters/github.js";
 import { runCalibrate, loadGoldenCases } from "../../src/commands/calibrate.js";
-import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig } from "../helpers/config.js";
 import { extractFrontmatter } from "docmeta";
 import { resolvePage } from "../../src/core/resolve.js";
 import { stripFrontmatterBlock, type PageFile } from "../../src/core/discover.js";
@@ -86,7 +86,7 @@ describe("differentiation", () => {
     return { plan, eval: plan.evals[0]! };
   }
 
-  const DIFF_CONFIG = parseConfig(
+  const DIFF_CONFIG = parseDocevalsConfig(
     [
       "version: 1",
       "evals:",
@@ -96,7 +96,7 @@ describe("differentiation", () => {
       "suites:",
       "  s: { evals: [distinct] }",
     ].join("\n"),
-    "/fake/docevals.config.yaml",
+    "/fake/moose.config.yaml",
   );
 
   it("flags near-duplicate pages, passes distinct ones", async () => {
@@ -124,7 +124,7 @@ describe("differentiation", () => {
 
 describe("valeGrader", () => {
   it("parses vale JSON and applies the severity map", async () => {
-    const config = parseConfig(
+    const config = parseDocevalsConfig(
       [
         "version: 1",
         "evals:",
@@ -134,7 +134,7 @@ describe("valeGrader", () => {
         "suites:",
         "  s: { evals: [style] }",
       ].join("\n"),
-      "/fake/docevals.config.yaml",
+      "/fake/moose.config.yaml",
     );
     const content = "---\ntitle: x\nevals:\n  suite: s\n---\nBody.";
     const page: PageFile = {
@@ -218,9 +218,9 @@ describe("reporters", () => {
   it("github emits workflow annotations with escaped properties", () => {
     const gh = renderGithub(report);
     expect(gh).toContain(
-      "::error file=docs/a.md,line=4,title=docevals%3A fresh-enough::Page last reviewed 900 days ago (max 365)",
+      "::error file=docs/a.md,line=4,title=moose-docevals%3A fresh-enough::Page last reviewed 900 days ago (max 365)",
     );
-    expect(gh).toContain("## docevals results");
+    expect(gh).toContain("## moose-docevals results");
   });
 });
 

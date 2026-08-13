@@ -1,5 +1,5 @@
 /**
- * Persisted human reviews (Level 3 grading). `.docevals/reviews.yaml` records
+ * Persisted human reviews (Level 3 grading). `.moose-docevals/reviews.yaml` records
  * human verdicts for evals that landed in the human-review zone. A review
  * applies only while the page body it reviewed is unchanged (contentHash);
  * stale reviews silently return the eval to needs-review.
@@ -20,7 +20,7 @@ export interface ReviewEntry {
   note?: string;
 }
 
-export const REVIEWS_PATH = join(".docevals", "reviews.yaml");
+export const REVIEWS_PATH = join(".moose-docevals", "reviews.yaml");
 
 export function loadReviews(root: string): ReviewEntry[] {
   const path = join(root, REVIEWS_PATH);

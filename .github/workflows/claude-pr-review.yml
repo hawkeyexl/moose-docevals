@@ -69,7 +69,7 @@ jobs:
             PR DESCRIPTION: ${{ github.event.pull_request.body }}
             PR AUTHOR: ${{ github.event.pull_request.user.login }}
 
-            Review this pull request to docevals, a CLI that runs deterministic
+            Review this pull request to moose-docevals, a CLI that runs deterministic
             and LLM-as-judge evals against documentation pages.
 
             Read CLAUDE.md first. It states the architecture and a short list of

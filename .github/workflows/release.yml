@@ -7,15 +7,15 @@
 #   next      -> @next prerelease
 #   feat/**   -> per-branch prerelease channel
 #
-# OPT-IN. docevals has never been published, and a first publish to npm cannot
+# OPT-IN. moose-docevals has never been published, and a first publish to npm cannot
 # be undone, so this job runs only when the repository variable RELEASE_ENABLED
 # is set to "true":
 #
-#   gh variable set RELEASE_ENABLED --body true --repo hawkeyexl/docevals
+#   gh variable set RELEASE_ENABLED --body true --repo hawkeyexl/moose-docevals
 #
 # Before enabling, configure npm trusted publishing for the package so the
 # publish step can authenticate without an NPM_TOKEN. On npmjs.com, add a
-# trusted publisher for `docevals` naming this repository and this workflow
+# trusted publisher for `moose-docevals` naming this repository and this workflow
 # file (release.yml). npm then exchanges the workflow's OIDC token for a
 # short-lived, scoped publish credential — which is what `id-token: write`
 # below authorizes — and mints provenance automatically.

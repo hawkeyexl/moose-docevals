@@ -4,17 +4,17 @@ date: 2026-08-03
 decision-makers: [hawkeyexl]
 ---
 
-# Test the docs site through docevals itself, with committed cache fixtures
+# Test the docs site through moose-docevals itself, with committed cache fixtures
 
 ## Context and Problem Statement
 
-docevals is a documentation-testing tool. Shipping a documentation site whose commands are not tested
+moose-docevals is a documentation-testing tool. Shipping a documentation site whose commands are not tested
 would be an unforced credibility failure. `docmeta` solves the equivalent problem with inline Doc
 Detective steps in each `.mdx` plus a dedicated `doc-detective.yml` workflow.
 
-docevals has an option docmeta does not: it already ships a **`tool:doc-detective` grader**. So the
+moose-docevals has an option docmeta does not: it already ships a **`tool:doc-detective` grader**. So the
 question is whether to port docmeta's standalone workflow or compose the doc tests into
-`docevals run`. A second problem follows either way: **most docevals commands need an LLM**, so the
+`moose-docevals run`. A second problem follows either way: **most moose-docevals commands need an LLM**, so the
 pages documenting `fill`, `promote`, `calibrate`, and judged `run` cannot be tested the way `list`
 and `run --deterministic-only` can.
 
@@ -32,28 +32,28 @@ and `run --deterministic-only` can.
 
 **For running the doc tests**
 
-1. **Composed** — pages carry `evals:` frontmatter; `docevals run` drives the doc tests via
+1. **Composed** — pages carry `evals:` frontmatter; `moose-docevals run` drives the doc tests via
    `tool:doc-detective`, one job.
-2. **Standalone** — port docmeta's `doc-detective.yml` verbatim, independent of docevals.
-3. **Both layers** — standalone for command accuracy, `docevals run` for prose quality.
+2. **Standalone** — port docmeta's `doc-detective.yml` verbatim, independent of moose-docevals.
+3. **Both layers** — standalone for command accuracy, `moose-docevals run` for prose quality.
 
 **For the LLM-dependent pages**
 
 A. **Deterministic subset only** — never test the LLM paths.
-B. **Committed cache fixtures** — commit `.docevals-cache` entries so judged runs replay with no key.
-C. **Live calls, gated** — run them for real behind a `DOCEVALS_LIVE=1`-style gate.
+B. **Committed cache fixtures** — commit `.moose-docevals-cache` entries so judged runs replay with no key.
+C. **Live calls, gated** — run them for real behind a `MOOSE_DOCEVALS_LIVE=1`-style gate.
 
 ## Decision Outcome
 
 Chosen: **option 1 (composed)** and **option B (committed cache fixtures)**.
 
-- `.doc-detective.json` at the repo root; `docs/docevals.config.yaml` as a second config, separate
+- `.doc-detective.json` at the repo root; `docs/moose.config.yaml` as a second config, separate
   from the fixture-corpus config at the root.
 - A `verify-docs` job runs `npm run docs:verify`, then builds the Astro site.
-- `judge.cacheDir: docs/.docevals-cache` and `fill.cacheDir: docs/.docevals-cache/fill` — **not** the
-  default `.docevals/cache`, which the root `.gitignore` excludes. This keeps the fixture cache
+- `judge.cacheDir: docs/.moose-docevals-cache` and `fill.cacheDir: docs/.moose-docevals-cache/fill` — **not** the
+  default `.moose-docevals/cache`, which the root `.gitignore` excludes. This keeps the fixture cache
   disposable and the docs cache version-controlled with no `.gitignore` surgery.
-- `npm run docs:refresh-cache` clears and regenerates; `docs/.docevals-cache/README.md` documents it.
+- `npm run docs:refresh-cache` clears and regenerates; `docs/.moose-docevals-cache/README.md` documents it.
 - `doc-detective` is pinned as a devDependency so `npx --no-install` resolves a known version rather
   than whatever is global.
 
@@ -84,7 +84,7 @@ they are safe against a hostile fork is wrong in the most dangerous possible way
   with `ANTHROPIC_API_KEY` unset.
 - Bad: the cache-regeneration duty is real recurring work, and a contributor who bumps a prompt
   without a provider configured cannot discharge it locally.
-- Bad: a failure in docevals' own judging could in principle mask a doc-test failure — the cost of
+- Bad: a failure in moose-docevals' own judging could in principle mask a doc-test failure — the cost of
   composing rather than keeping the layers independent. Accepted because `commands-work` is an
   `error`-severity eval whose failure is reported per page, not swallowed.
 - Neutral: **no cache fixtures exist yet.** The site is currently section-index stubs and the
@@ -104,18 +104,18 @@ they are safe against a hostile fork is wrong in the most dangerous possible way
 
 ## Pros and Cons of the Options
 
-### Option 1 — Composed through `docevals run`
+### Option 1 — Composed through `moose-docevals run`
 
 - Good, because it is the strongest dogfood: the tool gates its own docs using its own grader.
 - Good, because one job and one config surface, and prose evals and command tests report together.
-- Bad, because the layers are coupled — a docevals regression could mask a doc-test regression.
+- Bad, because the layers are coupled — a moose-docevals regression could mask a doc-test regression.
 
 ### Option 2 — Standalone, mirroring docmeta
 
 - Good, because independence: a broken judge can never hide a broken doc test.
 - Good, because it is a proven, copyable configuration.
-- Bad, because it ignores a capability docevals already ships, and leaves the obvious question
-  ("why doesn't docevals test its own docs?") unanswered on the highest-visibility surface there is.
+- Bad, because it ignores a capability moose-docevals already ships, and leaves the obvious question
+  ("why doesn't moose-docevals test its own docs?") unanswered on the highest-visibility surface there is.
 - Bad, because two workflows and two config surfaces to keep in step.
 
 ### Option 3 — Both layers

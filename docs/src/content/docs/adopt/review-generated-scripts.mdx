@@ -3,7 +3,7 @@ title: Review generated scripts
 description: Generated checks are ordinary source. Read them like it.
 ---
 
-docevals writes check scripts to files beside your docs rather than embedding them in frontmatter.
+moose-docevals writes check scripts to files beside your docs rather than embedding them in frontmatter.
 That design exists for exactly one reason: **so they show up in pull requests and someone reads
 them.**
 
@@ -15,7 +15,7 @@ reason is worse than the llm eval it replaced, because it is now silent, fast, a
 ```text
 docs/
 ├── installation.mdx
-└── docevals/
+└── moose-docevals/
     └── installation.install-command-present.mjs
 ```
 
@@ -25,7 +25,7 @@ They are ES modules using only Node built-ins — no dependencies to audit.
 Frontmatter records the reference and the hash of the assertion that produced it:
 
 ```yaml
-      command: [node, docevals/installation.install-command-present.mjs, "{file}"]
+      command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
         assertionHash: aefaa89e…
 ```
@@ -40,7 +40,7 @@ that mentions it in prose and never shows the code block.
 **Does it pass for the wrong reason?** Try it against a page you know should fail:
 
 ```bash
-node docs/docevals/installation.install-command-present.mjs docs/some-other-page.mdx
+node docs/moose-docevals/installation.install-command-present.mjs docs/some-other-page.mdx
 ```
 
 If it exits 0 on a page that plainly does not satisfy the assertion, the script is wrong even though
@@ -59,7 +59,7 @@ They are yours. Fix a bad regex, tighten a match, add a comment explaining a non
 edits survive — regeneration only happens when the **assertion** changes, which is what
 `assertionHash` tracks.
 
-If you change the assertion, the hash stops matching, the script is stale, and docevals regenerates
+If you change the assertion, the hash stops matching, the script is stale, and moose-docevals regenerates
 it — discarding your edits. That is intended: the assertion is the contract, the script is an
 implementation of it. Change them together.
 
@@ -70,7 +70,7 @@ Not every `promotable` verdict should be taken. Push back when:
 - The script only approximates the assertion, and the gap matters.
 - The assertion was vague, and the script has now *silently made it precise* in a way nobody agreed
   to. Fix the assertion first — see
-  [Write good assertions](/docevals/evals/write-good-assertions/).
+  [Write good assertions](/moose-docevals/evals/write-good-assertions/).
 - The check is cheap either way and the llm version is more robust to legitimate rewording.
 
 Reverting is just deleting the script and setting `grader: llm` back.
@@ -78,5 +78,5 @@ Reverting is just deleting the script and setting `grader: llm` back.
 ## Treat them like test code
 
 They are test code. Same standards: readable, minimal, and failing for the right reason. A repo where
-`docevals/` directories are skipped in review has reintroduced the problem the file-based design
+`moose-docevals/` directories are skipped in review has reintroduced the problem the file-based design
 was meant to solve.

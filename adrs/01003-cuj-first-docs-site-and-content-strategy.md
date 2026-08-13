@@ -8,9 +8,9 @@ decision-makers: [hawkeyexl]
 
 ## Context and Problem Statement
 
-docevals ships eight commands, nine grader kinds, three judge providers, a confidence-zone judging
+moose-docevals ships eight commands, nine grader kinds, three judge providers, a confidence-zone judging
 model, and a `fill → promote → generate` ratchet — with exactly one user-facing surface: the README.
-CLAUDE.md said so outright ("docevals has no docs site, so the README is the only user-facing surface
+CLAUDE.md said so outright ("moose-docevals has no docs site, so the README is the only user-facing surface
 and there is nothing to gate"). A README is a features tour; it cannot sequence a reader from "docs
 quality is slipping" to "the pipeline tells us."
 
@@ -24,7 +24,7 @@ governs that structure** so it survives contact with many small future changes?
   at from `CLAUDE.md`, not tribal.
 - The sibling repo `docmeta` already solved this and shares most of its adopter base — divergence
   costs comprehension for anyone working across both.
-- docevals has **no users**, so no call evidence exists to segment audiences from. Whatever is
+- moose-docevals has **no users**, so no call evidence exists to segment audiences from. Whatever is
   written must be honest about that rather than presenting inference as research.
 - The docs backlog needs to be an enumerated, prioritized artifact — the gaps are the deliverable.
 
@@ -50,7 +50,7 @@ Chosen: **option 1**, with docmeta's *location and spirit* and the skill's *stru
 - Three persona names (Devin, Sara, Theo) are **deliberately shared with docmeta** — one reader, one
   pipeline, two tools.
 - The evidence basis is **adjacent synthesis, and says so**: docmeta's validated strategy, Doc
-  Detective's user base, the *Docs as Tests with AI* manuscript, and docevals' own surface. Every
+  Detective's user base, the *Docs as Tests with AI* manuscript, and moose-docevals' own surface. Every
   audience file carries an `evidence_basis:` field and the README labels the whole set a falsifiable
   hypothesis to re-derive from call evidence once there are users.
 - Astro + Starlight, matching docmeta's stack and version range.
@@ -112,5 +112,5 @@ Chosen: **option 1**, with docmeta's *location and spirit* and the skill's *stru
 - Good, because prose files are faster to read end-to-end.
 - Bad, because nothing is machine-checkable: no IDs, so dangling references are invisible, and no
   route assertions, so the backlog and the journeys drift apart silently.
-- Bad, because docevals has more personas and more journeys than docmeta; four flat files would each
+- Bad, because moose-docevals has more personas and more journeys than docmeta; four flat files would each
   become long enough that nobody reads to the bottom.

@@ -69,7 +69,7 @@ export class FillCache {
       if (!this.warned) {
         this.warned = true;
         console.warn(
-          `docevals: could not write the fill cache at ${this.dir} (${e instanceof Error ? e.message : String(e)}). Continuing without caching.`,
+          `moose-docevals: could not write the fill cache at ${this.dir} (${e instanceof Error ? e.message : String(e)}). Continuing without caching.`,
         );
       }
     }

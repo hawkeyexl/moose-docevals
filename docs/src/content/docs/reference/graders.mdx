@@ -7,7 +7,7 @@ A grader decides pass or fail for one eval on one page. Verified against `src/gr
 and each adapter.
 
 Graders sit in a preference order — code first, judge second, human last. Cheapest and most
-explicable wins; see [How docevals works](/docevals/get-started/how-docevals-works/).
+explicable wins; see [How moose-docevals works](/moose-docevals/get-started/how-moose-docevals-works/).
 
 | Kind | Runs | Needs a provider |
 |---|---|---|
@@ -30,7 +30,7 @@ Runs any executable. `{file}` in an argument expands to the page's absolute path
 | `timeoutMs` (eval field) | `scripts.timeoutMs` (`30000`) | |
 
 A `command` eval with an assertion and **no** command is a plain-language deterministic check —
-docevals generates the script. See [Deterministic checks](/docevals/evals/deterministic-checks/).
+moose-docevals generates the script. See [Deterministic checks](/moose-docevals/evals/deterministic-checks/).
 
 ## `tool:markdownlint`
 
@@ -53,7 +53,7 @@ Runs Vale with `--output=JSON` once per group.
 
 Vale's own severities map through the eval's `severityMap`, defaulting to:
 
-| Vale | docevals |
+| Vale | moose-docevals |
 |---|---|
 | `error` | `error` |
 | `warning` | `warning` |
@@ -81,7 +81,7 @@ Validates page structure against a named YAML template.
 ## `tool:doc-detective`
 
 Runs the procedure tests embedded in a page and reports failed steps. This is how the docs you are
-reading test their own commands — see [Test your commands](/docevals/evals/test-your-commands/).
+reading test their own commands — see [Test your commands](/moose-docevals/evals/test-your-commands/).
 
 | Option | Default |
 |---|---|
@@ -100,7 +100,7 @@ drive a browser.
 :::danger
 This grader executes shell commands embedded in page **bodies**.
 `scripts.allowFrontmatterCommands` does **not** gate it. On untrusted pull requests the job itself
-must be gated — see [Untrusted pull requests](/docevals/ci/untrusted-pull-requests/).
+must be gated — see [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
 
 ## `tool:freshness`
@@ -145,10 +145,10 @@ threshold against any sibling in scope fails.
 ## `llm`
 
 The judge. Needs `assertion`, and works far better with `evidence` and `examples` — see
-[Write good assertions](/docevals/evals/write-good-assertions/). Outcome is `pass`, `fail`, or
-`needs-review`; the mechanics are in [How judging works](/docevals/judge/).
+[Write good assertions](/moose-docevals/evals/write-good-assertions/). Outcome is `pass`, `fail`, or
+`needs-review`; the mechanics are in [How judging works](/moose-docevals/judge/).
 
 ## `human`
 
-Routes to a person. Verdicts persist in `.docevals/reviews.yaml` and self-invalidate when the page
-changes. See [Human review](/docevals/judge/human-review/).
+Routes to a person. Verdicts persist in `.moose-docevals/reviews.yaml` and self-invalidate when the page
+changes. See [Human review](/moose-docevals/judge/human-review/).

@@ -1,4 +1,4 @@
-/** Programmatic API for docevals. */
+/** Programmatic API for moose-docevals. */
 export { loadConfig, parseConfig, DEFAULT_CONFIG_FILENAME } from "./core/config.js";
 export type { DocevalsConfig, EvalDef, SuiteDef, ProviderName } from "./core/config.js";
 export { discoverPages, readPage, stripFrontmatterBlock } from "./core/discover.js";

@@ -1,8 +1,8 @@
 # Claude Code Configuration
 
-Repo-wide guidance for AI agents working on **docevals** — a TypeScript/ESM CLI and library that runs deterministic and LLM-as-judge evals against documentation pages.
+Repo-wide guidance for AI agents working on **moose-docevals** — a TypeScript/ESM CLI and library that runs deterministic and LLM-as-judge evals against documentation pages.
 
-Conventions here are ported from [doc-detective](https://github.com/doc-detective/doc-detective) and adapted to this repo. Where a rule depends on tooling doc-detective has and docevals does not yet, that is called out in ["Enforcement not yet wired"](#enforcement-not-yet-wired) rather than described as if it exists.
+Conventions here are ported from [doc-detective](https://github.com/doc-detective/doc-detective) and adapted to this repo. Where a rule depends on tooling doc-detective has and moose-docevals does not yet, that is called out in ["Enforcement not yet wired"](#enforcement-not-yet-wired) rather than described as if it exists.
 
 ## Environment setup (required)
 
@@ -47,7 +47,7 @@ Always use **red → green** test-driven development. For every behavior change:
 
 Don't write implementation code before the failing test exists, and don't batch many changes behind one test.
 
-The suite must stay **offline and hermetic**: judge providers are mocked (`MockProvider`), process execution is injected (`ExecFn`), and grader adapters are tested against captured tool output in `test/fixtures/`. A test that reaches the network or shells out to a real binary is a defect — the one exception is `test/integration/live.test.ts`, which is gated behind `DOCEVALS_LIVE=1` and skipped by default.
+The suite must stay **offline and hermetic**: judge providers are mocked (`MockProvider`), process execution is injected (`ExecFn`), and grader adapters are tested against captured tool output in `test/fixtures/`. A test that reaches the network or shells out to a real binary is a defect — the one exception is `test/integration/live.test.ts`, which is gated behind `MOOSE_DOCEVALS_LIVE=1` and skipped by default.
 
 ## Architecture Decision Records (required)
 
@@ -68,12 +68,12 @@ Unit tests are necessary but not sufficient. When you add or change a **user-fac
 - Each precedence level (config default vs. suite vs. page override).
 - The guard paths (skip flags, missing provider, disabled frontmatter commands, stale assertion hash).
 
-`test/fixtures/pages/` is a snapshot of doc-detective's docs annotated with docevals frontmatter. It is deliberately **not** all-passing — it encodes both outcomes so the gate is meaningful:
+`test/fixtures/pages/` is a snapshot of doc-detective's docs annotated with moose-docevals frontmatter. It is deliberately **not** all-passing — it encodes both outcomes so the gate is meaningful:
 
 - `goTo.mdx` fails freshness at error severity (drives the expected non-zero exit).
 - `concepts.md` is stale at *warning* severity, so it reports a finding but still passes.
 - `installation.mdx` has a command eval with no command — the script-generation target.
-- `find.mdx` has a pre-generated script in `test/fixtures/pages/docs/actions/docevals/`.
+- `find.mdx` has a pre-generated script in `test/fixtures/pages/docs/actions/moose-docevals/`.
 - `index.mdx` is skipped at the page level.
 
 CI runs the built CLI against this corpus and asserts specific outcomes, so a fixture change that flips one of these must update `.github/workflows/ci.yml` in the same commit.
@@ -99,7 +99,7 @@ The rules that follow from it:
 5. **Every page needs `title` and `description` frontmatter.** Pages that present commands also carry inline Doc Detective steps against committed fixtures — see "Authoring convention" in `proposed-ia.md`.
 6. **Verify claims against the source, and exact emitted strings against `test/`.** Type definitions describe the shape of output and over-promise.
 
-The strategy is an evidence-based *hypothesis*, not validated research — docevals has no users yet. Re-derive it from real call evidence when there are, and expect it to change.
+The strategy is an evidence-based *hypothesis*, not validated research — moose-docevals has no users yet. Re-derive it from real call evidence when there are, and expect it to change.
 
 ## Commit messages (required)
 
@@ -142,9 +142,9 @@ Pick the commit type deliberately — it is the **only** signal that decides whe
 
 | Branch | npm dist-tag | Install |
 |---|---|---|
-| `main` | `latest` | `npm i docevals` |
-| `next` | `next` | `npm i docevals@next` |
-| `feat/**` (any depth) | `<slug>` (branch suffix lowercased, non-alphanumeric → `-`) | `npm i docevals@<slug>` |
+| `main` | `latest` | `npm i moose-docevals` |
+| `next` | `next` | `npm i moose-docevals@next` |
+| `feat/**` (any depth) | `<slug>` (branch suffix lowercased, non-alphanumeric → `-`) | `npm i moose-docevals@<slug>` |
 
 ## Don't
 
@@ -154,7 +154,7 @@ Pick the commit type deliberately — it is the **only** signal that decides whe
 - Don't use `--no-verify` to skip a failing hook — fix the cause.
 - Don't add commitizen, standard-version, release-please, or changesets — they conflict with semantic-release.
 - Don't use `npm ci` (see ["Environment setup"](#environment-setup-required)).
-- Don't register docevals' frontmatter schema as a built-in inside docmeta (see ["Design decisions"](#design-decisions)).
+- Don't register moose-docevals' frontmatter schema as a built-in inside docmeta (see ["Design decisions"](#design-decisions)).
 
 ## Testing behavior
 
@@ -173,37 +173,38 @@ Note that vitest and node write diagnostics, including failures, to stderr — `
 ## Commands
 
 - `npm test` — vitest (unit + integration; no network, no API keys)
-- `DOCEVALS_LIVE=1 npm test` — adds the live smoke test via the Claude CLI
+- `MOOSE_DOCEVALS_LIVE=1 npm test` — adds the live smoke test via the Claude CLI
 - `npm run typecheck` / `npm run build`
 - `node dist/cli.js run --deterministic-only` — dogfood run against `test/fixtures/pages`
-- `npm run docs:verify` — run docevals over the docs site (the `verify-docs` gate). **Requires the CLI on `PATH` first**, because the pages' inline Doc Detective steps invoke `npx docevals`:
+- `npm run docs:verify` — run moose-docevals over the docs site (the `verify-docs` gate). **Requires the CLI on `PATH` first**, because the pages' inline Doc Detective steps invoke `npx moose-docevals`:
 
   ```bash
-  npm run build && npm link && npm link @hawkeyexl/docevals && npm run docs:verify
+  npm run build && npm link && npm link moose-docevals && npm run docs:verify
   ```
 
   `dist/` is gitignored and the package is unpublished, so without the link those steps have nothing to resolve. CI does the same thing.
-- `npm run docs:refresh-cache` — clear and regenerate `docs/.docevals-cache/` after a `PROMPT_VERSION` bump (needs a provider configured)
+- `npm run docs:refresh-cache` — clear and regenerate `docs/.moose-docevals-cache/` after a `PROMPT_VERSION` bump (needs a provider configured)
 - `cd docs && npm run build` — build the Starlight site
 
 ## Architecture
 
 - One concept: the **eval**. Graders: `llm`, `command`, `tool:<name>`, `human`. There are no "runners".
 - `src/core/engine.ts` — pipeline: discover → resolve → generation pass → deterministic graders (cheap first) → LLM judge → reviews → aggregate. The judge and script generation are injected (`options.judge`, `options.generateScripts`) so the engine tests offline.
-- `src/core/resolve.ts` — merges page frontmatter (the `evals` key: array shorthand or object form with `suite`/`skip`) with `docevals.config.yaml` suites and named evals. Page wins on name collision. `type` defaults to `regression`, `grader` to `llm`.
+- `src/core/resolve.ts` — merges page frontmatter (the `evals` key: array shorthand or object form with `suite`/`skip`) with `moose.config.yaml` suites and named evals. Page wins on name collision. `type` defaults to `regression`, `grader` to `llm`.
 - `src/graders/` — grader registry (mirrors docmeta's schema-registry pattern). Tool adapters parse each tool's output into `Finding[]`; unit tests use captured output plus a fake `exec`, never real binaries.
-- `src/judge/` — the judge stage, built on [`@hawkeyexl/inference`](https://github.com/hawkeyexl/inference) (ADR 01002). The providers, the N-run ensemble, consensus (`partial` counts as fail), confidence zones, the response cache, and the price table all live in the library. What stays here is docevals' own: the prompts and `PROMPT_VERSION`, the page-worded verdict schema, the cache-key composition (`cache.ts`), the config → `ProviderSpec` mapping (`provider.ts`), and the orchestration in `judge.ts` — bounded concurrency across targets, the cost budget, the self-judgment warning, and human-review resolution. Never reimplement a provider, ensemble, cache, or price table here; three copies of that code drifted apart once already, and a fix belongs upstream.
+- `src/judge/` — the judge stage, built on [`@hawkeyexl/inference`](https://github.com/hawkeyexl/inference) (ADR 01002). The providers, the N-run ensemble, consensus (`partial` counts as fail), confidence zones, the response cache, and the price table all live in the library. What stays here is moose-docevals' own: the prompts and `PROMPT_VERSION`, the page-worded verdict schema, the cache-key composition (`cache.ts`), the config → `ProviderSpec` mapping (`provider.ts`), and the orchestration in `judge.ts` — bounded concurrency across targets, the cost budget, the self-judgment warning, and human-review resolution. Never reimplement a provider, ensemble, cache, or price table here; three copies of that code drifted apart once already, and a fix belongs upstream.
 - `src/graders/exec.ts` — re-exports the library's `realExec`. The judge's subprocess provider and the command/tool graders were running two copies of the same cross-spawn wrapper; the Windows-specific parts (npm `.cmd` shim resolution, stdin piping past the ~32K command-line limit, StringDecoder-backed output) now have one home. `outputTail` stays local.
-- `src/graders/scriptgen.ts` + `src/core/frontmatter-edit.ts` — LLM-generated check scripts written to `{docDir}/docevals/`, with the command reference persisted via surgical YAML edits.
+- `src/graders/scriptgen.ts` + `src/core/frontmatter-edit.ts` — LLM-generated check scripts written to `{docDir}/moose-docevals/`, with the command reference persisted via surgical YAML edits.
 
 ## Invariants
 
 - Errored judge runs count against consensus — they may push an eval to human-review, never to a silent pass.
 - Deterministic evals fail only on `error`-severity findings; warnings and info report but pass.
 - Exit codes: `0` pass, `1` any fail/error/suite-miss, `2` operational (`DocevalsError`).
-- Bump `PROMPT_VERSION` (`src/judge/prompt.ts`) whenever judge prompts change — it is part of the cache key, and stale cached verdicts otherwise survive a prompt revision. **Bumping it also invalidates the committed docs cache** (`docs/.docevals-cache/`), which turns the `verify-docs` job red until you run `npm run docs:refresh-cache` and re-read the affected pages. That breakage is deliberate: a prompt change can change a verdict, and the docs present those verdicts as documented behavior (ADR 01004).
+- Bump `PROMPT_VERSION` (`src/judge/prompt.ts`) whenever judge prompts change — it is part of the cache key, and stale cached verdicts otherwise survive a prompt revision. **Bumping it also invalidates the committed docs cache** (`docs/.moose-docevals-cache/`), which turns the `verify-docs` job red until you run `npm run docs:refresh-cache` and re-read the affected pages. That breakage is deliberate: a prompt change can change a verdict, and the docs present those verdicts as documented behavior (ADR 01004).
 - Bump `FILL_PROMPT_VERSION` (`src/fill/prompt.ts`) whenever the fill prompt or `PROPOSAL_SCHEMA` changes — it is part of the fill cache key, and stale cached proposals otherwise survive a prompt revision (the exact analog of `PROMPT_VERSION`, including the committed-docs-cache consequence above).
 - Script generation must leave the page byte-identical outside the edited frontmatter node.
+- Anything that **writes** a config — `init`'s `STARTER_CONFIG`, docs examples, fixtures — must nest it under `docevals:`. A flat config is not an error: the loader treats the whole file as a sibling tool's and runs on pure defaults, silently passing. `test/unit/init.test.ts` guards the scaffold by loading it back rather than matching its text; do the same for any new writer.
 - Content files drive arbitrary code execution by **two** paths, and they are gated differently. (1) Frontmatter-declared commands — any change near command graders or script generation must preserve the `scripts.allowFrontmatterCommands` config and `--no-frontmatter-commands` flag gate. (2) The `tool:doc-detective` grader executes steps embedded in page *bodies*, which that flag does **not** cover; the only complete control is restricting the job to same-repo pull requests. The `verify-docs` job in [ci.yml](.github/workflows/ci.yml) carries that gate — never remove it, and never document the flag as sufficient protection against a hostile fork.
 - `schemas/frontmatter-0.1.json` is a **published artifact**, not internal source: it ships in the package (`files`/`exports`) and consumers point their validator at it by path. Keep the `$id` a resolvable URL, and pin its behavior in `test/unit/schema.test.ts`.
 - docmeta is a published dependency (`^1.3.0`) used for `extractFrontmatter` (shared fence handling and JSON-Pointer line maps) and `runValidate` (the `tool:docmeta` grader). 1.3.0 is the floor — the release that added those exports.
@@ -213,16 +214,28 @@ Note that vitest and node write diagnostics, including failures, to stderr — `
 Every user-facing knob flows through the resolved config. CLI flags do **not** bypass it — they override it. This is what lets a config file and the CLI reach the same code paths.
 
 ```text
-docevals.config.yaml  →  Ajv validate (src/core/config-schema.json)  →  defaults applied  →  CLI override  →  runtime
+moose.config.yaml  →  `docevals:` namespace  →  Ajv validate (src/core/config-schema.json)  →  defaults applied  →  CLI override  →  runtime
 ```
 
-- `src/core/config.ts` `parseConfig()` validates the file against `config-schema.json` and fills every default, so downstream code receives a fully-populated `DocevalsConfig` and never has to re-apply a default.
+`moose.config.yaml` is shared by the whole moose tool family, so **every docevals setting lives under a top-level `docevals:` key** (ADR 01008). Root keys the schema does not know belong to sibling tools and are ignored; inside `docevals:`, `additionalProperties: false` still catches typos. That asymmetry is why the schema's root is permissive and its `$defs/docevalsConfig` subtree is strict — don't "fix" the root to `false`.
+
+```yaml
+docevals:
+  version: 1
+  judge:
+    ensembleRuns: 3
+```
+
+- `src/core/config.ts` `parseConfig()` reads `raw[NAMESPACE]`, validates against `config-schema.json`, and fills every default, so downstream code receives a fully-populated `DocevalsConfig` and never has to re-apply a default. A file with no `docevals:` key resolves to pure defaults.
+- `loadConfig()` raises a migration error when it finds only a pre-rename `docevals.config.yaml`. Falling through to defaults there would run with no named evals and no suites — and *pass*. Keep that guard.
 - CLI options are collected into `JudgeOptions` / `RunOptions` and overlaid at the read site with `??` (e.g. `options.runs ?? config.judge.ensembleRuns`), so an unset flag falls through to config.
 - Runtime code reads the resolved config and options — never raw `argv`.
 
+Tests build configs through `test/helpers/config.ts` (`parseDocevalsConfig` / `nestUnderDocevals`) so the nesting lives in one place. `test/unit/config.test.ts` deliberately calls `parseConfig` directly — it pins the file contract itself.
+
 ### Adding a new knob
 
-1. **Schema first.** Add the field to `src/core/config-schema.json` with the same name you'll use in code, and add a positive and negative case to `test/unit/config.test.ts`.
+1. **Schema first.** Add the field under `$defs/docevalsConfig` in `src/core/config-schema.json` with the same name you'll use in code, and add a positive and negative case to `test/unit/config.test.ts`.
 2. **Default in `parseConfig()`.** Every field gets an explicit default there; don't scatter `?? fallback` through the codebase.
 3. **CLI flag** in `src/cli.ts`, threaded through the command's options type.
 4. **Override at the read site** with `??`, so config and CLI converge.
@@ -242,7 +255,7 @@ Durable decisions behind the current shape. Backfill these into `adrs/` when tha
 - **Generated check scripts are files, not inline code.** A plain-language deterministic assertion has its script written to a file parallel to the doc and referenced as a `command`. Scripts are never embedded in frontmatter, so they stay reviewable in PRs and editable by hand. There is no `script` grader kind.
 - **`type` defaults to `regression`, not `capability`.** Most evals guard behavior that must keep working.
 - **Level 1 orchestrates, it does not reimplement.** Deterministic checks wrap existing tools (docmeta, markdownlint, Vale, doc-structure-lint, Doc Detective); native graders exist only where nothing else covers the gap (freshness, reading level, cross-page differentiation).
-- **Schemas are published by the tool that owns them.** docevals ships `schemas/frontmatter-0.1.json` as a package artifact rather than registering it as a docmeta built-in — that keeps schema versioning in this repo instead of gated on a docmeta release. A built-in was built and PR'd before this was reversed; don't re-propose it.
+- **Schemas are published by the tool that owns them.** moose-docevals ships `schemas/frontmatter-0.1.json` as a package artifact rather than registering it as a docmeta built-in — that keeps schema versioning in this repo instead of gated on a docmeta release. A built-in was built and PR'd before this was reversed; don't re-propose it.
 - **Conceptual source**: the *Docs as Tests with AI* manuscript (draft 4) — the grader hierarchy, eval sketch fields, 3-run ensemble, confidence zones, 70% calibration threshold, and 15% false-positive alert all come from it.
 
 ## Enforcement
@@ -265,20 +278,20 @@ Two workflows are inert until configured, by design — both would otherwise fai
 - **Claude review** (`claude-pr-review.yml`, `claude.yml`) skip with a notice until the repo has a token:
 
   ```bash
-  gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo hawkeyexl/docevals
+  gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo hawkeyexl/moose-docevals
   ```
 
   Even with the token set, `claude-code-action` **refuses to run when the workflow file differs from the copy on the default branch** ("Skipping action due to workflow validation"). That is an anti-tampering guard — otherwise a PR could rewrite the review workflow and run the modified version with repo credentials. Consequences worth knowing: a PR that *introduces or edits* a Claude workflow never gets reviewed by it, and the change only takes effect once merged to `main`. The job still reports success, so a green `review` check does not by itself mean a review happened — check the duration (a real review takes minutes, a skip takes seconds).
 
-- **Releases** are opt-in. docevals has never been published and a first npm publish cannot be undone, so `release.yml` runs only when a repository variable says to:
+- **Releases** are opt-in. moose-docevals has never been published and a first npm publish cannot be undone, so `release.yml` runs only when a repository variable says to:
 
   ```bash
-  gh variable set RELEASE_ENABLED --body true --repo hawkeyexl/docevals
+  gh variable set RELEASE_ENABLED --body true --repo hawkeyexl/moose-docevals
   ```
 
   Before enabling, configure npm trusted publishing for the package (add a trusted publisher on npmjs.com naming this repo and `release.yml`) so the publish authenticates via OIDC without an `NPM_TOKEN`. The release commit is pushed with the default `GITHUB_TOKEN`, which works while `main` has no ruleset requiring PRs; if one is added, this needs a GitHub App token as a bypass actor, as docmeta does.
 
-The last unported convention was **docs impact** — doc-detective gates behavior changes on a docs assessment against its content strategy. That is now ported: docevals has a documentation site (`docs/`) and a content strategy (`docs/content-strategy/`), so a behavior change is assessed against them. See ["Content & documentation work"](#content--documentation-work-required) above. Not machine-enforced; the `verify-docs` job checks that the pages that exist are *correct*, not that new behavior has pages.
+The last unported convention was **docs impact** — doc-detective gates behavior changes on a docs assessment against its content strategy. That is now ported: moose-docevals has a documentation site (`docs/`) and a content strategy (`docs/content-strategy/`), so a behavior change is assessed against them. See ["Content & documentation work"](#content--documentation-work-required) above. Not machine-enforced; the `verify-docs` job checks that the pages that exist are *correct*, not that new behavior has pages.
 
 ## Related files
 
@@ -293,8 +306,8 @@ The last unported convention was **docs impact** — doc-detective gates behavio
 - [scripts/check-docs-links.mjs](scripts/check-docs-links.mjs) — internal-link check over the built site
 - [.github/workflows/claude-pr-review.yml](.github/workflows/claude-pr-review.yml) — automatic review on every PR
 - [.github/workflows/claude.yml](.github/workflows/claude.yml) — interactive `@claude` in issues, PR comments, and reviews (trusted authors only)
-- [docevals.config.yaml](docevals.config.yaml) — the repo's own dogfood config (fixture corpus)
-- [docs/docevals.config.yaml](docs/docevals.config.yaml) — the docs-site config used by `verify-docs`
+- [moose.config.yaml](moose.config.yaml) — the repo's own dogfood config (fixture corpus)
+- [docs/moose.config.yaml](docs/moose.config.yaml) — the docs-site config used by `verify-docs`
 - [docs/content-strategy/](docs/content-strategy) — audiences, personas, CUJs, and the proposed IA
 - [docs/src/content/docs/](docs/src/content/docs) — the published Starlight site
 - [.doc-detective.json](.doc-detective.json) — Doc Detective config for the docs' inline test steps

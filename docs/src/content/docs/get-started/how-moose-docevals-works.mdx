@@ -1,5 +1,5 @@
 ---
-title: How docevals works
+title: How moose-docevals works
 description: The eval, the grader hierarchy, and how a verdict is reached.
 ---
 
@@ -33,7 +33,7 @@ Graders sit in a preference order, cheapest and most explicable first.
 Detective — plus three native checks where nothing else covers the gap: freshness, reading level,
 and cross-page differentiation.
 
-docevals **orchestrates; it does not reimplement**. Vale keeps doing what Vale does, and its findings
+moose-docevals **orchestrates; it does not reimplement**. Vale keeps doing what Vale does, and its findings
 arrive as a named eval with a severity alongside everything else.
 
 **2. The LLM judge — `llm`.** For assertions that need interpretation: "does this page explain why
@@ -43,14 +43,14 @@ before how?" No linter expresses that. The judge does, with safeguards described
 
 The rule to carry: **if you can express the criterion as code, do.** An llm eval is the choice of
 last resort, not the default. Left alone, everything drifts upward into the expensive tier — which
-is why [`promote` and `generate`](/docevals/adopt/promote-to-deterministic/) exist.
+is why [`promote` and `generate`](/moose-docevals/adopt/promote-to-deterministic/) exist.
 
 ## How a verdict is reached
 
-**Deterministic graders** produce [findings](/docevals/reference/output-and-exit-codes/) with a
+**Deterministic graders** produce [findings](/moose-docevals/reference/output-and-exit-codes/) with a
 severity. An eval fails only on an `error`-severity finding; `warning` and `info` report and pass.
 That is the mechanism behind entering a new check at `warning` and
-[ratcheting it up](/docevals/adopt/retrofit-a-legacy-corpus/).
+[ratcheting it up](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
 **The judge** runs the eval N times independently (default 3), each a separate request with no
 shared context so the runs cannot reinforce one another. Consensus aggregates them, then confidence
@@ -78,7 +78,7 @@ Every eval is pass or fail. That looks crude for prose until you see where the n
 
 So "70% of our how-to pages explain why before how" is expressible, without any individual eval
 returning a mushy 0.7. `type` defaults to `regression`, because most evals guard something. See
-[Regression vs capability](/docevals/evals/regression-vs-capability/).
+[Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
 ## The pipeline
 
@@ -97,7 +97,7 @@ check rarely needs an expensive opinion.
 
 ## Next
 
-- [Declare evals in frontmatter](/docevals/evals/) — the contract
-- [Write good assertions](/docevals/evals/write-good-assertions/) — the skill that decides whether
+- [Declare evals in frontmatter](/moose-docevals/evals/) — the contract
+- [Write good assertions](/moose-docevals/evals/write-good-assertions/) — the skill that decides whether
   any of this works
-- [Trust the judge](/docevals/judge/) — the mechanics above, in full, plus how to prove them
+- [Trust the judge](/moose-docevals/judge/) — the mechanics above, in full, plus how to prove them

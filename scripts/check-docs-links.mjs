@@ -1,7 +1,7 @@
 /**
  * Verify every internal link in the built docs site resolves.
  *
- * `docevals run` checks that a page's *commands* are true; nothing checks that
+ * `moose-docevals run` checks that a page's *commands* are true; nothing checks that
  * its *links* are. With ~1,350 internal links across the content set, a single
  * renamed route silently produces dozens of 404s that no existing gate catches
  * — the site builds fine either way.
@@ -13,7 +13,7 @@ import path from "node:path";
 
 const DIST = process.env.DOCS_DIST ?? "docs/dist";
 /** Must match `base` in docs/astro.config.mjs. */
-const BASE = process.env.DOCS_BASE ?? "/docevals";
+const BASE = process.env.DOCS_BASE ?? "/moose-docevals";
 
 /** Asset extensions are emitted by the bundler and not worth re-checking. */
 const ASSET = /\.(css|js|mjs|svg|png|jpe?g|gif|ico|woff2?|xml|txt|json|webmanifest)$/;
@@ -36,7 +36,7 @@ const pages = [];
 function resolvesOnDisk(href) {
   let route = href.split("#")[0].split("?")[0];
   // Match the base as a path segment, not a string prefix: a link to
-  // /docevals-v2/x must not be treated as base-relative and then reported
+  // /moose-docevals-v2/x must not be treated as base-relative and then reported
   // broken.
   if (route !== BASE && !route.startsWith(`${BASE}/`)) return null;
   route = route.slice(BASE.length) || "/";

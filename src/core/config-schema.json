@@ -1,115 +1,123 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "docevals:config:0.1",
-  "title": "docevals config",
+  "$id": "moose:config:0.1",
+  "title": "moose config",
+  "description": "Shared configuration for the moose family of documentation tools. Each tool reads its own top-level namespace; unknown keys belong to sibling tools and are ignored here.",
   "type": "object",
   "properties": {
-    "version": { "const": 1 },
-    "files": {
+    "docevals": { "$ref": "#/$defs/docevalsConfig" }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "docevalsConfig": {
       "type": "object",
       "properties": {
-        "include": { "type": "array", "items": { "type": "string" } },
-        "exclude": { "type": "array", "items": { "type": "string" } }
-      },
-      "additionalProperties": false
-    },
-    "defaults": {
-      "type": "object",
-      "properties": {
-        "suite": { "type": ["string", "null"] },
-        "failFast": { "type": "boolean" },
-        "concurrency": { "type": "integer", "minimum": 1 }
-      },
-      "additionalProperties": false
-    },
-    "provider": {
-      "type": "object",
-      "properties": {
-        "default": { "enum": ["anthropic", "openai", "claude-cli"] },
-        "anthropic": {
+        "version": { "const": 1 },
+        "files": {
           "type": "object",
           "properties": {
-            "model": { "type": "string" },
-            "apiKeyEnv": { "type": "string" },
-            "pricing": { "$ref": "#/$defs/pricing" }
+            "include": { "type": "array", "items": { "type": "string" } },
+            "exclude": { "type": "array", "items": { "type": "string" } }
           },
           "additionalProperties": false
         },
-        "openai": {
+        "defaults": {
           "type": "object",
           "properties": {
-            "baseUrl": { "type": "string" },
-            "model": { "type": "string" },
-            "apiKeyEnv": { "type": "string" },
-            "pricing": { "$ref": "#/$defs/pricing" }
+            "suite": { "type": ["string", "null"] },
+            "failFast": { "type": "boolean" },
+            "concurrency": { "type": "integer", "minimum": 1 }
           },
           "additionalProperties": false
         },
-        "claude-cli": {
+        "provider": {
           "type": "object",
           "properties": {
-            "model": { "type": "string" },
-            "command": { "type": "string" }
+            "default": { "enum": ["anthropic", "openai", "claude-cli"] },
+            "anthropic": {
+              "type": "object",
+              "properties": {
+                "model": { "type": "string" },
+                "apiKeyEnv": { "type": "string" },
+                "pricing": { "$ref": "#/$defs/pricing" }
+              },
+              "additionalProperties": false
+            },
+            "openai": {
+              "type": "object",
+              "properties": {
+                "baseUrl": { "type": "string" },
+                "model": { "type": "string" },
+                "apiKeyEnv": { "type": "string" },
+                "pricing": { "$ref": "#/$defs/pricing" }
+              },
+              "additionalProperties": false
+            },
+            "claude-cli": {
+              "type": "object",
+              "properties": {
+                "model": { "type": "string" },
+                "command": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
           },
           "additionalProperties": false
+        },
+        "judge": {
+          "type": "object",
+          "properties": {
+            "ensembleRuns": { "type": "integer", "minimum": 1 },
+            "temperature": { "type": "number", "minimum": 0 },
+            "zones": {
+              "type": "object",
+              "properties": {
+                "autoPass": { "type": "number", "minimum": 0, "maximum": 1 },
+                "autoFail": { "type": "number", "minimum": 0, "maximum": 1 }
+              },
+              "additionalProperties": false
+            },
+            "falsePositiveAlert": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cacheDir": { "type": "string" },
+            "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "scripts": {
+          "type": "object",
+          "properties": {
+            "dir": { "type": "string" },
+            "configDir": { "type": "string" },
+            "allowFrontmatterCommands": { "type": "boolean" },
+            "timeoutMs": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "fill": {
+          "type": "object",
+          "properties": {
+            "confidenceThreshold": { "type": "number", "minimum": 0, "maximum": 1 },
+            "maxEvalsPerPage": { "type": "integer", "minimum": 1 },
+            "temperature": { "type": "number", "minimum": 0 },
+            "cacheDir": { "type": "string" },
+            "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "evals": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "additionalProperties": { "$ref": "#/$defs/evalDef" }
+        },
+        "suites": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "additionalProperties": { "$ref": "#/$defs/suiteDef" }
         }
       },
+      "required": ["version"],
       "additionalProperties": false
     },
-    "judge": {
-      "type": "object",
-      "properties": {
-        "ensembleRuns": { "type": "integer", "minimum": 1 },
-        "temperature": { "type": "number", "minimum": 0 },
-        "zones": {
-          "type": "object",
-          "properties": {
-            "autoPass": { "type": "number", "minimum": 0, "maximum": 1 },
-            "autoFail": { "type": "number", "minimum": 0, "maximum": 1 }
-          },
-          "additionalProperties": false
-        },
-        "falsePositiveAlert": { "type": "number", "minimum": 0, "maximum": 1 },
-        "cacheDir": { "type": "string" },
-        "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
-      },
-      "additionalProperties": false
-    },
-    "scripts": {
-      "type": "object",
-      "properties": {
-        "dir": { "type": "string" },
-        "configDir": { "type": "string" },
-        "allowFrontmatterCommands": { "type": "boolean" },
-        "timeoutMs": { "type": "integer", "minimum": 1 }
-      },
-      "additionalProperties": false
-    },
-    "fill": {
-      "type": "object",
-      "properties": {
-        "confidenceThreshold": { "type": "number", "minimum": 0, "maximum": 1 },
-        "maxEvalsPerPage": { "type": "integer", "minimum": 1 },
-        "temperature": { "type": "number", "minimum": 0 },
-        "cacheDir": { "type": "string" },
-        "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
-      },
-      "additionalProperties": false
-    },
-    "evals": {
-      "type": "object",
-      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
-      "additionalProperties": { "$ref": "#/$defs/evalDef" }
-    },
-    "suites": {
-      "type": "object",
-      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
-      "additionalProperties": { "$ref": "#/$defs/suiteDef" }
-    }
-  },
-  "required": ["version"],
-  "additionalProperties": false,
-  "$defs": {
     "pricing": {
       "type": "object",
       "properties": {

@@ -1,10 +1,10 @@
 ---
 title: FAQ
-description: Recurring questions from contributors who hit a docevals check.
+description: Recurring questions from contributors who hit a moose-docevals check.
 ---
 
 Short answers for people who just want their pull request green. The triage table is on
-[Fix a failing eval](/docevals/fix/).
+[Fix a failing eval](/moose-docevals/fix/).
 
 ## Why did this fail when I only changed one sentence?
 
@@ -45,12 +45,12 @@ check is inconvenient" — that is a conversation with whoever owns the eval.
 
 LLM verdicts are about the page, not a character position. Read the rationale alongside the eval's
 `assertion` and `examples.fail` — see
-[An LLM verdict](/docevals/fix/#an-llm-verdict).
+[An LLM verdict](/moose-docevals/fix/#an-llm-verdict).
 
 ## What does `needs-review` mean and how do I clear it?
 
 The judge was not confident enough either way. **You cannot clear it** — someone with standing runs
-`docevals review <file> <eval> pass|fail`. Ask whoever owns docs quality in your repo.
+`moose-docevals review <file> <eval> pass|fail`. Ask whoever owns docs quality in your repo.
 
 ## I ran it locally and got a different result
 
@@ -64,7 +64,7 @@ Also check you are running against the same config. CI may pass `-c` with a spec
 No. Use:
 
 ```bash
-npx docevals run docs/your-page.mdx --deterministic-only
+npx moose-docevals run docs/your-page.mdx --deterministic-only
 ```
 
 That skips the judge entirely and needs no credential.
@@ -96,10 +96,10 @@ something else turned the build red.
 
 It might be. Generated scripts are ordinary committed source and can be edited by hand. If it checks
 something other than what the assertion says, that is worth raising — see
-[Review generated scripts](/docevals/adopt/review-generated-scripts/).
+[Review generated scripts](/moose-docevals/adopt/review-generated-scripts/).
 
 ## Who owns this check?
 
-Whoever added it. `docevals list <your file>` shows each eval's source — `config` means it is defined
-centrally in `docevals.config.yaml`, `page` means it is inline in the page's frontmatter. `git blame`
+Whoever added it. `moose-docevals list <your file>` shows each eval's source — `config` means it is defined
+centrally in `moose.config.yaml`, `page` means it is inline in the page's frontmatter. `git blame`
 the definition from there.

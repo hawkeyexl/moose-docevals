@@ -26,13 +26,13 @@ const PROPOSAL = {
 };
 
 function copyCorpus(): string {
-  const root = mkdtempSync(join(tmpdir(), "docevals-fill-int-"));
+  const root = mkdtempSync(join(tmpdir(), "moose-docevals-fill-int-"));
   cpSync(join(REPO, "test/fixtures/pages"), join(root, "test/fixtures/pages"), {
     recursive: true,
   });
   copyFileSync(
-    join(REPO, "docevals.config.yaml"),
-    join(root, "docevals.config.yaml"),
+    join(REPO, "moose.config.yaml"),
+    join(root, "moose.config.yaml"),
   );
   return root;
 }

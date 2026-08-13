@@ -240,7 +240,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         }
         problems.push({
           file: plan.page.file,
-          message: `Eval "${ev.name}": assertion changed since its script was generated — run \`docevals generate\` to regenerate`,
+          message: `Eval "${ev.name}": assertion changed since its script was generated — run \`moose-docevals generate\` to regenerate`,
           level: "warning",
         });
       }
@@ -285,7 +285,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
           file: t.plan.page.file,
           outcome: "error",
           skipReason:
-            "no command and script generation unavailable (configure a provider or run `docevals generate`)",
+            "no command and script generation unavailable (configure a provider or run `moose-docevals generate`)",
           durationMs: 0,
         });
       }

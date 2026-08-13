@@ -9,7 +9,7 @@ import {
 } from "../../src/core/frontmatter-edit.js";
 import { makeGenerateScripts, scriptLocationFor } from "../../src/graders/scriptgen.js";
 import { MockProvider } from "@hawkeyexl/inference";
-import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig } from "../helpers/config.js";
 import { readPage } from "../../src/core/discover.js";
 import { resolvePage } from "../../src/core/resolve.js";
 import { sha256 } from "../../src/judge/cache.js";
@@ -37,10 +37,10 @@ const PAGE = [
 describe("updatePageEval", () => {
   it("adds command and generated fields, preserving body and comments", () => {
     const updated = updatePageEval(PAGE, "page.md", "gen-me", {
-      command: ["node", "docevals/sample.gen-me.mjs", "{file}"],
+      command: ["node", "moose-docevals/sample.gen-me.mjs", "{file}"],
       generated: { assertionHash: "abc" },
     });
-    expect(updated).toContain('command: [ node, docevals/sample.gen-me.mjs, "{file}" ]');
+    expect(updated).toContain('command: [ node, moose-docevals/sample.gen-me.mjs, "{file}" ]');
     expect(updated).toContain("assertionHash: abc");
     expect(updated).toContain("# a comment that must survive");
     // Body after the closing fence is byte-identical.
@@ -85,10 +85,10 @@ describe("updateConfigEval", () => {
       "suites: {}",
     ].join("\n");
     const updated = updateConfigEval(config, "cfg.yaml", "check-links", {
-      command: ["node", "docevals-scripts/check-links.mjs", "{file}"],
+      command: ["node", "moose-docevals-scripts/check-links.mjs", "{file}"],
       generated: { assertionHash: "xyz" },
     });
-    expect(updated).toContain("docevals-scripts/check-links.mjs");
+    expect(updated).toContain("moose-docevals-scripts/check-links.mjs");
     expect(updated).toContain("assertionHash: xyz");
     expect(updated).toContain("version: 1");
   });
@@ -104,12 +104,12 @@ const SCRIPT_CODE = [
 ].join("\n");
 
 function tempWorkspace(): { root: string; pagePath: string } {
-  const root = mkdtempSync(join(tmpdir(), "docevals-gen-"));
+  const root = mkdtempSync(join(tmpdir(), "moose-docevals-gen-"));
   mkdirSync(join(root, "docs"), { recursive: true });
   const pagePath = join(root, "docs", "sample.md");
   writeFileSync(pagePath, PAGE);
   writeFileSync(
-    join(root, "docevals.config.yaml"),
+    join(root, "moose.config.yaml"),
     'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n',
   );
   return { root, pagePath };
@@ -118,9 +118,9 @@ function tempWorkspace(): { root: string; pagePath: string } {
 describe("makeGenerateScripts", () => {
   it("writes the script parallel to the doc and persists the command reference", async () => {
     const { root, pagePath } = tempWorkspace();
-    const config = parseConfig(
-      readFileSync(join(root, "docevals.config.yaml"), "utf8"),
-      join(root, "docevals.config.yaml"),
+    const config = parseDocevalsConfig(
+      readFileSync(join(root, "moose.config.yaml"), "utf8"),
+      join(root, "moose.config.yaml"),
     );
     const page = readPage(pagePath, root);
     const plan = resolvePage(page, config);
@@ -130,21 +130,21 @@ describe("makeGenerateScripts", () => {
     const generate = makeGenerateScripts({ provider, root });
     const { generatedPaths } = await generate([target], config, {});
 
-    expect(generatedPaths).toEqual(["docs/docevals/sample.gen-me.mjs"]);
-    const scriptPath = join(root, "docs", "docevals", "sample.gen-me.mjs");
+    expect(generatedPaths).toEqual(["docs/moose-docevals/sample.gen-me.mjs"]);
+    const scriptPath = join(root, "docs", "moose-docevals", "sample.gen-me.mjs");
     expect(existsSync(scriptPath)).toBe(true);
-    expect(readFileSync(scriptPath, "utf8")).toContain("docevals generated check");
+    expect(readFileSync(scriptPath, "utf8")).toContain("moose-docevals generated check");
 
     // Frontmatter now references the script; hash matches the assertion.
     const updated = readFileSync(pagePath, "utf8");
-    expect(updated).toContain("docevals/sample.gen-me.mjs");
+    expect(updated).toContain("moose-docevals/sample.gen-me.mjs");
     expect(updated).toContain(sha256("The page has a heading."));
     expect(updated).toContain("Body text stays byte-identical.");
 
     // In-memory eval mutated for the current run.
     expect(target.eval.command).toEqual([
       "node",
-      "docevals/sample.gen-me.mjs",
+      "moose-docevals/sample.gen-me.mjs",
       "{file}",
     ]);
   });
@@ -162,7 +162,7 @@ describe("makeGenerateScripts", () => {
     expect(result?.outcome).toBe("pass");
     // Flags the eval as generated on this run, so reporters can mark it.
     expect(result?.generated).toBe(true);
-    expect(report.generated).toEqual(["docs/docevals/sample.gen-me.mjs"]);
+    expect(report.generated).toEqual(["docs/moose-docevals/sample.gen-me.mjs"]);
   });
 
   it("regenerates when the assertion hash is stale", async () => {
@@ -174,7 +174,7 @@ describe("makeGenerateScripts", () => {
         "      grader: command",
         [
           "      grader: command",
-          '      command: ["node", "docevals/old.mjs", "{file}"]',
+          '      command: ["node", "moose-docevals/old.mjs", "{file}"]',
           "      generated:",
           "        assertionHash: stale-hash",
         ].join("\n"),
@@ -186,7 +186,7 @@ describe("makeGenerateScripts", () => {
       deterministicOnly: true,
       generateScripts: makeGenerateScripts({ provider, root }),
     });
-    expect(report.generated).toEqual(["docs/docevals/sample.gen-me.mjs"]);
+    expect(report.generated).toEqual(["docs/moose-docevals/sample.gen-me.mjs"]);
     expect(readFileSync(pagePath, "utf8")).toContain("sample.gen-me.mjs");
     expect(provider.requests).toHaveLength(1);
   });
@@ -206,7 +206,7 @@ describe("makeGenerateScripts", () => {
 
   it("scriptLocationFor routes config-sourced evals to the config scripts dir", () => {
     const { root, pagePath } = tempWorkspace();
-    const config = parseConfig(
+    const config = parseDocevalsConfig(
       [
         "version: 1",
         "evals:",
@@ -216,7 +216,7 @@ describe("makeGenerateScripts", () => {
         "suites:",
         "  s: { evals: [central-check] }",
       ].join("\n"),
-      join(root, "docevals.config.yaml"),
+      join(root, "moose.config.yaml"),
     );
     const page = readPage(pagePath, root);
     const plan = resolvePage(
@@ -229,11 +229,11 @@ describe("makeGenerateScripts", () => {
       root,
     );
     expect(location.scriptAbsPath.replace(/\\/g, "/")).toContain(
-      "docevals-scripts/central-check.mjs",
+      "moose-docevals-scripts/central-check.mjs",
     );
     expect(location.command).toEqual([
       "node",
-      "docevals-scripts/central-check.mjs",
+      "moose-docevals-scripts/central-check.mjs",
       "{file}",
     ]);
   });

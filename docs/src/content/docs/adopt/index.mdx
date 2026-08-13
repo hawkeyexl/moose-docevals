@@ -3,7 +3,7 @@ title: Bootstrap a corpus with fill
 description: Propose evals for every page from its content, gated on confidence and capped on cost.
 ---
 
-Ten minutes to write a good eval, times two hundred pages, is not a project anyone starts. `docevals
+Ten minutes to write a good eval, times two hundred pages, is not a project anyone starts. `moose-docevals
 fill` asks your configured LLM to propose evals for each page from its content, each with a
 self-reported 0–1 confidence.
 
@@ -12,7 +12,7 @@ self-reported 0–1 confidence.
 Always `--dry-run` first:
 
 ```bash
-npx docevals fill --dry-run docs/
+npx moose-docevals fill --dry-run docs/
 ```
 
 ```console
@@ -31,7 +31,7 @@ Raw proposals are cached **before** the confidence gate. Re-running at a differe
 costs nothing:
 
 ```bash
-npx docevals fill --dry-run --confidence 0.85 docs/
+npx moose-docevals fill --dry-run --confidence 0.85 docs/
 ```
 
 Knowing this changes how you work. Without it, the threshold feels like a one-shot irreversible
@@ -41,7 +41,7 @@ at what each admits.
 ## Cap the spend
 
 ```bash
-npx docevals fill --max-cost 5 docs/
+npx moose-docevals fill --max-cost 5 docs/
 ```
 
 `--max-cost` (and `fill.maxCostUsd`) is a **hard ceiling that aborts**, not a warning. Set it even
@@ -52,7 +52,7 @@ when you are confident; the run you regret is the one you did not bound.
 Drop `--dry-run`:
 
 ```bash
-npx docevals fill docs/
+npx moose-docevals fill docs/
 ```
 
 Only proposals at or above the threshold (default `0.7`, config `fill.confidenceThreshold`) are
@@ -76,11 +76,11 @@ default for a machine-written assertion, and also means an unreviewed corpus is 
 corpus. Read them as assertions:
 
 - Is it judgeable, or is it a feeling? See
-  [Write good assertions](/docevals/evals/write-good-assertions/).
+  [Write good assertions](/moose-docevals/evals/write-good-assertions/).
 - Does it encode the page's *current* state as the standard? A proposal derived from the content will
   happily assert what the page already does, which measures nothing.
 - Should it be code? Most "the page contains X" proposals should be —
-  [promote](/docevals/adopt/promote-to-deterministic/) finds them.
+  [promote](/moose-docevals/adopt/promote-to-deterministic/) finds them.
 
 Batch by directory so the review stays reviewable. Nobody can approve a 3,000-page pull request.
 
@@ -88,10 +88,10 @@ Batch by directory so the review stays reviewable. Nobody can approve a 3,000-pa
 
 | Situation | Page |
 |---|---|
-| The corpus has never been measured and an honest run would be all red | [Retrofit a legacy corpus](/docevals/adopt/retrofit-a-legacy-corpus/) |
-| Everything is an llm eval and the bill scales with the corpus | [Promote to deterministic](/docevals/adopt/promote-to-deterministic/) |
-| You want the generated scripts reviewed properly | [Review generated scripts](/docevals/adopt/review-generated-scripts/) |
+| The corpus has never been measured and an honest run would be all red | [Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/) |
+| Everything is an llm eval and the bill scales with the corpus | [Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/) |
+| You want the generated scripts reviewed properly | [Review generated scripts](/moose-docevals/adopt/review-generated-scripts/) |
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"--confidence must be between 0 and 1; above 1 is a usage error, not a silent clamp.","runShell":{"command":"npx docevals fill --confidence 5 --dry-run","exitCodes":[2]}} */}
+{/* step {"description":"--confidence must be between 0 and 1; above 1 is a usage error, not a silent clamp.","runShell":{"command":"npx moose-docevals fill --confidence 5 --dry-run","exitCodes":[2]}} */}

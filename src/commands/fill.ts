@@ -1,5 +1,5 @@
 /**
- * `docevals fill` — ask an LLM provider to propose frontmatter evals for each
+ * `moose-docevals fill` — ask an LLM provider to propose frontmatter evals for each
  * page, gate the proposals on self-reported confidence, and append the
  * survivors to the page's frontmatter. Proposals are llm-graded only and
  * deduplicated against the page's resolved plan; existing evals are never

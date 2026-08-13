@@ -32,7 +32,7 @@ it is where the **human-review zone stops being an elegant design idea and becom
 A queue nobody knows how to clear silently becomes a queue nobody clears, and the team's response is
 to turn the zone off.
 
-Three facts do most of the work. **`docevals review` with no arguments lists what is waiting** —
+Three facts do most of the work. **`moose-docevals review` with no arguments lists what is waiting** —
 readers assume they need to hunt through a report, and they do not. **A recorded verdict persists**, so
 this is not a per-run tax; unchanged pages stay resolved. And **verdicts self-invalidate when the page
 changes**, which is the property that makes persistence safe rather than a way to accumulate stale

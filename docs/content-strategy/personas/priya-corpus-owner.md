@@ -27,7 +27,7 @@ journeys:
 # Persona: Priya
 
 **Scope:** the lead persona — the primary adopter and owner for
-[`aud-docs-platform-team`](../audiences/docs-platform-team.md). Priya configures docevals and lives
+[`aud-docs-platform-team`](../audiences/docs-platform-team.md). Priya configures moose-docevals and lives
 with it daily. She is not the person who defines the standard in a large org (that is
 [Sara](sara-standard-owner.md)) nor the person who operates the pipeline (that is
 [Devin](devin-pipeline-owner.md)), though below a certain team size she is all three.

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig } from "../helpers/config.js";
 import { extractFrontmatter } from "docmeta";
 import { stripFrontmatterBlock, type PageFile } from "../../src/core/discover.js";
 import { resolvePage } from "../../src/core/resolve.js";
@@ -16,7 +16,7 @@ import { parseMarkdownlintOutput } from "../../src/graders/tools/markdownlint.js
 import { docDetectiveGrader, lastJsonBlob } from "../../src/graders/tools/doc-detective.js";
 import type { ExecFn, ExecResult, GraderTarget } from "../../src/graders/types.js";
 
-const CONFIG = parseConfig("version: 1\n", "/fake/docevals.config.yaml");
+const CONFIG = parseDocevalsConfig("version: 1\n", "/fake/moose.config.yaml");
 
 function makeTarget(frontmatterYaml: string, body = "Body."): GraderTarget {
   const content = `---\n${frontmatterYaml}\n---\n${body}`;
@@ -121,7 +121,7 @@ describe("commandGrader", () => {
 
 describe("freshnessGrader", () => {
   const exec = fakeExec({}).exec;
-  const graderConfig = parseConfig(
+  const graderConfig = parseDocevalsConfig(
     [
       "version: 1",
       "evals:",
@@ -132,7 +132,7 @@ describe("freshnessGrader", () => {
       "suites:",
       "  s: { evals: [fresh] }",
     ].join("\n"),
-    "/fake/docevals.config.yaml",
+    "/fake/moose.config.yaml",
   );
 
   function freshTarget(frontmatter: string): GraderTarget {
@@ -227,7 +227,7 @@ describe("reading level", () => {
   });
 
   it("grader flags pages above maxGrade", async () => {
-    const graderConfig = parseConfig(
+    const graderConfig = parseDocevalsConfig(
       [
         "version: 1",
         "evals:",
@@ -238,7 +238,7 @@ describe("reading level", () => {
         "suites:",
         "  s: { evals: [readable] }",
       ].join("\n"),
-      "/fake/docevals.config.yaml",
+      "/fake/moose.config.yaml",
     );
     const body = Array(10)
       .fill(
@@ -265,7 +265,7 @@ describe("reading level", () => {
 });
 
 describe("docDetectiveGrader", () => {
-  const ddConfig = parseConfig(
+  const ddConfig = parseDocevalsConfig(
     [
       "version: 1",
       "evals:",
@@ -276,7 +276,7 @@ describe("docDetectiveGrader", () => {
       "suites:",
       "  s: { evals: [commands-work] }",
     ].join("\n"),
-    "/fake/docevals.config.yaml",
+    "/fake/moose.config.yaml",
   );
 
   function ddTarget(optionsYaml = ""): GraderTarget {

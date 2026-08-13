@@ -35,8 +35,8 @@ Anything else is a **usage error: exit 2**, with the allowed set in the message.
 Passing `run`'s `markdown` to `list` is rejected for the same reason.
 
 ```console
-$ docevals list docs/ --format xml
-docevals: --format must be one of human | json, got "xml"
+$ moose-docevals list docs/ --format xml
+moose-docevals: --format must be one of human | json, got "xml"
 $ echo $?
 2
 ```
@@ -49,7 +49,7 @@ silently falling back to the human report would hand `jq` ANSI colour codes and 
 The default. Per page, one line per eval; then per-suite aggregates.
 
 ```console
-$ docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate
+$ moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate
 test/fixtures/pages/docs/actions/goTo.mdx
   skip no-future-promises
        judge skipped (--deterministic-only)
@@ -140,9 +140,9 @@ Workflow commands for inline annotations, followed by the markdown summary — s
 both annotates the diff and works as `$GITHUB_STEP_SUMMARY`.
 
 ```text
-::error file=test/fixtures/pages/docs/actions/goTo.mdx,line=4,title=docevals%3A fresh-enough::Page last reviewed 937 days ago (max 365)
+::error file=test/fixtures/pages/docs/actions/goTo.mdx,line=4,title=moose-docevals%3A fresh-enough::Page last reviewed 937 days ago (max 365)
 
-## docevals results
+## moose-docevals results
 
 | Suite | Passed | Failed | Review | Pass rate | Target | |
 |---|---|---|---|---|---|---|
@@ -151,11 +151,11 @@ both annotates the diff and works as `$GITHUB_STEP_SUMMARY`.
 
 Severity maps to the annotation level: `error` → `::error`, `warning` → `::warning`, `info` →
 `::notice`. Values are escaped per GitHub's rules — `%`, CR, and LF in data; additionally `:` and
-`,` in properties, which is why the title reads `docevals%3A`.
+`,` in properties, which is why the title reads `moose-docevals%3A`.
 
 A failing **llm** eval annotates the file with the mean confidence and the judge's reasoning, since
 it has no line to point at:
 
 ```text
-::error file=...,title=docevals%3A no-future-promises::LLM judge: fail (confidence 0.93). <reasoning>
+::error file=...,title=moose-docevals%3A no-future-promises::LLM judge: fail (confidence 0.93). <reasoning>
 ```

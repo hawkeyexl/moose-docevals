@@ -1,7 +1,7 @@
 /**
- * `docevals calibrate` — measure judge agreement against a human-verified
+ * `moose-docevals calibrate` — measure judge agreement against a human-verified
  * golden set (the book's step 3: calibrate judges before trusting them).
- * Golden cases live in YAML files under .docevals/golden/ by default:
+ * Golden cases live in YAML files under .moose-docevals/golden/ by default:
  *
  *   - file: docs/install.md
  *     eval: no-future-promises      # llm-graded eval resolvable on that page
@@ -101,7 +101,7 @@ export async function runCalibrate(
 ): Promise<CalibrationReport> {
   const cwd = options.cwd ?? process.cwd();
   const config = loadConfig(options.config, cwd);
-  const goldenDir = resolve(cwd, options.golden ?? join(".docevals", "golden"));
+  const goldenDir = resolve(cwd, options.golden ?? join(".moose-docevals", "golden"));
   const cases = loadGoldenCases(goldenDir);
 
   const judge =

@@ -12,7 +12,7 @@ personas: [persona-retrofitter]
 features_emphasized:
   [fill, confidence-threshold, severity-warning, capability-suites, target-pass-rate, skip,
    promote, generate, max-cost]
-evidence_basis: [doc-detective-user-base, docs-as-tests-manuscript, docevals-surface]
+evidence_basis: [doc-detective-user-base, docs-as-tests-manuscript, moose-docevals-surface]
 ---
 
 # Audience: Brownfield corpus *(cross-cutting lens)*

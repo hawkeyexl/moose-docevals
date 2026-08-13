@@ -1,5 +1,5 @@
 /**
- * Shared result model for docevals.
+ * Shared result model for moose-docevals.
  *
  * Vocabulary follows the "Docs as Evals" methodology (Docs as Tests with AI):
  * every check is an *eval*; what differs is its *grader* (code-based, LLM-as-
@@ -8,7 +8,7 @@
  */
 
 // The judge vocabulary is shared with the inference layer and is re-exported
-// here so docevals code and its consumers keep one import site. A second local
+// here so moose-docevals code and its consumers keep one import site. A second local
 // definition would be a second thing to keep in sync.
 //
 //   Match          — a single run's verdict; `partial` counts as fail

@@ -11,15 +11,16 @@ Two mechanisms make the steady-state cost of a docs pull request approximately z
 ## Hard ceilings that abort
 
 ```yaml
-judge:
-  maxCostUsd: 2.0
-fill:
-  maxCostUsd: 5.0
+docevals:
+  judge:
+    maxCostUsd: 2.0
+  fill:
+    maxCostUsd: 5.0
 ```
 
 ```bash
-npx docevals run --max-cost 2
-npx docevals fill --max-cost 5
+npx moose-docevals run --max-cost 2
+npx moose-docevals fill --max-cost 5
 ```
 
 These **abort the run**; they are not warnings. `null` (the default) means no ceiling.
@@ -47,8 +48,8 @@ is why re-running at a different `--confidence` costs nothing.
 
 | Path | Default | Commit? |
 |---|---|---|
-| `judge.cacheDir` | `.docevals/cache` | No |
-| `fill.cacheDir` | `.docevals/cache/fill` | No |
+| `judge.cacheDir` | `.moose-docevals/cache` | No |
+| `fill.cacheDir` | `.moose-docevals/cache/fill` | No |
 
 ## Cache persistence is a correctness concern
 
@@ -58,9 +59,9 @@ the entire corpus on every push, and the resulting bill is the reason someone de
 ```yaml
       - uses: actions/cache@v4
         with:
-          path: .docevals/cache
-          key: docevals-${{ hashFiles('docevals.config.yaml') }}-${{ github.sha }}
-          restore-keys: docevals-${{ hashFiles('docevals.config.yaml') }}-
+          path: .moose-docevals/cache
+          key: moose-docevals-${{ hashFiles('moose.config.yaml') }}-${{ github.sha }}
+          restore-keys: moose-docevals-${{ hashFiles('moose.config.yaml') }}-
 ```
 
 The config hash belongs in the key: changing an assertion should invalidate verdicts, and this makes
@@ -82,14 +83,14 @@ persisting.
 
 **Push evals down the hierarchy.** The ratio of deterministic to judged evals decides whether the
 gate is affordable at ten times the corpus size. See
-[Promote to deterministic](/docevals/adopt/promote-to-deterministic/).
+[Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/).
 
 **Scope the trigger.** Only run on pull requests that touch docs:
 
 ```yaml
 on:
   pull_request:
-    paths: ["docs/**", "docevals.config.yaml"]
+    paths: ["docs/**", "moose.config.yaml"]
 ```
 
 **Run deterministic on every push, judged on pull requests.** `--deterministic-only` costs nothing
@@ -97,7 +98,7 @@ and catches most regressions.
 
 **Lower `judge.ensembleRuns` deliberately, or not at all.** Three runs is the calibrated default;
 dropping to one saves two thirds of the cost and removes the consensus signal that makes the
-human-review zone meaningful. Measure with [calibrate](/docevals/judge/calibrate/) before you decide
+human-review zone meaningful. Measure with [calibrate](/moose-docevals/judge/calibrate/) before you decide
 that trade is worth it.
 
 ## `--no-cache`

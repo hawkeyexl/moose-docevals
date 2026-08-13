@@ -12,11 +12,12 @@ are executed on every pull request.
 ## Add the eval
 
 ```yaml
-evals:
-  commands-work:
-    assertion: Every command the page presents runs and produces the documented result.
-    grader: tool:doc-detective
-    severity: error
+docevals:
+  evals:
+    commands-work:
+      assertion: Every command the page presents runs and produces the documented result.
+      grader: tool:doc-detective
+      severity: error
 ```
 
 Then put it in the suite your doc pages use, or set `defaults.suite` so every page gets it.
@@ -26,7 +27,7 @@ Then put it in the suite your doc pages use, or set `defaults.suite` so every pa
 Steps go at the foot of the `.mdx`, as MDX comments — invisible to readers, visible to the grader:
 
 ```mdx
-{/* STEP {"description":"Exit 0 when every eval passes.","runShell":{"command":"npx docevals run docs/intro.md --deterministic-only","exitCodes":[0]}} */}
+{/* STEP {"description":"Exit 0 when every eval passes.","runShell":{"command":"npx moose-docevals run docs/intro.md --deterministic-only","exitCodes":[0]}} */}
 ```
 
 :::note[Why this page writes `STEP` instead of `step`]
@@ -85,7 +86,7 @@ in *frontmatter*. Steps embedded in page *bodies* run regardless. On a fork pull
 controls both.
 
 The only complete control is gating the job itself to same-repo pull requests. See
-[Untrusted pull requests](/docevals/ci/untrusted-pull-requests/).
+[Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
 
 ## Make the commands runnable
@@ -94,7 +95,7 @@ If your CLI is unpublished, or you want to test the build rather than the releas
 build on `PATH` before running:
 
 ```bash
-npm run build && npm link && npm link @hawkeyexl/docevals
+npm run build && npm link && npm link moose-docevals
 ```
 
 Otherwise `npx <your-cli>` in a documented command resolves to whatever is installed globally — or
@@ -111,7 +112,7 @@ Add a step you know is wrong (writing `step`, not `STEP`):
 {/* STEP {"description":"PROBE.","runShell":{"command":"node -e \"process.exit(9)\"","exitCodes":[0]}} */}
 ```
 
-Run `docevals run` over the page and confirm it exits 1 with the step named in the finding. Then
+Run `moose-docevals run` over the page and confirm it exits 1 with the step named in the finding. Then
 remove it. Checking only the green direction is how a broken gate survives review.
 
 ## What a failure looks like

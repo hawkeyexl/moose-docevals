@@ -1,10 +1,10 @@
 ---
 title: Get started
-description: Install docevals, declare one assertion, and get a real finding on a real page.
+description: Install moose-docevals, declare one assertion, and get a real finding on a real page.
 ---
 
 Zero to a real finding. No concepts first — those are on the
-[next page](/docevals/get-started/how-docevals-works/), and you will understand them faster having
+[next page](/moose-docevals/get-started/how-moose-docevals-works/), and you will understand them faster having
 seen a run.
 
 Requires Node.js 24+.
@@ -12,14 +12,14 @@ Requires Node.js 24+.
 ## 1. Install and scaffold
 
 ```bash
-npm i -D @hawkeyexl/docevals
+npm i -D moose-docevals
 ```
 
 ```bash
-npx docevals init
+npx moose-docevals init
 ```
 
-`init` writes a starter `docevals.config.yaml`: a `files.include` glob, a pinned judge model, and a
+`init` writes a starter `moose.config.yaml`: a `files.include` glob, a pinned judge model, and a
 few named evals to start from — including `no-future-promises` and `fresh-enough`.
 
 ## 2. Get a finding without spending anything
@@ -27,14 +27,14 @@ few named evals to start from — including `no-future-promises` and `fresh-enou
 Before touching frontmatter or a provider, run the deterministic graders over your docs:
 
 ```bash
-npx docevals run --deterministic-only
+npx moose-docevals run --deterministic-only
 ```
 
 `--deterministic-only` skips the LLM judge entirely, so this needs no API key and costs nothing. On
 a corpus that has never been checked, `fresh-enough` alone usually finds something.
 
 ```console
-$ npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate
+$ npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate
 test/fixtures/pages/docs/actions/goTo.mdx
   skip no-future-promises
        judge skipped (--deterministic-only)
@@ -48,7 +48,7 @@ Suites
 ```
 
 Read the finding line as `severity:line [ruleId] message`. The exit code is `1` — a finding, not an
-error. [Exit codes](/docevals/reference/output-and-exit-codes/) explains why that distinction
+error. [Exit codes](/moose-docevals/reference/output-and-exit-codes/) explains why that distinction
 matters.
 
 ## 3. Declare your own eval
@@ -69,12 +69,12 @@ evals:
 
 Two entries, two different things. `no-future-promises` **references** a named eval from your
 config. The second **defines** one inline — and being `command`-graded with an assertion but no
-command, docevals will write the check script for it.
+command, moose-docevals will write the check script for it.
 
 Check what resolved before running anything:
 
 ```bash
-npx docevals list docs/installation.mdx
+npx moose-docevals list docs/installation.mdx
 ```
 
 ## 4. Add the judge
@@ -83,39 +83,39 @@ Set your key and drop `--deterministic-only`:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-…
-npx docevals run docs/installation.mdx
+npx moose-docevals run docs/installation.mdx
 ```
 
 Each llm eval runs three times independently; agreement decides the verdict, and anything the judge
-is unsure about routes to [human review](/docevals/judge/human-review/) rather than guessing.
+is unsure about routes to [human review](/moose-docevals/judge/human-review/) rather than guessing.
 
 No API key, or a security review to satisfy? The `claude-cli` provider uses local CLI auth and needs
 no key, and the `openai` provider takes any OpenAI-compatible `baseUrl` including a self-hosted one.
-See [Choose a provider](/docevals/judge/choose-a-provider/).
+See [Choose a provider](/moose-docevals/judge/choose-a-provider/).
 
 ## 5. Gate a pull request
 
 ```yaml
-- name: docevals
-  run: npx docevals run --format github
+- name: moose-docevals
+  run: npx moose-docevals run --format github
   env:
     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
 `--format github` annotates the offending lines inline in the diff. Full recipes, the exit-code
-contract, and the fork-safety rules are in [Run it in CI](/docevals/ci/).
+contract, and the fork-safety rules are in [Run it in CI](/moose-docevals/ci/).
 
 ## Where to go next
 
 | You want to | Go to |
 |---|---|
-| Understand what just happened | [How docevals works](/docevals/get-started/how-docevals-works/) |
-| Write assertions that hold up | [Write good assertions](/docevals/evals/write-good-assertions/) |
-| Cover a corpus you can't annotate by hand | [Adopt at scale](/docevals/adopt/) |
-| Wire this into CI properly | [Run it in CI](/docevals/ci/) |
+| Understand what just happened | [How moose-docevals works](/moose-docevals/get-started/how-moose-docevals-works/) |
+| Write assertions that hold up | [Write good assertions](/moose-docevals/evals/write-good-assertions/) |
+| Cover a corpus you can't annotate by hand | [Adopt at scale](/moose-docevals/adopt/) |
+| Wire this into CI properly | [Run it in CI](/moose-docevals/ci/) |
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"The deterministic path runs with no API key and reports a real finding.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"/freshness\\/stale/"}} */}
+{/* step {"description":"The deterministic path runs with no API key and reports a real finding.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"/freshness\\/stale/"}} */}
 
-{/* step {"description":"`list` shows the resolved plan without running anything.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"evals resolved"}} */}
+{/* step {"description":"`list` shows the resolved plan without running anything.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"evals resolved"}} */}

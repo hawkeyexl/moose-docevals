@@ -1,5 +1,5 @@
 /**
- * Resolution: merge a page's `docevals` frontmatter with the central config
+ * Resolution: merge a page's `moose-docevals` frontmatter with the central config
  * into a concrete per-page plan. Suites contribute named evals; page entries
  * reference them (with overrides) or define inline evals. Page entries win on
  * name collision.
@@ -39,7 +39,7 @@ export interface PageProblem {
 
 export interface ResolvedPagePlan {
   page: PageFile;
-  /** Page-level skip (docevals.skip: true). */
+  /** Page-level skip (moose-docevals.skip: true). */
   skip: boolean;
   suite: string | null;
   generatedBy?: string;

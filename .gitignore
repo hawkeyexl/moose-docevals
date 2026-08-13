@@ -1,6 +1,6 @@
 node_modules/
 dist/
-.docevals/
+.moose-docevals/
 *.tsbuildinfo
 .DS_Store
 
@@ -9,11 +9,11 @@ dist/
 .tmp/
 
 # Report written by the CI dogfood gate; also produced by a local dogfood run.
-docevals-run.json
+moose-docevals-run.json
 
 # Doc Detective run output (see .doc-detective.json `output`). Written whenever
 # the tool:doc-detective grader runs over the docs corpus.
-# NOTE: docs/.docevals-cache/ is deliberately NOT ignored — it holds the
+# NOTE: docs/.moose-docevals-cache/ is deliberately NOT ignored — it holds the
 # committed judge cache that lets verify-docs replay without an API key.
-# See adrs/01004-test-the-docs-through-docevals-itself.md.
+# See adrs/01004-test-the-docs-through-moose-docevals-itself.md.
 .doc-detective/

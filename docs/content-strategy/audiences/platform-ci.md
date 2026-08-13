@@ -10,7 +10,7 @@ personas: [persona-pipeline-owner]
 features_emphasized:
   [exit-codes, format-github, format-json, max-cost, response-cache, no-frontmatter-commands,
    deterministic-only, provider-secrets]
-evidence_basis: [docmeta-content-strategy, docevals-surface]
+evidence_basis: [docmeta-content-strategy, moose-docevals-surface]
 ---
 
 # Audience: Platform / CI engineers

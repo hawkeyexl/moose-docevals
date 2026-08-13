@@ -3,7 +3,7 @@ id: cuj-fix-red-check
 type: cuj
 title: Fix a failing eval fast
 personas: [persona-contributor]
-trigger: "A pull request is red because of a docevals check the author did not write"
+trigger: "A pull request is red because of a moose-docevals check the author did not write"
 entry_point: docs/src/content/docs/fix/index.mdx
 success_criteria: >
   The author identifies which check failed, makes the smallest correct change or escalates
@@ -20,11 +20,11 @@ steps:
 # CUJ: Fix a failing eval fast
 
 **Scope:** one contributor, one red check, one page. This journey ends when the pull request is green
-or correctly escalated. It never expands into configuring, authoring, or operating docevals — those
+or correctly escalated. It never expands into configuring, authoring, or operating moose-docevals — those
 belong to journeys this reader will not take.
 
 **Trigger.** [Theo](../personas/theo-contributor.md) pushed a change and a check he did not configure
-went red. He learns about docevals from a CI annotation and expects to stop learning about it four
+went red. He learns about moose-docevals from a CI annotation and expects to stop learning about it four
 minutes later.
 
 **Narrative.** By page views this is the **highest-traffic journey on the site**, and by depth the
@@ -32,7 +32,7 @@ shallowest. Every contributor who ever trips a check arrives here, most of them 
 well is also how the gate survives its first month: a blocked contributor who cannot self-serve
 escalates to the docs team, and enough of that gets the check removed.
 
-**Triage is the first screen and nothing else works until it is solved.** docevals produces at least
+**Triage is the first screen and nothing else works until it is solved.** moose-docevals produces at least
 five failures that look alike in a CI log and have unrelated remedies:
 
 | What he sees | What it actually is | What he does |
@@ -50,7 +50,7 @@ the failing example shows what violating it looks like, and between them the off
 usually obvious. That move is the single most valuable thing his page teaches.
 
 Third: **reproducing locally is not obvious.** CI had a provider key and a warm cache; his laptop has
-neither, so a naive local run either fails on a missing credential or costs him money. `docevals run
+neither, so a naive local run either fails on a missing credential or costs him money. `moose-docevals run
 --deterministic-only <one file>` is nearly always the right local check, and he will never guess it.
 
 This journey enforces the site's one hard structural constraint: **`fix/index.mdx` has no subject

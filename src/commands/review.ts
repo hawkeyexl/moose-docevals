@@ -1,10 +1,10 @@
 /**
- * `docevals review` — record human verdicts for evals in the human-review
+ * `moose-docevals review` — record human verdicts for evals in the human-review
  * zone. A verdict binds to the page's current content hash; edits to the page
  * return the eval to needs-review on the next run.
  *
- *   docevals review                       # list recorded reviews
- *   docevals review <file> <eval> pass    # record a verdict
+ *   moose-docevals review                       # list recorded reviews
+ *   moose-docevals review <file> <eval> pass    # record a verdict
  */
 import { existsSync } from "node:fs";
 import { resolve, relative } from "node:path";

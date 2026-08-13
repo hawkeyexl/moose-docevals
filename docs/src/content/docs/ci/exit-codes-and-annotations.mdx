@@ -19,7 +19,7 @@ trust and one they route around.
 A recipe like this is wrong:
 
 ```yaml
-- run: npx docevals run || echo "docs check failed"
+- run: npx moose-docevals run || echo "docs check failed"
 ```
 
 So is anything that reports every non-zero exit as "the docs are bad". When the provider key is
@@ -30,17 +30,17 @@ the step.
 Route them separately:
 
 ```yaml
-      - name: docevals
-        id: docevals
+      - name: moose-docevals
+        id: moose-docevals
         continue-on-error: true
-        run: npx docevals run --format github
+        run: npx moose-docevals run --format github
 
       - name: Fail the PR on findings
-        if: steps.docevals.outcome == 'failure'
+        if: steps.moose-docevals.outcome == 'failure'
         run: |
-          code=${{ steps.docevals.outputs.exit-code || '1' }}
+          code=${{ steps.moose-docevals.outputs.exit-code || '1' }}
           if [ "$code" = "2" ]; then
-            echo "::error::docevals could not run — this is a pipeline problem, not a docs problem."
+            echo "::error::moose-docevals could not run — this is a pipeline problem, not a docs problem."
           fi
           exit 1
 ```
@@ -63,7 +63,7 @@ This is a genuine policy fork, not a best practice:
 
 The deciding question is whether anyone owns the review queue. If nobody does, blocking on it just
 converts a rotting queue into blocked contributors. See
-[Human review](/docevals/judge/human-review/).
+[Human review](/moose-docevals/judge/human-review/).
 
 ## Inline annotations
 
@@ -71,7 +71,7 @@ converts a rotting queue into blocked contributors. See
 annotates the diff and produces a job summary.
 
 ```text
-::error file=docs/actions/goTo.mdx,line=4,title=docevals%3A fresh-enough::Page last reviewed 937 days ago (max 365)
+::error file=docs/actions/goTo.mdx,line=4,title=moose-docevals%3A fresh-enough::Page last reviewed 937 days ago (max 365)
 ```
 
 Severity maps to the annotation level:
@@ -83,7 +83,7 @@ Severity maps to the annotation level:
 | `info` | `::notice` |
 
 Values are escaped per GitHub's rules — `%`, CR and LF in data; additionally `:` and `,` in
-properties, which is why the title renders as `docevals%3A fresh-enough`.
+properties, which is why the title renders as `moose-docevals%3A fresh-enough`.
 
 ### Judged failures annotate the file
 
@@ -91,11 +91,11 @@ An llm eval has no line to point at, so it annotates the file with the mean conf
 judge's reasoning:
 
 ```text
-::error file=docs/tutorial.mdx,title=docevals%3A no-future-promises::LLM judge: fail (confidence 0.93). <reasoning>
+::error file=docs/tutorial.mdx,title=moose-docevals%3A no-future-promises::LLM judge: fail (confidence 0.93). <reasoning>
 ```
 
 That reasoning is what a contributor acts on. It is only as good as the assertion behind it — see
-[Write good assertions](/docevals/evals/write-good-assertions/).
+[Write good assertions](/moose-docevals/evals/write-good-assertions/).
 
 ## Suites below target fail the run
 
@@ -106,20 +106,20 @@ Suites
 
 Exit `1`, even if no individual eval errored. A capability suite left at the default target of `1.0`
 is the most common cause of a surprising red build — see
-[Regression vs capability](/docevals/evals/regression-vs-capability/).
+[Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
 ## Job summary
 
 ```yaml
-      - run: npx docevals run --format github | tee "$GITHUB_STEP_SUMMARY"
+      - run: npx moose-docevals run --format github | tee "$GITHUB_STEP_SUMMARY"
 ```
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"Exit 0: every eval passes.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"Exit 0: every eval passes.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
 
-{/* step {"description":"Exit 1: a finding, or a suite below its target.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"below target"}} */}
+{/* step {"description":"Exit 1: a finding, or a suite below its target.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"below target"}} */}
 
-{/* step {"description":"Exit 2: an operational error, distinct from a finding.","runShell":{"command":"npx docevals run -c does-not-exist.yaml","exitCodes":[2]}} */}
+{/* step {"description":"Exit 2: an operational error, distinct from a finding.","runShell":{"command":"npx moose-docevals run -c does-not-exist.yaml","exitCodes":[2]}} */}
 
-{/* step {"description":"github format emits an ::error with file and line for a finding with a known line.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate --format github","exitCodes":[1],"stdio":"/::error file=.*,line=4,/"}} */}
+{/* step {"description":"github format emits an ::error with file and line for a finding with a known line.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate --format github","exitCodes":[1],"stdio":"/::error file=.*,line=4,/"}} */}

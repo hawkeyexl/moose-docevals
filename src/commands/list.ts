@@ -1,5 +1,5 @@
 /**
- * `docevals list` — dry-run: show the resolved eval plan for each discovered
+ * `moose-docevals list` — dry-run: show the resolved eval plan for each discovered
  * page without executing anything. The fastest way to debug suite/frontmatter
  * resolution.
  */

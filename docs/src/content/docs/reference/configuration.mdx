@@ -1,13 +1,38 @@
 ---
 title: Configuration reference
-description: Every docevals.config.yaml key, its type, and its default.
+description: Every moose.config.yaml key, its type, and its default.
 ---
 
 Every key, verified against `src/core/config-schema.json` and the defaults applied in
-`src/core/config.ts`. Unknown keys are rejected — the schema sets `additionalProperties: false` at
-every level, so a typo is a startup error rather than a silently ignored setting.
+`src/core/config.ts`.
 
-With no config file present, every default below applies and there are no named evals or suites.
+## The `docevals` namespace
+
+`moose.config.yaml` is shared by every tool in the moose family. Each tool reads one top-level key,
+so **every setting on this page lives under `docevals:`**:
+
+```yaml
+docevals:
+  version: 1
+  judge:
+    ensembleRuns: 3
+```
+
+The key names in the tables below are written relative to that namespace: `files.include` means
+`docevals.files.include` in the file.
+
+Root keys moose-docevals does not recognize belong to sibling tools and are ignored, so another
+tool's settings can sit beside yours in the same file. Inside `docevals:`, unknown keys are rejected
+at every level — a typo there is a startup error rather than a silently ignored setting.
+
+One consequence is worth knowing: because the root is permissive, misspelling the namespace itself
+(`docevlas:`) is not an error. moose-docevals reads it as another tool's config and runs on pure
+defaults — no named evals, no suites, and a passing exit code. `moose-docevals init` writes the key
+correctly; if a run reports far fewer evals than you expect, check that spelling first.
+
+With no config file present, every default below applies and there are no named evals or suites. A
+file left over from before the rename — `docevals.config.yaml` — is not read; moose-docevals stops
+and tells you to migrate rather than silently running on defaults.
 
 ## `version`
 
@@ -45,7 +70,7 @@ Positional globs on the CLI override `files.include` for that run.
 
 `provider.anthropic.pricing` and `provider.openai.pricing` each take `inputPerMTok` and
 `outputPerMTok` numbers, overriding the built-in price table for cost reporting. See
-[Choose a provider](/docevals/judge/choose-a-provider/).
+[Choose a provider](/moose-docevals/judge/choose-a-provider/).
 
 ## `judge`
 
@@ -56,25 +81,25 @@ Positional globs on the CLI override `files.include` for that run.
 | `judge.zones.autoPass` | number 0–1 | `0.8` | Confidence at or above which a passing consensus auto-passes. |
 | `judge.zones.autoFail` | number 0–1 | `0.8` | Confidence at or above which a failing consensus auto-fails. |
 | `judge.falsePositiveAlert` | number 0–1 | `0.15` | Calibration alerts above this false-positive rate. |
-| `judge.cacheDir` | string | `.docevals/cache` | |
+| `judge.cacheDir` | string | `.moose-docevals/cache` | |
 | `judge.maxCostUsd` | number \| null | `null` | Hard ceiling that aborts, not a warning. |
 
 Anything between the two zone thresholds lands in human review. See
-[How judging works](/docevals/judge/).
+[How judging works](/moose-docevals/judge/).
 
 ## `scripts`
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `scripts.dir` | string | `{docDir}/docevals` | Where generated scripts go. `{docDir}` expands to the page's directory. |
-| `scripts.configDir` | string | `docevals-scripts` | Used when `scripts.dir` has no `{docDir}`; resolved relative to the config file. |
+| `scripts.dir` | string | `{docDir}/moose-docevals` | Where generated scripts go. `{docDir}` expands to the page's directory. |
+| `scripts.configDir` | string | `moose-docevals-scripts` | Used when `scripts.dir` has no `{docDir}`; resolved relative to the config file. |
 | `scripts.allowFrontmatterCommands` | boolean | `true` | Gates `command` evals declared in page frontmatter. |
 | `scripts.timeoutMs` | integer ≥ 1 | `30000` | |
 
 :::caution
 `scripts.allowFrontmatterCommands` gates **frontmatter-declared commands only**. The
 `tool:doc-detective` grader executes steps embedded in page bodies and is not covered by it. See
-[Untrusted pull requests](/docevals/ci/untrusted-pull-requests/).
+[Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
 
 ## `fill`
@@ -84,7 +109,7 @@ Anything between the two zone thresholds lands in human review. See
 | `fill.confidenceThreshold` | number 0–1 | `0.7` |
 | `fill.maxEvalsPerPage` | integer ≥ 1 | `3` |
 | `fill.temperature` | number ≥ 0 | `0` |
-| `fill.cacheDir` | string | `.docevals/cache/fill` |
+| `fill.cacheDir` | string | `.moose-docevals/cache/fill` |
 | `fill.maxCostUsd` | number \| null | `null` |
 
 ## `evals`
@@ -92,19 +117,20 @@ Anything between the two zone thresholds lands in human review. See
 A map of eval name to definition. Names match `^[a-z0-9][a-z0-9-]*$`.
 
 Every field an eval can carry is documented in
-[Frontmatter reference](/docevals/reference/frontmatter/) — the same shape applies whether the eval
+[Frontmatter reference](/moose-docevals/reference/frontmatter/) — the same shape applies whether the eval
 is defined here or inline on a page.
 
 ```yaml
-evals:
-  no-future-promises:
-    type: regression
-    assertion: The page makes no claims about unreleased or future functionality.
-    grader: llm
-    evidence: All prose sections
-    examples:
-      pass: Describes only shipped behavior.
-      fail: Says "coming soon" or references an unreleased version.
+docevals:
+  evals:
+    no-future-promises:
+      type: regression
+      assertion: The page makes no claims about unreleased or future functionality.
+      grader: llm
+      evidence: All prose sections
+      examples:
+        pass: Describes only shipped behavior.
+        fail: Says "coming soon" or references an unreleased version.
 ```
 
 ## `suites`
@@ -117,13 +143,14 @@ A map of suite name to definition.
 | `evals` | string[] | `[]` |
 
 ```yaml
-suites:
-  reference:
-    targetPassRate: 1.0
-    evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
-  tutorial:
-    targetPassRate: 0.7
-    evals: [explains-why-before-how, no-future-promises]
+docevals:
+  suites:
+    reference:
+      targetPassRate: 1.0
+      evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
+    tutorial:
+      targetPassRate: 0.7
+      evals: [explains-why-before-how, no-future-promises]
 ```
 
 ## Referential integrity

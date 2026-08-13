@@ -1,6 +1,6 @@
 /**
  * Judge cache key composition. The cache itself is the inference library's
- * `JsonCache`; what stays here is what only docevals can decide — what
+ * `JsonCache`; what stays here is what only moose-docevals can decide — what
  * invalidates an entry: provider, model, prompt version, run count,
  * temperature, the page body, and the resolved eval.
  */

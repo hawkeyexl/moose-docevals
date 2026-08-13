@@ -2,8 +2,8 @@
 
 **This directory is version-controlled on purpose.** It is not a build artifact.
 
-`docs/docevals.config.yaml` points `judge.cacheDir` and `fill.cacheDir` here rather than at the
-default `.docevals/cache`, which the repo-root `.gitignore` excludes. Committing the cache is what
+`docs/moose.config.yaml` points `judge.cacheDir` and `fill.cacheDir` here rather than at the
+default `.moose-docevals/cache`, which the repo-root `.gitignore` excludes. Committing the cache is what
 lets the `verify-docs` CI job replay LLM verdicts for the docs site **with no `ANTHROPIC_API_KEY`** —
 the same guarantee the deterministic graders already give, extended to the judged evals.
 
@@ -37,4 +37,4 @@ npm run build && npm run docs:refresh-cache
 Then review the diff before committing. A verdict that flipped is a signal about the page, not noise
 to be committed past.
 
-See ADR `01004-test-the-docs-through-docevals-itself.md`.
+See ADR `01004-test-the-docs-through-moose-docevals-itself.md`.

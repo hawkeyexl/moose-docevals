@@ -83,9 +83,9 @@ takes every field below.
 | `successExitCodes` | integer[] | `[0]` | Exit codes treated as a pass. |
 | `timeoutMs` | integer ≥ 1 | grader-specific | |
 | `generated.assertionHash` | string | — | Written by script generation; a mismatch means the script is stale. |
-| `options` | object | `{}` | Grader-specific. See [Graders](/docevals/reference/graders/). |
+| `options` | object | `{}` | Grader-specific. See [Graders](/moose-docevals/reference/graders/). |
 | `severity` | `error` \| `warning` \| `info` | `error` | Only `error` findings fail the build. |
-| `severityMap` | object | — | Maps a tool's own severities onto docevals severities. |
+| `severityMap` | object | — | Maps a tool's own severities onto moose-docevals severities. |
 
 ## Resolution order
 
@@ -96,7 +96,7 @@ For each page, the plan is built in this order:
    inline definition replaces it.
 
 **Page entries win on name collision.** Local override beats global default, which is the right
-behavior and invisible until it bites — so check the resolved plan with `docevals list` rather than
+behavior and invisible until it bites — so check the resolved plan with `moose-docevals list` rather than
 by running.
 
 Every resolved eval records its `source` as `config` or `page`, which `list` prints.
@@ -120,23 +120,24 @@ Errors carry the source line, resolved through docmeta's JSON-Pointer line map.
 The schema ships in the package, so any JSON Schema validator can check your pages:
 
 ```bash
-docmeta validate --schema node_modules/@hawkeyexl/docevals/schemas/frontmatter-0.1.json docs/
+docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
 ```
 
 Or wire it in as an eval, so bad declarations fail the run like any other check:
 
 ```yaml
-evals:
-  frontmatter-valid:
-    assertion: Page frontmatter matches the docevals schema.
-    grader: tool:docmeta
-    options:
-      schemas: ["node_modules/@hawkeyexl/docevals/schemas/frontmatter-0.1.json"]
-    severity: error
+docevals:
+  evals:
+    frontmatter-valid:
+      assertion: Page frontmatter matches the moose-docevals schema.
+      grader: tool:docmeta
+      options:
+        schemas: ["node_modules/moose-docevals/schemas/frontmatter-0.1.json"]
+      severity: error
 ```
 
 Programmatic consumers can import the schema object or its resolved path:
 
 ```js
-import { frontmatterSchema, frontmatterSchemaPath } from "@hawkeyexl/docevals";
+import { frontmatterSchema, frontmatterSchemaPath } from "moose-docevals";
 ```

@@ -1,5 +1,5 @@
 /**
- * `docevals generate` — generate check scripts for command-graded evals that
+ * `moose-docevals generate` — generate check scripts for command-graded evals that
  * have a plain-language assertion but no command yet (or whose assertion
  * changed since generation), without running any evals.
  */

@@ -1,5 +1,5 @@
 /**
- * `docevals run` — execute the full pipeline. Deterministic graders run
+ * `moose-docevals run` — execute the full pipeline. Deterministic graders run
  * first (cheap-first ordering); the LLM judge stage runs when a provider is
  * available and not disabled.
  */
@@ -61,7 +61,7 @@ export async function runRun(
       if (options.llmOnly || !(e instanceof DocevalsError)) throw e;
       if (!options.deterministicOnly || options.generate === true) {
         console.warn(
-          `docevals: provider unavailable — ${e.message}. Running deterministic evals only.`,
+          `moose-docevals: provider unavailable — ${e.message}. Running deterministic evals only.`,
         );
       }
     }

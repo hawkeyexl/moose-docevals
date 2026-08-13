@@ -3,7 +3,7 @@ title: Untrusted pull requests
 description: What a content file can cause to execute, why one flag is not enough, and how to gate the job.
 ---
 
-docevals runs code that content files ask it to run. On a pull request from a fork, the person
+moose-docevals runs code that content files ask it to run. On a pull request from a fork, the person
 supplying those content files is a stranger.
 
 Read this before enabling the gate on a public repository.
@@ -69,7 +69,7 @@ Then give forks a separate job that executes nothing and needs no secret:
       - uses: actions/setup-node@v5
         with: { node-version: 24, cache: npm }
       - run: npm ci
-      - run: npx docevals run --deterministic-only --no-frontmatter-commands --format github
+      - run: npx moose-docevals run --deterministic-only --no-frontmatter-commands --format github
 ```
 
 Fork contributors still get freshness, lint, structure, and frontmatter validation — most of the

@@ -18,15 +18,16 @@ An eval fails only if it produced at least one `error`-severity finding. `warnin
 in the report and in PR annotations, and pass.
 
 ```yaml
-evals:
-  markdownlint:
-    assertion: Page passes markdownlint rules.
-    grader: tool:markdownlint
-    severity: warning        # reports, does not block
-  frontmatter-valid:
-    assertion: Page frontmatter validates.
-    grader: tool:docmeta
-    severity: error          # blocks
+docevals:
+  evals:
+    markdownlint:
+      assertion: Page passes markdownlint rules.
+      grader: tool:markdownlint
+      severity: warning        # reports, does not block
+    frontmatter-valid:
+      assertion: Page frontmatter validates.
+      grader: tool:docmeta
+      severity: error          # blocks
 ```
 
 `severity` defaults to `error`.
@@ -44,7 +45,7 @@ The move is **not** to weaken the assertion. It is to lower the severity:
 
 Weakening the assertion instead permanently encodes the corpus's current state as your standard, and
 nobody ever tightens it back. Full sequencing in
-[Retrofit a legacy corpus](/docevals/adopt/retrofit-a-legacy-corpus/).
+[Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
 You can ratchet per page while you work, using an override:
 
@@ -93,17 +94,17 @@ Vale defaults to exactly that mapping. Any tool severity you do not map falls ba
 which is what makes `--format github` able to annotate the exact line.
 
 Severity also maps onto annotation levels: `error` → `::error`, `warning` → `::warning`, `info` →
-`::notice`. See [Output and exit codes](/docevals/reference/output-and-exit-codes/).
+`::notice`. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/).
 
 ## Severity is not the LLM's
 
 Severity applies to deterministic graders. A judged eval's outcome comes from consensus and
-confidence zones instead — see [How judging works](/docevals/judge/). The capability suite target is
+confidence zones instead — see [How judging works](/moose-docevals/judge/). The capability suite target is
 the judged analog of the ratchet; see
-[Regression vs capability](/docevals/evals/regression-vs-capability/).
+[Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"A warning-severity finding reports without failing the page.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/get-started/concepts.md --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"A warning-severity finding reports without failing the page.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/get-started/concepts.md --deterministic-only --no-generate","exitCodes":[0]}} */}
 
-{/* step {"description":"The same check at error severity fails, and the finding carries severity, line, and rule id.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"[freshness/stale]"}} */}
+{/* step {"description":"The same check at error severity fails, and the finding carries severity, line, and rule id.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"[freshness/stale]"}} */}

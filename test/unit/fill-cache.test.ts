@@ -16,7 +16,7 @@ const PROPOSAL = {
 };
 
 function tempDir(): string {
-  return mkdtempSync(join(tmpdir(), "docevals-fill-cache-"));
+  return mkdtempSync(join(tmpdir(), "moose-docevals-fill-cache-"));
 }
 
 describe("fillCacheKey", () => {
