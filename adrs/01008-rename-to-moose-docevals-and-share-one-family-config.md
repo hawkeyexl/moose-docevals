@@ -83,9 +83,20 @@ The namespace key stays `docevals:`, **not** `moose-docevals:`. Within a `moose.
 prefix is already implied by the filename; repeating it in every key would be noise.
 
 A legacy `docevals.config.yaml` is **not** loaded. But because a silently-defaulted run is the worst
-outcome (it passes), the loader checks for the old filename when no `moose.config.yaml` is found and
-raises a `DocevalsError` naming the migration, rather than falling through to defaults. This is a
-one-line guard, not a compatibility path — it errors, it does not read the file.
+outcome (it passes), two guards stand in front of it. Neither is a compatibility path — both error,
+and neither reads a legacy file:
+
+1. **By filename.** `loadConfig` checks for `docevals.config.yaml` when no `moose.config.yaml` is
+   found in the working directory, and raises a `DocevalsError` naming the migration.
+2. **By shape.** `--config <path>` hands `parseConfig` a file directly, never passing that filename
+   check — so a pre-rename config under any name would parse to pure defaults. `parseConfig`
+   therefore rejects a root that has no `docevals:` key but *does* carry keys only a docevals config
+   has (`version`, `files`, `judge`, `evals`, `suites`, …), and names the offending keys.
+
+The second guard is the load-bearing one: CI pipelines pass `-c` explicitly far more often than they
+rely on discovery, and this repo's own `docs:verify` does exactly that. A sibling tool's config is
+unaffected, because the family contract puts every tool's settings under its own namespace key —
+root-level `files:` is unambiguous evidence of an unmigrated file.
 
 Renamed alongside, for consistency:
 
@@ -95,9 +106,23 @@ Renamed alongside, for consistency:
 | Fill cache dir (default) | `.docevals/cache/fill` | `.moose-docevals/cache/fill` |
 | Generated script dir (default) | `{docDir}/docevals` | `{docDir}/moose-docevals` |
 | Script config dir (default) | `docevals-scripts` | `moose-docevals-scripts` |
+| Human reviews | `.docevals/reviews.yaml` | `.moose-docevals/reviews.yaml` |
+| Calibration golden set (default) | `.docevals/golden/` | `.moose-docevals/golden/` |
 | Live-test env var | `DOCEVALS_LIVE` | `MOOSE_DOCEVALS_LIVE` |
-| Fixture env var | `DOCEVALS_FILE` | `MOOSE_DOCEVALS_FILE` |
+| Page-path env var passed to command graders | `DOCEVALS_FILE` | `MOOSE_DOCEVALS_FILE` |
 | Frontmatter schema `$id` | `…/docevals/schemas/…` | `…/moose-docevals/schemas/…` |
+| GitHub Pages base path | `/docevals` | `/moose-docevals` |
+
+The last two rows of on-disk state deserve a call-out: `reviews.yaml` and `golden/` are the only
+**committed team state** in that list (the caches are disposable — see
+`reference/files-and-state`). Moving them means a repo carrying human verdicts must move the
+directory too, or every reviewed eval silently returns to needs-review. Nothing warns about this,
+because a missing reviews file is indistinguishable from a repo that has never recorded one.
+
+`MOOSE_DOCEVALS_FILE` has a matching consequence for generated check scripts: `scriptgen`'s system
+prompt tells the model the page path arrives as `process.argv[2]` *or* that variable, so any
+already-generated script reading the old name loses its fallback. `argv[2]` is still passed, and
+generated scripts prefer it, so this only bites a hand-edited script that reads the env var alone.
 
 Deliberately **not** renamed:
 
@@ -129,9 +154,12 @@ Deliberately **not** renamed:
 ### Confirmation
 
 - `test/unit/config.test.ts` pins the shape: a config nested under `docevals:` parses; sibling root keys
-  are ignored rather than rejected; an unknown key *inside* `docevals:` is still an error; and a
-  directory containing only `docevals.config.yaml` raises the migration error instead of returning
-  defaults.
+  are ignored rather than rejected; an unknown key *inside* `docevals:` is still an error; a root
+  carrying pre-rename keys with no namespace is rejected by shape; and a directory containing only
+  `docevals.config.yaml` raises the migration error instead of returning defaults.
+- `test/unit/init.test.ts` loads the `init` scaffold back through the real loader and asserts its
+  evals and suites survive, rather than matching the scaffold's text — a text match would pass on a
+  config the loader ignores.
 - `test/unit/schema.test.ts` pins the published frontmatter schema's `$id`.
 - The `verify-docs` job executes the docs' inline Doc Detective steps, so any `npx docevals` left in a
   documented command fails CI rather than merely going stale.

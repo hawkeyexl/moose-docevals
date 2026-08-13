@@ -11,6 +11,9 @@ dist/
 # Report written by the CI dogfood gate; also produced by a local dogfood run.
 moose-docevals-run.json
 
+# Scratch workspace built by the CI moose-config-contract gate.
+.ci-config-check/
+
 # Doc Detective run output (see .doc-detective.json `output`). Written whenever
 # the tool:doc-detective grader runs over the docs corpus.
 # NOTE: docs/.moose-docevals-cache/ is deliberately NOT ignored — it holds the

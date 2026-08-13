@@ -92,6 +92,22 @@ export const DEFAULT_CONFIG_FILENAME = "moose.config.yaml";
 /** The pre-rename filename, kept only to raise a migration error. Never read. */
 const LEGACY_CONFIG_FILENAME = `${NAMESPACE}.config.yaml`;
 
+/**
+ * Root keys that only a pre-rename config has. A moose config namespaces every
+ * tool, so finding these at the root means the file was never migrated.
+ */
+const PRE_RENAME_ROOT_KEYS = [
+  "version",
+  "files",
+  "defaults",
+  "provider",
+  "judge",
+  "scripts",
+  "fill",
+  "evals",
+  "suites",
+];
+
 const ajv = new Ajv2020({ allErrors: true, allowUnionTypes: true });
 const validateConfig = ajv.compile(configSchema);
 
@@ -112,6 +128,22 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
   }
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new DocevalsError(`Invalid config in ${configPath}: root must be an object`);
+  }
+
+  // `--config <path>` reaches here without passing loadConfig's filename check,
+  // so a pre-rename file named anything at all would otherwise parse to pure
+  // defaults — no evals, no suites, exit 0. Catch it by shape instead.
+  if (!(NAMESPACE in raw)) {
+    const stray = PRE_RENAME_ROOT_KEYS.filter((k) => k in raw);
+    if (stray.length > 0) {
+      throw new DocevalsError(
+        `Invalid config in ${configPath}: found ${stray.join(", ")} at the root, ` +
+          `but no "${NAMESPACE}:" key.\n` +
+          `moose.config.yaml is shared across the moose family, so every docevals ` +
+          `setting belongs under a top-level "${NAMESPACE}:" key. Indent the file's ` +
+          `contents one level and add that key.`,
+      );
+    }
   }
   if (!validateConfig(raw)) {
     const details = (validateConfig.errors ?? [])

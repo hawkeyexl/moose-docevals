@@ -9,7 +9,8 @@ import {
 } from "../../src/core/frontmatter-edit.js";
 import { makeGenerateScripts, scriptLocationFor } from "../../src/graders/scriptgen.js";
 import { MockProvider } from "@hawkeyexl/inference";
-import { parseDocevalsConfig } from "../helpers/config.js";
+import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig, nestUnderDocevals } from "../helpers/config.js";
 import { readPage } from "../../src/core/discover.js";
 import { resolvePage } from "../../src/core/resolve.js";
 import { sha256 } from "../../src/judge/cache.js";
@@ -108,9 +109,10 @@ function tempWorkspace(): { root: string; pagePath: string } {
   mkdirSync(join(root, "docs"), { recursive: true });
   const pagePath = join(root, "docs", "sample.md");
   writeFileSync(pagePath, PAGE);
+  // A real moose.config.yaml on disk: the engine loads this one itself.
   writeFileSync(
     join(root, "moose.config.yaml"),
-    'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n',
+    nestUnderDocevals('version: 1\nfiles:\n  include: ["docs/**/*.md"]\n'),
   );
   return { root, pagePath };
 }
@@ -118,7 +120,8 @@ function tempWorkspace(): { root: string; pagePath: string } {
 describe("makeGenerateScripts", () => {
   it("writes the script parallel to the doc and persists the command reference", async () => {
     const { root, pagePath } = tempWorkspace();
-    const config = parseDocevalsConfig(
+    // Already a complete moose config on disk, so it parses as written.
+    const config = parseConfig(
       readFileSync(join(root, "moose.config.yaml"), "utf8"),
       join(root, "moose.config.yaml"),
     );

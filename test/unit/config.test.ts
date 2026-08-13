@@ -56,6 +56,28 @@ describe("parseConfig", () => {
     expect(c.evals).toEqual({});
   });
 
+  // The `--config <path>` flag hands parseConfig the file directly, bypassing
+  // loadConfig's filename-based migration guard. Without this check a
+  // pre-rename config passed with -c parses to pure defaults: zero evals, zero
+  // suites, exit 0 — a green run that checked nothing.
+  it("rejects a pre-rename config whose keys sit at the root", () => {
+    const flat = ["version: 1", "files:", '  include: ["docs/**"]'].join("\n");
+    expect(() => parseConfig(flat, PATH)).toThrow(DocevalsError);
+    expect(() => parseConfig(flat, PATH)).toThrow(/docevals:/);
+  });
+
+  it("names the root keys it recognized as ours", () => {
+    expect(() =>
+      parseConfig(["suites:", "  s:", "    evals: []"].join("\n"), PATH),
+    ).toThrow(/suites/);
+  });
+
+  it("still accepts a sibling-only file, even one with a nested files key", () => {
+    expect(() =>
+      parseConfig(["some-other-tool:", "  files: [a]"].join("\n"), PATH),
+    ).not.toThrow();
+  });
+
   it("rejects invalid YAML", () => {
     expect(() => parseConfig("docevals: [1", PATH)).toThrow(DocevalsError);
   });

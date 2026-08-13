@@ -12,6 +12,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runEvals } from "../../src/core/engine.js";
+import { nestUnderDocevals } from "../helpers/config.js";
 import { makeJudge } from "../../src/judge/judge.js";
 import { makeGenerateScripts } from "../../src/graders/scriptgen.js";
 import { ClaudeCliProvider } from "@hawkeyexl/inference";
@@ -68,7 +69,7 @@ describe.skipIf(!LIVE)("live smoke via Claude CLI", () => {
     );
     writeFileSync(
       join(root, "moose.config.yaml"),
-      'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n',
+      nestUnderDocevals('version: 1\nfiles:\n  include: ["docs/**/*.md"]\n'),
     );
     const report = await runEvals({
       cwd: root,

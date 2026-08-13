@@ -135,21 +135,29 @@ jobs:
             *"fresh-enough"*) ;;
             *) echo "scaffolded config resolved no named evals — got: $out"; exit 1 ;;
           esac
-          # A pre-rename config must stop the run, not fall through to defaults.
+          expect_usage_error() {
+            set +e
+            out=$("$@" 2>&1)
+            code=$?
+            set -e
+            if [ "$code" -ne 2 ]; then
+              echo "Expected exit 2 from: $* — got $code"
+              echo "$out"
+              exit 1
+            fi
+            case "$out" in
+              *"docevals:"*) ;;
+              *) echo "Expected the migration message to name the namespace — got: $out"; exit 1 ;;
+            esac
+          }
+          # Guard 1, by filename: a pre-rename name in cwd must stop the run.
           mv moose.config.yaml docevals.config.yaml
-          set +e
-          out=$(node ../dist/cli.js run --deterministic-only 2>&1)
-          code=$?
-          set -e
-          if [ "$code" -ne 2 ]; then
-            echo "Expected exit 2 for a legacy docevals.config.yaml, got $code"
-            echo "$out"
-            exit 1
-          fi
-          case "$out" in
-            *"moose.config.yaml"*) ;;
-            *) echo "Expected the migration message to name moose.config.yaml — got: $out"; exit 1 ;;
-          esac
+          expect_usage_error node ../dist/cli.js run --deterministic-only
+          # Guard 2, by shape: --config never reaches the filename check, so an
+          # unmigrated *flat* config has to be caught on its keys. Without this
+          # the run exits 0 having resolved nothing at all.
+          printf 'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n' > flat.yaml
+          expect_usage_error node ../dist/cli.js run -c flat.yaml --deterministic-only
           cd ..
           rm -rf .ci-config-check
 
