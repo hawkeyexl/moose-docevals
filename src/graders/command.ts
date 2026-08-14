@@ -1,10 +1,10 @@
 /**
- * Command grader: runs a user-supplied (or docevals-generated) CLI command per
+ * Command grader: runs a user-supplied (or moose-docevals-generated) CLI command per
  * page. Exit code membership in `successExitCodes` (default [0]) decides
  * pass/fail; the output tail becomes the finding message.
  *
  * Working directory: page-sourced commands run from the page's directory (so
- * generated script paths like "docevals/page.eval.mjs" resolve naturally);
+ * generated script paths like "moose-docevals/page.eval.mjs" resolve naturally);
  * config-sourced commands run from the config file's directory.
  */
 import { dirname } from "node:path";
@@ -27,7 +27,7 @@ async function gradeOne(
         evalName: ev.name,
         file: plan.page.file,
         message:
-          "No command to run (script not yet generated — run `docevals generate` or `docevals run` with a provider configured)",
+          "No command to run (script not yet generated — run `moose-docevals generate` or `moose-docevals run` with a provider configured)",
         severity: ev.severity,
       },
     ];
@@ -37,7 +37,7 @@ async function gradeOne(
   const result = await ctx.exec(substitute(ev.command, plan.page.absPath), {
     cwd,
     timeoutMs: ev.timeoutMs ?? ctx.config.scripts.timeoutMs,
-    env: { DOCEVALS_FILE: plan.page.absPath },
+    env: { MOOSE_DOCEVALS_FILE: plan.page.absPath },
   });
 
   if (result.spawnError) {

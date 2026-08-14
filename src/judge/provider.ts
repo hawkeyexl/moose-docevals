@@ -1,9 +1,9 @@
 /**
- * Judge-provider construction: map docevals' `provider` config section onto
+ * Judge-provider construction: map moose-docevals' `provider` config section onto
  * the shared inference library's `ProviderSpec`.
  *
  * The providers themselves live in `@hawkeyexl/inference` (ADR 01002). What
- * stays here is the one thing only docevals can decide: which of its own
+ * stays here is the one thing only moose-docevals can decide: which of its own
  * config keys mean what, and which section a `--provider` flag selects.
  */
 import {

@@ -1,8 +1,8 @@
 /**
- * `docevals promote` — the grader hierarchy in tool form: review llm-graded
+ * `moose-docevals promote` — the grader hierarchy in tool form: review llm-graded
  * evals, ask the LLM which are expressible as deterministic checks, and (with
  * --write) rewrite them as command-graded evals backed by generated scripts.
- * Never runs automatically as part of `docevals run`.
+ * Never runs automatically as part of `moose-docevals run`.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative } from "node:path";

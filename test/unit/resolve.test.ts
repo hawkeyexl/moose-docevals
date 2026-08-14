@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig } from "../helpers/config.js";
 import { resolvePage } from "../../src/core/resolve.js";
 import { extractFrontmatter } from "docmeta";
 import type { PageFile } from "../../src/core/discover.js";
 import { stripFrontmatterBlock } from "../../src/core/discover.js";
 
-const CONFIG = parseConfig(
+const CONFIG = parseDocevalsConfig(
   [
     "version: 1",
     "evals:",
@@ -21,7 +21,7 @@ const CONFIG = parseConfig(
     "    targetPassRate: 0.9",
     "    evals: [central-llm, central-tool]",
   ].join("\n"),
-  "/fake/docevals.config.yaml",
+  "/fake/moose.config.yaml",
 );
 
 function page(frontmatterYaml: string, body = "Body."): PageFile {
@@ -156,7 +156,7 @@ describe("resolvePage", () => {
     expect(plan.evals).toHaveLength(0);
   });
 
-  it("rejects malformed docevals frontmatter via schema", () => {
+  it("rejects malformed moose-docevals frontmatter via schema", () => {
     const plan = resolvePage(
       page("evals:\n  evals:\n    - name: Bad_Name\n      assertion: x"),
       CONFIG,
@@ -207,8 +207,8 @@ describe("resolvePage", () => {
     expect(plan.evals[0]?.skip).toBe(true);
   });
 
-  it("uses defaults.suite for pages without a docevals key", () => {
-    const cfg = parseConfig(
+  it("uses defaults.suite for pages without a moose-docevals key", () => {
+    const cfg = parseDocevalsConfig(
       [
         "version: 1",
         "defaults: { suite: ref }",
@@ -219,7 +219,7 @@ describe("resolvePage", () => {
         "  ref:",
         "    evals: [central-llm]",
       ].join("\n"),
-      "/fake/docevals.config.yaml",
+      "/fake/moose.config.yaml",
     );
     const plan = resolvePage(page("title: Plain"), cfg);
     expect(plan.suite).toBe("ref");

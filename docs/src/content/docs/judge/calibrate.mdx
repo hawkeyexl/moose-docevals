@@ -9,7 +9,7 @@ a build.
 
 ## Build a golden set
 
-20–50 human-verified cases in `.docevals/golden/*.yaml`. Each is a verdict a careful reviewer
+20–50 human-verified cases in `.moose-docevals/golden/*.yaml`. Each is a verdict a careful reviewer
 reached:
 
 ```yaml
@@ -35,11 +35,11 @@ from a judge that simply passes everything.
 ## Run it
 
 ```bash
-npx docevals calibrate
+npx moose-docevals calibrate
 ```
 
 ```bash
-npx docevals calibrate --golden .docevals/golden --runs 3
+npx moose-docevals calibrate --golden .moose-docevals/golden --runs 3
 ```
 
 Reports judge/human agreement and the false-positive rate. **Below 70% agreement it exits 1.**
@@ -56,7 +56,7 @@ The loop that works:
 
 1. Find the cases where judge and human disagree.
 2. Read the assertion for each, against the two-reviewer test in
-   [Write good assertions](/docevals/evals/write-good-assertions/).
+   [Write good assertions](/moose-docevals/evals/write-good-assertions/).
 3. Add or sharpen `evidence` and `examples.fail`.
 4. Re-run.
 
@@ -66,8 +66,9 @@ places; the failing example is where you write the boundary down.
 ## False positives matter more than accuracy
 
 ```yaml
-judge:
-  falsePositiveAlert: 0.15
+docevals:
+  judge:
+    falsePositiveAlert: 0.15
 ```
 
 Calibration alerts when the false-positive rate exceeds this.

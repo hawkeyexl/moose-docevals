@@ -58,7 +58,7 @@ actually looks like — and if you cannot write one, the assertion is not judgea
 
 It also pays off later: when a contributor hits this eval in CI, the judge's rationale tells them
 *what* is wrong and your `examples.fail` shows them *what it looks like*. Between them, the offending
-sentence is usually obvious. See [Fix a failing eval](/docevals/fix/).
+sentence is usually obvious. See [Fix a failing eval](/moose-docevals/fix/).
 
 ## Ask whether it should be an llm eval at all
 
@@ -68,8 +68,8 @@ The cheapest moment to notice that an assertion is really a grep is while writin
 
 That is `grader: command` — deterministic, free, and unarguable. Reach for the judge when the
 criterion genuinely needs interpretation, not because it is easier to write. See
-[Deterministic checks](/docevals/evals/deterministic-checks/), and
-[promote](/docevals/adopt/promote-to-deterministic/) for evals already on the wrong tier.
+[Deterministic checks](/moose-docevals/evals/deterministic-checks/), and
+[promote](/moose-docevals/adopt/promote-to-deterministic/) for evals already on the wrong tier.
 
 ## Common failure modes
 
@@ -88,7 +88,7 @@ the first time it is inconvenient.
 
 **Aspirational severity.** An assertion you believe in but that fails half your corpus should enter
 at `severity: warning` and ratchet up — *keep the assertion honest and lower the severity*, never the
-reverse. See [Retrofit a legacy corpus](/docevals/adopt/retrofit-a-legacy-corpus/).
+reverse. See [Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
 ## Regression or capability?
 
@@ -98,10 +98,10 @@ It changes how strictly to phrase the assertion.
 - **Capability** — measures reach across a corpus. Target ~0.7. Phrase for the good case; some
   pages will not meet it yet, and that is the measurement.
 
-`type` defaults to `regression`. See [Regression vs capability](/docevals/evals/regression-vs-capability/).
+`type` defaults to `regression`. See [Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
 ## When an eval keeps landing in review
 
 That is a diagnosis, not a chore. An eval that reaches the human-review zone on every run is telling
 you its assertion is ambiguous. Fix the wording rather than answering it faster forever — and if you
-are unsure whether a rewrite helped, [calibrate](/docevals/judge/calibrate/) will tell you.
+are unsure whether a rewrite helped, [calibrate](/moose-docevals/judge/calibrate/) will tell you.

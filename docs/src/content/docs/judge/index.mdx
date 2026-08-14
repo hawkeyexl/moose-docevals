@@ -50,23 +50,23 @@ every time. It is being asked to know when it is unsure.**
 
 Seen that way, the human-review zone stops looking like an admission of failure and starts looking
 like the reason a binary verdict is acceptable at all. Handling that queue is
-[Human review](/docevals/judge/human-review/).
+[Human review](/moose-docevals/judge/human-review/).
 
 Tightening the thresholds sends more to people; loosening sends more to automation. Do not tune them
-by feel — [calibrate](/docevals/judge/calibrate/) tells you what the trade actually costs.
+by feel — [calibrate](/moose-docevals/judge/calibrate/) tells you what the trade actually costs.
 
 ## Binary verdicts, non-binary quality
 
 Every eval is pass or fail. The nuance lives in the **suite pass rate**: regression suites target
 1.0, capability suites ~0.7. "70% of our tutorials explain why before how" is expressible without any
 eval returning a mushy 0.7. See
-[Regression vs capability](/docevals/evals/regression-vs-capability/).
+[Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
 ## When the judge looks wrong
 
 Nearly always, the assertion is. Before adjusting zones, ensemble size, or models, re-read the
 assertion against the two-reviewer test in
-[Write good assertions](/docevals/evals/write-good-assertions/) — an eval that keeps landing in review
+[Write good assertions](/moose-docevals/evals/write-good-assertions/) — an eval that keeps landing in review
 is telling you it is ambiguous.
 
 `calibrate` enforces this: below the agreement threshold it exits 1, and the correct response is to
@@ -84,6 +84,6 @@ refine the assertions, not the grader.
 
 | Page | Answers |
 |---|---|
-| [Calibrate](/docevals/judge/calibrate/) | "Is the judge actually agreeing with us?" — with a number |
-| [Human review](/docevals/judge/human-review/) | "Who clears the queue, and does it persist?" |
-| [Choose a provider](/docevals/judge/choose-a-provider/) | "Can we run this without sending pages to a vendor?" |
+| [Calibrate](/moose-docevals/judge/calibrate/) | "Is the judge actually agreeing with us?" — with a number |
+| [Human review](/moose-docevals/judge/human-review/) | "Who clears the queue, and does it persist?" |
+| [Choose a provider](/moose-docevals/judge/choose-a-provider/) | "Can we run this without sending pages to a vendor?" |

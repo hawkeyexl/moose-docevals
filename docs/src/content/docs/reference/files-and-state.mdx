@@ -1,17 +1,17 @@
 ---
 title: Files and state
-description: What docevals writes, where, and which of it belongs in version control.
+description: What moose-docevals writes, where, and which of it belongs in version control.
 ---
 
-docevals writes to four places. Only one of them is source you review.
+moose-docevals writes to four places. Only one of them is source you review.
 
 | Path | Default | Commit it? |
 |---|---|---|
-| `{docDir}/docevals/*.mjs` | generated check scripts | **Yes** — ordinary source |
-| `.docevals/cache/` | judge response cache | No |
-| `.docevals/cache/fill/` | raw `fill` proposals | No |
-| `.docevals/reviews.yaml` | human verdicts | **Yes** — team state |
-| `.docevals/golden/*.yaml` | calibration golden set | **Yes** — team state |
+| `{docDir}/moose-docevals/*.mjs` | generated check scripts | **Yes** — ordinary source |
+| `.moose-docevals/cache/` | judge response cache | No |
+| `.moose-docevals/cache/fill/` | raw `fill` proposals | No |
+| `.moose-docevals/reviews.yaml` | human verdicts | **Yes** — team state |
+| `.moose-docevals/golden/*.yaml` | calibration golden set | **Yes** — team state |
 
 ## Generated check scripts
 
@@ -21,7 +21,7 @@ by hand.
 ```text
 docs/
 ├── installation.mdx
-└── docevals/
+└── moose-docevals/
     └── installation.install-command-present.mjs
 ```
 
@@ -35,7 +35,7 @@ Frontmatter records the reference and a hash of the assertion that produced it:
     - name: install-command-present
       assertion: The page contains a bash code block with `npm i -g doc-detective`.
       grader: command
-      command: [node, docevals/installation.install-command-present.mjs, "{file}"]
+      command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
         assertionHash: aefaa89e…
 ```
@@ -54,12 +54,12 @@ Content-addressed. The key is composed in `src/judge/cache.ts` from, among other
 
 So an unchanged page with an unchanged assertion never re-judges, and **changing any of those
 invalidates the entry** rather than serving a stale verdict. That is what makes repeat runs
-approximately free — see [Cost and caching](/docevals/ci/cost-and-caching/).
+approximately free — see [Cost and caching](/moose-docevals/ci/cost-and-caching/).
 
 `fill` caches raw proposals in `fill.cacheDir` **before** the confidence gate is applied, keyed with
 `FILL_PROMPT_VERSION`. Re-running at a different `--confidence` therefore costs nothing.
 
-## `.docevals/reviews.yaml`
+## `.moose-docevals/reviews.yaml`
 
 One entry per (file, eval) pair. Recording a verdict replaces any existing entry for that pair.
 
@@ -78,9 +78,9 @@ matches; when the page changes, the review is silently ignored and the eval retu
 needs-review. That self-invalidation is what makes persistence safe rather than a way to accumulate
 stale approvals.
 
-## `.docevals/golden/*.yaml`
+## `.moose-docevals/golden/*.yaml`
 
-Human-verified cases for [calibration](/docevals/judge/calibrate/). A list of expected verdicts:
+Human-verified cases for [calibration](/moose-docevals/judge/calibrate/). A list of expected verdicts:
 
 ```yaml
 - file: test/fixtures/pages/docs/get-started/concepts.md
@@ -96,8 +96,8 @@ Human-verified cases for [calibration](/docevals/judge/calibrate/). A list of ex
 The caches are disposable; the reviews and golden set are not. A minimal `.gitignore`:
 
 ```text
-.docevals/cache/
+.moose-docevals/cache/
 ```
 
-Ignoring `.docevals/` wholesale also discards `reviews.yaml` and the golden set, which are the two
+Ignoring `.moose-docevals/` wholesale also discards `reviews.yaml` and the golden set, which are the two
 pieces of state your team actually built by hand.

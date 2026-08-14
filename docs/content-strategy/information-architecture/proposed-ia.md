@@ -1,7 +1,7 @@
 ---
 id: proposed-ia
 type: information-architecture
-scope: Proposed IA for the docevals documentation site, designed CUJ-first
+scope: Proposed IA for the moose-docevals documentation site, designed CUJ-first
 covers_subtree: docs/src/content/docs/
 excludes: [README.md, adrs/, docs/content-strategy/]
 derived_from: ../journeys/
@@ -23,7 +23,7 @@ page listed here that stops resolving is a defect.
 **Method — CUJ-first, not content-first.** Sections are derived from what the
 [journeys](../journeys/_overview.md) require, in the order they require it, not from the topics the
 README happens to cover today. That distinction is doing real work here: a content-first IA of
-docevals would produce sections named after commands (`run`, `fill`, `promote`, `calibrate`), which
+moose-docevals would produce sections named after commands (`run`, `fill`, `promote`, `calibrate`), which
 is exactly the shape that fails every persona — nobody's job is "use the `promote` command."
 
 ## Navigation tree
@@ -94,7 +94,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 | Page | CUJ | Pri | Notes |
 |---|---|:--:|---|
 | `get-started/index.mdx` | `cuj-first-gate` | ★ | Install, `init`, one assertion, one run, one real finding. Minimum vocabulary — Nate must reach a finding without meeting "capability suite". |
-| `get-started/how-docevals-works.mdx` | `cuj-first-gate`, `cuj-orchestrate-tools` | ★ | The eval → grader → verdict model and the grader hierarchy. Sits *after* the quickstart deliberately: Priya needs it before committing, Nate needs to not hit it first. |
+| `get-started/how-moose-docevals-works.mdx` | `cuj-first-gate`, `cuj-orchestrate-tools` | ★ | The eval → grader → verdict model and the grader hierarchy. Sits *after* the quickstart deliberately: Priya needs it before committing, Nate needs to not hit it first. |
 
 ### Write evals — Priya · Sara
 
@@ -103,7 +103,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 | `evals/index.mdx` | `cuj-first-gate`, `cuj-eval-library` | ★ | The frontmatter contract: array shorthand vs. object form, `suite`, `skip`, inline vs. referenced. |
 | `evals/write-good-assertions.mdx` | `cuj-write-judgeable-assertions` | ★ | Highest-leverage page for Sara. `assertion` + `evidence` + `examples` as one mechanism. The two-reviewer test. |
 | `evals/deterministic-checks.mdx` | `cuj-orchestrate-tools`, `cuj-cheapen-evals` | ★ | `command` and `tool:*` graders; wrapping existing linters; the generate path for a plain-language command eval. |
-| `evals/named-evals-and-suites.mdx` | `cuj-eval-library` | P1 | Named evals, suites, `targetPassRate`, resolution order, `docevals list` as the dry-run. |
+| `evals/named-evals-and-suites.mdx` | `cuj-eval-library` | P1 | Named evals, suites, `targetPassRate`, resolution order, `moose-docevals list` as the dry-run. |
 | `evals/test-your-commands.mdx` | `cuj-orchestrate-tools` | P1 | The inline Doc Detective convention — see [Authoring convention](#authoring-convention-pages-that-show-commands). |
 | `evals/regression-vs-capability.mdx` | `cuj-write-judgeable-assertions`, `cuj-retrofit-corpus` | P2 | Why `regression` is the default; how pass-rate targets carry the nuance binary verdicts appear to lose. |
 | `evals/severity-and-findings.mdx` | `cuj-orchestrate-tools`, `cuj-retrofit-corpus` | P2 | `error` fails; `warning`/`info` report and pass. `severityMap`. The severity ratchet. |
@@ -134,7 +134,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 |---|---|:--:|---|
 | `judge/index.mdx` | `cuj-trust-the-judge`, `cuj-write-judgeable-assertions`, `cuj-resolve-review` | ★ | Reproducibility, the ensemble, consensus (`partial` counts as fail; errored runs count against consensus), confidence zones. |
 | `judge/calibrate.mdx` | `cuj-trust-the-judge` | P1 | Golden set, agreement rate, the 70% floor and why the fix is the assertions, `falsePositiveAlert`. |
-| `judge/human-review.mdx` | `cuj-resolve-review` | P1 | `docevals review`; persistence; self-invalidation on page change; a repeat offender is a diagnosis. |
+| `judge/human-review.mdx` | `cuj-resolve-review` | P1 | `moose-docevals review`; persistence; self-invalidation on page change; a repeat offender is a diagnosis. |
 | `judge/choose-a-provider.mdx` | `cuj-trust-the-judge`, `cuj-ci-wire` | P1 | `anthropic`, OpenAI-compatible (incl. self-hosted), `claude-cli` with no key. The security-review answer. |
 
 ### Fix a failing eval — Theo
@@ -150,11 +150,11 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 |---|---|:--:|---|
 | `reference/index.mdx` | — *(navigation)* | ★ | Shelf index. Disposition in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3. |
 | `reference/cli.mdx` | `cuj-eval-library`, `cuj-bootstrap-corpus` | ★ | Every command and flag. |
-| `reference/configuration.mdx` | `cuj-eval-library`, `cuj-bound-cost-and-risk` | ★ | Every `docevals.config.yaml` key, type, and default — including provider blocks and pricing. |
+| `reference/configuration.mdx` | `cuj-eval-library`, `cuj-bound-cost-and-risk` | ★ | Every `moose.config.yaml` key, type, and default — including provider blocks and pricing. |
 | `reference/frontmatter.mdx` | `cuj-eval-library`, `cuj-cheapen-evals`, `cuj-write-judgeable-assertions` | ★ | Every eval field; resolution order; `generated.assertionHash`. |
 | `reference/graders.mdx` | `cuj-orchestrate-tools` | ★ | Densest page on the site: every kind in the registry with its `options` table. **Must state that `options.command` is a *partial* override for `tool:doc-detective`** — `--input` and `--exit-on-fail` are appended regardless, the latter because the grader cannot detect a failure without it (ADR 01005). A reader who assumes their array is the whole argv will be wrong. |
 | `reference/output-and-exit-codes.mdx` | `cuj-first-gate` | ★ | `human`/`json`/`markdown`/`github` shapes; exit codes. |
-| `reference/files-and-state.mdx` | `cuj-resolve-review` | P2 | `.docevals/` layout: caches, `reviews.yaml`, golden set, generated script paths. |
+| `reference/files-and-state.mdx` | `cuj-resolve-review` | P2 | `.moose-docevals/` layout: caches, `reviews.yaml`, golden set, generated script paths. |
 | `reference/glossary.mdx` | — *(vocabulary)* | P1 | eval, grader, assertion, evidence, suite, ensemble, consensus, confidence zone, calibration, regression vs. capability. Disposition in §3. |
 
 ## Source-of-truth mapping
@@ -182,15 +182,15 @@ npm run build && node dist/cli.js list test/fixtures/pages/**/*.mdx
 
 ## Authoring convention: pages that show commands
 
-docevals is a docs-testing tool, so its own docs are tested — by docevals, via the
+moose-docevals is a docs-testing tool, so its own docs are tested — by moose-docevals, via the
 `tool:doc-detective` grader. Any page presenting a command carries two things:
 
-1. **An `evals:` frontmatter block** naming the `docs-page` suite from `docs/docevals.config.yaml`.
+1. **An `evals:` frontmatter block** naming the `docs-page` suite from `docs/moose.config.yaml`.
 2. **Inline Doc Detective steps** at the foot of the file, as MDX comments, running the exact commands
    the page presents against committed fixtures under `test/fixtures/`:
 
    ```mdx
-   {/* step {"description":"Exit 1 when an eval fails.","runShell":{"command":"docevals run test/fixtures/pages/goTo.mdx --deterministic-only","exitCodes":[1]}} */}
+   {/* step {"description":"Exit 1 when an eval fails.","runShell":{"command":"moose-docevals run test/fixtures/pages/goTo.mdx --deterministic-only","exitCodes":[1]}} */}
    ```
 
 Both are executed by the `verify-docs` CI job. A documented command that drifts from the code fails
@@ -199,7 +199,7 @@ the build — which is the entire premise of the product, applied to itself.
 **Two constraints on those steps.** They run shell commands, so the job is gated to same-repo pull
 requests; `--no-frontmatter-commands` does *not* cover this path (see
 `ci/untrusted-pull-requests.mdx`). And LLM-path commands replay from committed cache fixtures in
-`docs/.docevals-cache/`, so bumping `PROMPT_VERSION` or `FILL_PROMPT_VERSION` invalidates them and
+`docs/.moose-docevals-cache/`, so bumping `PROMPT_VERSION` or `FILL_PROMPT_VERSION` invalidates them and
 requires `npm run docs:refresh-cache`.
 
 ## Deferred

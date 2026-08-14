@@ -6,7 +6,7 @@ description: The ten terms that recur across every section of these docs.
 **Assertion**
 : The claim an eval makes about a page — true or false, not an aspiration. "The page states its
   prerequisites before the first command" is an assertion; "the page is well-written" is not. See
-  [Write good assertions](/docevals/evals/write-good-assertions/).
+  [Write good assertions](/moose-docevals/evals/write-good-assertions/).
 
 **Capability suite**
 : A suite that measures reach rather than correctness, so its `targetPassRate` sits below 1.0
@@ -40,13 +40,13 @@ description: The ten terms that recur across every section of these docs.
   rule id and line. Only `error`-severity findings fail the build.
 
 **Golden set**
-: 20–50 human-verified cases in `.docevals/golden/*.yaml` that
-  [calibration](/docevals/judge/calibrate/) scores the judge against. This is the artifact you hand a
+: 20–50 human-verified cases in `.moose-docevals/golden/*.yaml` that
+  [calibration](/moose-docevals/judge/calibrate/) scores the judge against. This is the artifact you hand a
   skeptic.
 
 **Grader**
 : What decides an eval. `command` and `tool:*` are code, `llm` is the judge, `human` is a person.
-  They sit in that preference order — see [Graders](/docevals/reference/graders/).
+  They sit in that preference order — see [Graders](/moose-docevals/reference/graders/).
 
 **Grader hierarchy**
 : The rule that code beats judge beats human. If you can express the criterion as code, do — it is
@@ -68,7 +68,7 @@ description: The ten terms that recur across every section of these docs.
 **Severity**
 : `error`, `warning`, or `info` on a deterministic eval. Only `error` fails the build — which is
   what lets you enter a new check at `warning` and ratchet it up. See
-  [Retrofit a legacy corpus](/docevals/adopt/retrofit-a-legacy-corpus/).
+  [Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
 **Suite**
 : A named group of evals with a target pass rate, applied to a page by name.

@@ -3,7 +3,7 @@ id: persona-contributor
 type: persona
 name: "Theo — Doc Contributor"
 audience: aud-doc-contributor
-role: Engineer or writer who opened a pull request and hit a red docevals check
+role: Engineer or writer who opened a pull request and hit a red moose-docevals check
 shared_with: docmeta
 proficiency: [git, pull-requests, editing-markdown, reading-a-ci-log]
 prerequisites: []
@@ -24,7 +24,7 @@ journeys: [cuj-fix-red-check]
 # Persona: Theo
 
 **Scope:** the passing-through persona for
-[`aud-doc-contributor`](../audiences/doc-contributor.md). Theo did not install docevals, did not write
+[`aud-doc-contributor`](../audiences/doc-contributor.md). Theo did not install moose-docevals, did not write
 the eval, and will not read the rest of the site. Every other persona configures the tool; Theo only
 ever encounters it.
 
@@ -32,11 +32,11 @@ ever encounters it.
 contributor who hits a red eval, and it is the same bad afternoon either way.
 
 Theo is shipping a feature and updated a page alongside it. He may be a frequent contributor to this
-repo and a first-time reader of this site. His entire context on docevals is whatever fit in the CI
+repo and a first-time reader of this site. His entire context on moose-docevals is whatever fit in the CI
 annotation. He is not hostile to the check; he is busy, and his tolerance for learning a tool in order
 to unblock a two-line edit is close to zero.
 
-His first problem is **triage**, and nothing else works until it is solved. docevals produces at least
+His first problem is **triage**, and nothing else works until it is solved. moose-docevals produces at least
 five failures that look similar in a CI log and have completely different remedies: a deterministic
 tool finding pinned to a line; an LLM verdict with a rationale and no line; an eval parked in the
 human-review zone that he has no standing to resolve; a stale `assertionHash` meaning a generated
@@ -57,6 +57,6 @@ dependencies**. It must be reachable cold, from a link in a CI annotation, and b
 someone who has read nothing else. Every term it uses is defined inline or linked. Any change that
 gives that page a prerequisite is a defect, not a style preference.
 
-Success for Theo is four minutes: annotation → page → the sentence → the fix → `docevals run
+Success for Theo is four minutes: annotation → page → the sentence → the fix → `moose-docevals run
 --deterministic-only` on one file → green. He never learns what a capability suite is, and that is
 the correct outcome.

@@ -10,12 +10,12 @@ personas: [persona-standard-owner]
 features_emphasized:
   [assertion-evidence-examples, regression-vs-capability, target-pass-rate, calibrate, golden-set,
    confidence-zones, ensemble-runs, false-positive-alert, human-review, promote]
-evidence_basis: [docs-as-tests-manuscript, docmeta-content-strategy, docevals-surface]
+evidence_basis: [docs-as-tests-manuscript, docmeta-content-strategy, moose-docevals-surface]
 ---
 
 # Audience: Quality standard owner
 
-**Scope:** the people who define correctness rather than enforce it — the docevals analog of a schema
+**Scope:** the people who define correctness rather than enforce it — the moose-docevals analog of a schema
 author. They write the assertions, decide what is a regression versus a capability, set target pass
 rates, and own whether the judge can be trusted. Enforcement and operation belong to
 [`aud-docs-platform-team`](docs-platform-team.md) and [`aud-platform-ci`](platform-ci.md); in a small

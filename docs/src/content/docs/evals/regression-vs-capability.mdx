@@ -32,13 +32,14 @@ An eval's `type` is documentation of intent. **The target that actually gates yo
 suite's.**
 
 ```yaml
-suites:
-  tutorial:
-    targetPassRate: 0.7          # capability: measure reach
-    evals: [explains-why-before-how, no-future-promises]
-  reference:
-    targetPassRate: 1.0          # regression: these must hold
-    evals: [no-future-promises, fresh-enough, frontmatter-valid]
+docevals:
+  suites:
+    tutorial:
+      targetPassRate: 0.7          # capability: measure reach
+      evals: [explains-why-before-how, no-future-promises]
+    reference:
+      targetPassRate: 1.0          # regression: these must hold
+      evals: [no-future-promises, fresh-enough, frontmatter-valid]
 ```
 
 Put a capability eval in a suite left at the default `1.0` and every page short of the goal fails the
@@ -47,7 +48,7 @@ encodes the corpus's current state as the standard.
 
 Keep the assertion honest. Move the eval to a suite with an appropriate target, or lower the
 severity if it is deterministic. See
-[Retrofit a legacy corpus](/docevals/adopt/retrofit-a-legacy-corpus/).
+[Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
 ## Reading a capability result
 
@@ -75,6 +76,6 @@ evals:
 
 ## Related
 
-- [Named evals and suites](/docevals/evals/named-evals-and-suites/) — where targets are set
-- [Write good assertions](/docevals/evals/write-good-assertions/) — phrasing for each type
-- [Severity and findings](/docevals/evals/severity-and-findings/) — the deterministic analog
+- [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/) — where targets are set
+- [Write good assertions](/moose-docevals/evals/write-good-assertions/) — phrasing for each type
+- [Severity and findings](/moose-docevals/evals/severity-and-findings/) — the deterministic analog

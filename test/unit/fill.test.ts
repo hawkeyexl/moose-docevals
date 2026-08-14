@@ -7,18 +7,19 @@ import { MockProvider } from "@hawkeyexl/inference";
 import { readPage } from "../../src/core/discover.js";
 import { resolvePage } from "../../src/core/resolve.js";
 import { loadConfig } from "../../src/core/config.js";
+import { nestUnderDocevals } from "../helpers/config.js";
 
 const BASE_CONFIG = 'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n';
 
 const PLAIN_PAGE = ["---", "title: Sample", "---", "", "# Heading", "", "Body.", ""].join("\n");
 
 function workspace(pages: Record<string, string>, config = BASE_CONFIG): string {
-  const root = mkdtempSync(join(tmpdir(), "docevals-fill-"));
+  const root = mkdtempSync(join(tmpdir(), "moose-docevals-fill-"));
   mkdirSync(join(root, "docs"), { recursive: true });
   for (const [name, content] of Object.entries(pages)) {
     writeFileSync(join(root, "docs", name), content);
   }
-  writeFileSync(join(root, "docevals.config.yaml"), config);
+  writeFileSync(join(root, "moose.config.yaml"), nestUnderDocevals(config));
   return root;
 }
 

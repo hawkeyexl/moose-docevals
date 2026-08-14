@@ -61,7 +61,7 @@ structural treatment rather than a footnote on one persona's page:
 
 ## Deliberately not segmented
 
-- **By docs framework** (Docusaurus / Starlight / MkDocs / Hugo). docevals reads frontmatter from
+- **By docs framework** (Docusaurus / Starlight / MkDocs / Hugo). moose-docevals reads frontmatter from
   Markdown and MDX and never touches the site build, so framework choice does not change the journey.
 - **By company size alone.** Size correlates with ownership but does not determine it — plenty of
   large orgs still have exactly one person who owns docs quality, and they behave like

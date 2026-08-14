@@ -1,4 +1,4 @@
-/** docevals CLI entry point. */
+/** moose-docevals CLI entry point. */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -32,7 +32,7 @@ const pkg = JSON.parse(
 const program = new Command();
 
 program
-  .name("docevals")
+  .name("moose-docevals")
   .description(
     "Deterministic and LLM-as-judge evals for documentation pages, driven by frontmatter.",
   )
@@ -40,7 +40,7 @@ program
 
 function fail(e: unknown): never {
   if (e instanceof DocevalsError) {
-    console.error(pc.red(`docevals: ${e.message}`));
+    console.error(pc.red(`moose-docevals: ${e.message}`));
     process.exit(2);
   }
   throw e;
@@ -86,7 +86,7 @@ program
   .command("list")
   .description("Show the resolved eval plan per page without running anything")
   .argument("[globs...]", "File globs (default: config files.include)")
-  .option("-c, --config <path>", "Path to docevals.config.yaml")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
   .option(
     "-f, --format <format>",
     "Output format: human | json",
@@ -110,7 +110,7 @@ program
   .command("run")
   .description("Run evals against documentation pages")
   .argument("[globs...]", "File globs (default: config files.include)")
-  .option("-c, --config <path>", "Path to docevals.config.yaml")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
   .option(
     "-f, --format <format>",
     "Output format: human | json | markdown | github",
@@ -158,7 +158,7 @@ program
     "Generate check scripts for command evals with a plain-language assertion but no command",
   )
   .argument("[globs...]", "File globs (default: config files.include)")
-  .option("-c, --config <path>", "Path to docevals.config.yaml")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
   .action(
@@ -191,7 +191,7 @@ program
     "Propose frontmatter evals for pages with an LLM; writes proposals at or above the confidence threshold",
   )
   .argument("[globs...]", "File globs (default: config files.include)")
-  .option("-c, --config <path>", "Path to docevals.config.yaml")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
   .option(
     "-f, --format <format>",
     "Output format: human | json",
@@ -239,7 +239,7 @@ program
     "Find llm-graded evals expressible as deterministic checks; --write converts them",
   )
   .argument("[globs...]", "File globs (default: config files.include)")
-  .option("-c, --config <path>", "Path to docevals.config.yaml")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
   .option("--write", "Apply promotions (write scripts and rewrite evals)")
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
@@ -276,10 +276,10 @@ program
 program
   .command("calibrate")
   .description(
-    "Measure judge agreement against a human-verified golden set (.docevals/golden/*.yaml)",
+    "Measure judge agreement against a human-verified golden set (.moose-docevals/golden/*.yaml)",
   )
-  .option("-c, --config <path>", "Path to docevals.config.yaml")
-  .option("--golden <dir>", "Golden set directory", ".docevals/golden")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
+  .option("--golden <dir>", "Golden set directory", ".moose-docevals/golden")
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
   .option("--runs <n>", "Ensemble runs per case", parseIntArg("--runs"))
@@ -312,7 +312,7 @@ program
 
 program
   .command("init")
-  .description("Create a starter docevals.config.yaml in the current directory")
+  .description("Create a starter moose.config.yaml in the current directory")
   .action(() => {
     try {
       console.log(`Created ${runInit()}`);
@@ -345,7 +345,7 @@ program
         }
         if (!evalName || !verdict) {
           throw new DocevalsError(
-            "Usage: docevals review <file> <eval> <pass|fail>",
+            "Usage: moose-docevals review <file> <eval> <pass|fail>",
           );
         }
         const entry = runReview(file, evalName, verdict, opts);

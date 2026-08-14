@@ -110,7 +110,7 @@ export function renderHuman(report: EngineReport): string {
     lines.push("");
     lines.push(
       pc.yellow(
-        `${reviews.length} eval(s) need human review — run \`docevals review\` to record verdicts.`,
+        `${reviews.length} eval(s) need human review — run \`moose-docevals review\` to record verdicts.`,
       ),
     );
   }

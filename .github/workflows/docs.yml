@@ -1,7 +1,7 @@
 name: Docs
 
 # Build the Starlight docs site and publish it to GitHub Pages on every push to
-# main. The deploy is gated on docevals evaluating its own documentation: if a
+# main. The deploy is gated on moose-docevals evaluating its own documentation: if a
 # documented command drifts from the code, or a page's frontmatter stops
 # validating, the site does not ship.
 #
@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Dogfood: run docevals over its own documentation. The tool:doc-detective
+  # Dogfood: run moose-docevals over its own documentation. The tool:doc-detective
   # grader executes the inline steps embedded in each page, so the commands the
   # docs present are run against the committed fixture corpus.
   #
@@ -49,11 +49,11 @@ jobs:
       - run: npm install --no-fund --no-audit
       - run: npm run build
 
-      # Expose the freshly built CLI as the `docevals` command the docs invoke.
+      # Expose the freshly built CLI as the `moose-docevals` command the docs invoke.
       # dist/ is gitignored and the package is unpublished, so without these the
       # documented commands have nothing to resolve.
       - run: npm link
-      - run: npm link @hawkeyexl/docevals
+      - run: npm link moose-docevals
 
       # Guard against silent zero-coverage: a step with a typo'd key is reported
       # "isn't a valid step. Skipping.", and a page whose steps are all invalid
@@ -73,9 +73,9 @@ jobs:
           echo "All inline steps parsed."
 
       # No ANTHROPIC_API_KEY: the docs-page suite is deterministic today, and
-      # judged evals replay from the committed cache in docs/.docevals-cache/
+      # judged evals replay from the committed cache in docs/.moose-docevals-cache/
       # once they join the suite.
-      - name: Verify docs (docevals over the docs site)
+      - name: Verify docs (moose-docevals over the docs site)
         run: npm run docs:verify -- --format github
 
   # Build the Astro/Starlight static site and upload it as a Pages artifact.
@@ -96,7 +96,7 @@ jobs:
         run: npm run build
         working-directory: docs
 
-      # `docevals run` checks that a page's commands are true; nothing checks
+      # `moose-docevals run` checks that a page's commands are true; nothing checks
       # that its links are. ~1,350 internal links across the content set, so one
       # renamed route silently ships dozens of 404s — the build succeeds either
       # way. Gate the deploy on it.

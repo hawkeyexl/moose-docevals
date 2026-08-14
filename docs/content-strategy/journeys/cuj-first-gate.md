@@ -12,7 +12,7 @@ success_criteria: >
 steps:
   - { stage: "Decide whether this fits", doc: docs/src/content/docs/index.mdx, exists: true }
   - { stage: "Install and run one eval end to end", doc: docs/src/content/docs/get-started/index.mdx, exists: true }
-  - { stage: "Understand eval, grader, verdict", doc: docs/src/content/docs/get-started/how-docevals-works.mdx, exists: true }
+  - { stage: "Understand eval, grader, verdict", doc: docs/src/content/docs/get-started/how-moose-docevals-works.mdx, exists: true }
   - { stage: "Declare evals in page frontmatter", doc: docs/src/content/docs/evals/index.mdx, exists: true }
   - { stage: "Write an assertion the judge can decide", doc: docs/src/content/docs/evals/write-good-assertions.mdx, exists: true }
   - { stage: "Add a deterministic check so not everything is judged", doc: docs/src/content/docs/evals/deterministic-checks.mdx, exists: true }
@@ -41,11 +41,11 @@ walks it deliberately, once, and expects to understand the model before she comm
 [Nate](../personas/nate-solo-owner.md) wants a real finding on a real page inside ten minutes and will
 abandon the journey if the first screen is conceptual. The resolution is sequencing, not compromise:
 `get-started/index.mdx` gets Nate to a finding with the minimum vocabulary, and
-`get-started/how-docevals-works.mdx` sits immediately after it for the reader who needs the model
+`get-started/how-moose-docevals-works.mdx` sits immediately after it for the reader who needs the model
 before proceeding. Putting the concepts first loses Nate; omitting them loses Priya.
 
 The step that decides adoption is **"add a deterministic check so not everything is judged."** A
-reader who leaves this journey believing docevals means "an LLM grades my docs" has learned the wrong
+reader who leaves this journey believing moose-docevals means "an LLM grades my docs" has learned the wrong
 thing and will lose the cost and explicability arguments internally. The grader hierarchy — code
 first, judge second, human last — has to be experienced in the first run, not merely described.
 

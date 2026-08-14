@@ -35,7 +35,7 @@ What he needs from the docs is a first run that produces a **real finding on a r
 fast. Not a tour of the eval model, not a config walkthrough — evidence that the tool sees something
 he did not. If the quickstart spends its first screen explaining regression versus capability suites,
 he is gone. That constraint is what keeps `get-started/index.mdx` short and pushes every concept it
-does not strictly need into [`get-started/how-docevals-works.mdx`](../information-architecture/proposed-ia.md).
+does not strictly need into [`get-started/how-moose-docevals-works.mdx`](../information-architecture/proposed-ia.md).
 
 His second constraint is that **hand-authoring assertions is arithmetically impossible** for him: ten
 minutes per eval times two hundred pages is not a project he will start. [`fill`](../journeys/cuj-bootstrap-corpus.md)
@@ -49,6 +49,6 @@ He also needs the tool to be genuinely useful **without a provider at all**. `--
 how he evaluates on a Sunday with no key set, and if that path is presented as a degraded mode rather
 than a real one, he never gets to the part that costs money.
 
-Success for Nate is a Tuesday six months later when a `docevals run` catches that the install command
+Success for Nate is a Tuesday six months later when a `moose-docevals run` catches that the install command
 he changed in the CLI still says the old thing on three pages — and he fixes it before anyone files an
 issue.

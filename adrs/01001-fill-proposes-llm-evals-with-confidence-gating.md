@@ -8,9 +8,9 @@ decision-makers: [hawkeyexl]
 
 ## Context and Problem Statement
 
-Pages declare evals in frontmatter, but authoring them by hand is the bottleneck for adopting docevals across a docs corpus. dockg solved the analogous problem for SKOS metadata with a `fill` subcommand that asks an LLM to propose missing frontmatter. How should docevals bulk-propose evals, and how should it decide which proposals are trustworthy enough to write?
+Pages declare evals in frontmatter, but authoring them by hand is the bottleneck for adopting moose-docevals across a docs corpus. dockg solved the analogous problem for SKOS metadata with a `fill` subcommand that asks an LLM to propose missing frontmatter. How should moose-docevals bulk-propose evals, and how should it decide which proposals are trustworthy enough to write?
 
-Notably, dockg's `fill` has **no numeric confidence threshold** — it relies on prompt self-gating ("omit fields you are not confident about"), schema validation, and a cost budget. docevals already has real confidence machinery (judge confidence zones, the 70% calibration bar), so the question of a scored gate is live here in a way it was not there.
+Notably, dockg's `fill` has **no numeric confidence threshold** — it relies on prompt self-gating ("omit fields you are not confident about"), schema validation, and a cost budget. moose-docevals already has real confidence machinery (judge confidence zones, the 70% calibration bar), so the question of a scored gate is live here in a way it was not there.
 
 ## Decision Drivers
 
@@ -35,7 +35,7 @@ Chosen option: "Numeric confidence gate", with these specifics:
 - **Append-only-missing-names**: proposals are deduplicated against the page's *resolved plan* (inline evals, `use:` references, suite-expanded evals), and surviving evals are appended; existing entries are never touched. Pages with `evals: {skip: true}` are skipped without an LLM call.
 - **Write by default, `--dry-run` to report** (dockg parity). Statuses: `filled | proposed | nothing-proposed | skipped | skipped-budget | error`. Exit `0` clean, `1` any contained per-page error, `2` operational.
 - **`confidence` and `rationale` are report-only** — never persisted to frontmatter.
-- **Cache stores the raw pre-gating proposal**, keyed on provider, model, `FILL_PROMPT_VERSION`, temperature, `maxEvalsPerPage`, body hash, and the existing eval-name set — so changing `--confidence` re-gates from cache with zero API calls, and a post-fill re-run misses (the name set changed) and asks for *additional* coverage instead of replaying stale proposals. Separate cache dir (`.docevals/cache/fill`) from the judge cache: different key schemes and value shapes must never mix.
+- **Cache stores the raw pre-gating proposal**, keyed on provider, model, `FILL_PROMPT_VERSION`, temperature, `maxEvalsPerPage`, body hash, and the existing eval-name set — so changing `--confidence` re-gates from cache with zero API calls, and a post-fill re-run misses (the name set changed) and asks for *additional* coverage instead of replaying stale proposals. Separate cache dir (`.moose-docevals/cache/fill`) from the judge cache: different key schemes and value shapes must never mix.
 - **Lazy provider construction**: identity is resolved without building the provider, so fully-cached or all-skipped runs need no API key.
 - Every proposal must carry `examples.pass` / `examples.fail`, so generated evals never trigger the resolve-time missing-examples warning.
 - Pages with no frontmatter block get one synthesized; everywhere else the edit is surgical and the body stays byte-identical.
@@ -46,7 +46,7 @@ Chosen option: "Numeric confidence gate", with these specifics:
 - Good, because the command-grader exclusion keeps `fill` outside the arbitrary-code-execution surface.
 - Good, because threshold experiments and corpus re-runs are free once proposals are cached.
 - Bad, because LLM self-reported confidence is imperfectly calibrated; the 0.7 default may need tuning against real corpora.
-- Bad, because two cache directories (judge, fill) exist under `.docevals/cache/`.
+- Bad, because two cache directories (judge, fill) exist under `.moose-docevals/cache/`.
 
 ### Confirmation
 
@@ -65,7 +65,7 @@ Chosen option: "Numeric confidence gate", with these specifics:
 
 - Good, because it is simpler and matches the sibling tool.
 - Bad, because nothing is tunable — the only lever on proposal quality is rewriting the prompt.
-- Bad, because docevals' whole design (zones, calibration) is built on scored confidence; an unscored generator is out of character.
+- Bad, because moose-docevals' whole design (zones, calibration) is built on scored confidence; an unscored generator is out of character.
 
 ### Reuse `judge.zones.autoPass` (0.8)
 

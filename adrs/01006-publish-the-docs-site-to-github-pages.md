@@ -4,7 +4,7 @@ date: 2026-08-04
 decision-makers: [hawkeyexl]
 ---
 
-# Publish the docs site to GitHub Pages, gated on docevals evaluating itself
+# Publish the docs site to GitHub Pages, gated on moose-docevals evaluating itself
 
 ## Context and Problem Statement
 
@@ -21,7 +21,7 @@ Two questions: where the site is hosted, and what must hold before it ships.
   the failure modes that actually exist.
 - `main` has no ruleset requiring pull requests, so anything that assumes "it passed on the PR"
   is assuming something the repo does not enforce.
-- ~1,350 internal links across 35 built pages, and **nothing checked them**. `docevals run` verifies
+- ~1,350 internal links across 35 built pages, and **nothing checked them**. `moose-docevals run` verifies
   that a page's commands are true; links were an unguarded surface where the build succeeds either
   way.
 
@@ -44,7 +44,7 @@ C. Build and deploy without re-verifying.
 Chosen: **option 1** for hosting and **option A** for gating, plus a new link check.
 
 `docs.yml` runs `verify-docs → build → deploy` on every push to `main` and on manual dispatch. Pages
-is configured with `build_type: workflow`, publishing to `https://hawkeyexl.github.io/docevals/` —
+is configured with `build_type: workflow`, publishing to `https://hawkeyexl.github.io/moose-docevals/` —
 which is exactly what `docs/astro.config.mjs` already declared as `site` + `base`, so no config
 changed to make this work.
 
@@ -87,7 +87,7 @@ on `pull_request`, so the page-embedded commands it executes are always already 
   then `build` + link check, then `deploy`. Any failure stops the deploy.
 - `npm run docs:check-links` locally after `npm run build` in `docs/`.
 - The built output was checked before enabling anything: base prefix applied to all 1,354 internal
-  links and assets, sitemap emitting absolute `https://hawkeyexl.github.io/docevals/...` URLs, and
+  links and assets, sitemap emitting absolute `https://hawkeyexl.github.io/moose-docevals/...` URLs, and
   deep routes present.
 
 ## Pros and Cons of the Options

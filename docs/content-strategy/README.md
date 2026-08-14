@@ -1,6 +1,6 @@
 # Content strategy
 
-This directory holds the durable content strategy for the docevals documentation site: who the docs
+This directory holds the durable content strategy for the moose-docevals documentation site: who the docs
 are for, what those people are trying to accomplish, and what the site's structure must therefore be.
 It is the reference every writing task consults before drafting a page.
 
@@ -47,7 +47,7 @@ without a page behind it, is the signal — and
 
 ## Evidence basis, and its limits
 
-**This strategy is a reasoned hypothesis, not validated research.** docevals is unpublished and has no
+**This strategy is a reasoned hypothesis, not validated research.** moose-docevals is unpublished and has no
 users, so there were no customer or prospect calls to segment from. The audiences are synthesized
 bottom-up from four named sources, and each audience file records which ones it leans on in its
 `evidence_basis:` field:
@@ -55,9 +55,9 @@ bottom-up from four named sources, and each audience file records which ones it 
 | Source | What it supports |
 |---|---|
 | The [docmeta](https://github.com/hawkeyexl/docmeta) content strategy | Its four audiences were derived for a near-identical adopter base — a docs-as-code team wiring a metadata gate into CI. Three personas are deliberately shared. |
-| Doc Detective's user base | `test/fixtures/pages/` *is* its documentation, which makes it a concrete worked example of the corpus docevals is aimed at. |
+| Doc Detective's user base | `test/fixtures/pages/` *is* its documentation, which makes it a concrete worked example of the corpus moose-docevals is aimed at. |
 | The *Docs as Tests with AI* manuscript (draft 4) | The grader hierarchy, ensemble size, confidence zones, the 70% calibration threshold, and the 15% false-positive alert. |
-| docevals' own surface | `src/cli.ts`, `src/core/config-schema.json`, and `src/graders/registry.ts` bound what any persona can actually do. |
+| moose-docevals' own surface | `src/cli.ts`, `src/core/config-schema.json`, and `src/graders/registry.ts` bound what any persona can actually do. |
 
 Treat the audiences and pains as **falsifiable claims**. When there are real users, re-derive this
 directory from call evidence and expect it to change — segments to merge, pains to be wrong, at least
@@ -83,7 +83,7 @@ Before drafting or editing any page under `docs/src/content/docs/**`:
 
 ## Verifying technical claims
 
-docevals docs document a real CLI, so every flag, exit code, output string, and config key must match
+moose-docevals docs document a real CLI, so every flag, exit code, output string, and config key must match
 the code — never the writer's assumption.
 
 - **Source files are the contract for behavior.** `src/cli.ts` for commands and flags,
@@ -95,6 +95,6 @@ the code — never the writer's assumption.
 - **Capture real sample output** rather than hand-writing it: `npm run build`, then run
   `node dist/cli.js …` against `test/fixtures/pages/`.
 - **Every page presenting a command carries inline Doc Detective steps** that run it, and an `evals:`
-  block whose `tool:doc-detective` eval executes them. `docevals run` over this site is a CI gate, so
+  block whose `tool:doc-detective` eval executes them. `moose-docevals run` over this site is a CI gate, so
   a command that drifts from the code fails the build. See
   `information-architecture/proposed-ia.md` for the authoring convention.

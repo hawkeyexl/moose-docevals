@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { computeConsensus, zoneFor } from "@hawkeyexl/inference";
 import { makeJudge } from "../../src/judge/judge.js";
 import { MockProvider, mockVerdict } from "@hawkeyexl/inference";
-import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig } from "../helpers/config.js";
 import { resolvePage } from "../../src/core/resolve.js";
 import { recordReview } from "../../src/core/reviews.js";
 import { stripFrontmatterBlock, type PageFile } from "../../src/core/discover.js";
@@ -108,17 +108,17 @@ function makeTarget(body: string, name = "claim-check"): GraderTarget {
     body: stripFrontmatterBlock(content),
     frontmatter: extractFrontmatter(content, "markdown"),
   };
-  const config = parseConfig("version: 1\n", "/fake/docevals.config.yaml");
+  const config = parseDocevalsConfig("version: 1\n", "/fake/moose.config.yaml");
   const plan = resolvePage(page, config);
   return { plan, eval: plan.evals[0]! };
 }
 
 function tempRoot(): string {
-  return mkdtempSync(join(tmpdir(), "docevals-judge-"));
+  return mkdtempSync(join(tmpdir(), "moose-docevals-judge-"));
 }
 
 describe("makeJudge", () => {
-  const config = parseConfig("version: 1\n", "/fake/docevals.config.yaml");
+  const config = parseDocevalsConfig("version: 1\n", "/fake/moose.config.yaml");
 
   it("runs the ensemble and auto-passes unanimous confident verdicts", async () => {
     const provider = new MockProvider([mockVerdict("pass", 0.95)]);
@@ -238,9 +238,9 @@ describe("makeJudge", () => {
   });
 
   it("stops judging when the cost budget is exhausted", async () => {
-    const costConfig = parseConfig(
+    const costConfig = parseDocevalsConfig(
       "version: 1\nprovider:\n  anthropic:\n    model: claude-sonnet-4-5\n",
-      "/fake/docevals.config.yaml",
+      "/fake/moose.config.yaml",
     );
     // MockProvider reports usage; model "mock-model" has no pricing → cost 0.
     // Use a zero budget so the second target is skipped regardless.

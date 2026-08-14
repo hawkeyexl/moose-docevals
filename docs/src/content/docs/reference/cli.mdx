@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Every docevals command and flag, with the exit code each produces.
+description: Every moose-docevals command and flag, with the exit code each produces.
 ---
 
 Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by
@@ -13,15 +13,15 @@ Commands that operate on pages take **positional globs**. With none given, the c
 
 | Flag | Commands | Meaning |
 |---|---|---|
-| `-c, --config <path>` | all except `init` | Path to `docevals.config.yaml`. Without it, docevals looks for that filename in the working directory; with no file at all, built-in defaults apply and there are no named evals or suites. |
-| `-f, --format <format>` | `list`, `run`, `fill` | Output format. `run` accepts `human`, `json`, `markdown`, `github`; `list` and `fill` accept `human` and `json`. Anything else — including `run`'s `markdown` passed to `list` — is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
+| `-c, --config <path>` | all except `init` | Path to `moose.config.yaml`. Without it, moose-docevals looks for that filename in the working directory; with no file at all, built-in defaults apply and there are no named evals or suites. |
+| `-f, --format <format>` | `list`, `run`, `fill` | Output format. `run` accepts `human`, `json`, `markdown`, `github`; `list` and `fill` accept `human` and `json`. Anything else — including `run`'s `markdown` passed to `list` — is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
 | `--provider <name>` | `run`, `generate`, `fill`, `promote`, `calibrate` | `anthropic`, `openai`, or `claude-cli`. Overrides `provider.default`. |
 | `--model <model>` | same as above | Overrides the model for the selected provider. |
 
 Flags override config; they do not bypass it. An unset flag falls through to the resolved config
 value, so a config file and the CLI reach the same code paths.
 
-## `docevals run [globs...]`
+## `moose-docevals run [globs...]`
 
 Runs every resolved eval: deterministic graders first (cheapest first), then the LLM judge, then
 human-review resolution.
@@ -30,21 +30,21 @@ human-review resolution.
 |---|---|
 | `--deterministic-only` | Run only `command` and `tool:*` graders. LLM evals report as `skipped`. No provider needed — this is the offline path. |
 | `--llm-only` | Run only LLM-judged evals; skip deterministic graders. |
-| `--no-frontmatter-commands` | Skip `command` evals declared in **page frontmatter**. See [Untrusted pull requests](/docevals/ci/untrusted-pull-requests/) — this does **not** gate `tool:doc-detective`. |
+| `--no-frontmatter-commands` | Skip `command` evals declared in **page frontmatter**. See [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/) — this does **not** gate `tool:doc-detective`. |
 | `--no-generate` | Do not generate scripts for command evals that lack a `command`. |
 | `--no-cache` | Bypass the judge response cache. |
 | `--fail-on-review` | Exit 1 when any eval lands in the human-review zone. |
 | `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensembleRuns` (default 3). |
 | `--max-cost <usd>` | Abort judging once spend passes this ceiling. Overrides `judge.maxCostUsd`. |
 
-## `docevals list [globs...]`
+## `moose-docevals list [globs...]`
 
 Shows the resolved eval plan per page and runs nothing. This is the dry run for
-[named evals and suites](/docevals/evals/named-evals-and-suites/) — use it when a page's frontmatter,
+[named evals and suites](/moose-docevals/evals/named-evals-and-suites/) — use it when a page's frontmatter,
 a referenced eval, and a suite could each contribute the same name.
 
 ```console
-$ docevals list test/fixtures/pages/docs/actions/goTo.mdx
+$ moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx
 test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
   - no-future-promises [llm, regression, config]
   - fresh-enough [tool:freshness, regression, config]
@@ -56,15 +56,15 @@ test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
 
 Each line is `name [grader, type, source]`, where source is `config` or `page`.
 
-## `docevals generate [globs...]`
+## `moose-docevals generate [globs...]`
 
 Writes a check script for every `command` eval that has a plain-language assertion but no `command`,
 then records the command in frontmatter. See
-[Deterministic checks](/docevals/evals/deterministic-checks/).
+[Deterministic checks](/moose-docevals/evals/deterministic-checks/).
 
 Exits 1 if any target failed to generate.
 
-## `docevals fill [globs...]`
+## `moose-docevals fill [globs...]`
 
 Proposes evals for each page from its content, gated on a self-reported confidence.
 
@@ -78,29 +78,29 @@ Proposes evals for each page from its content, gated on a self-reported confiden
 Raw proposals are cached **before** the confidence gate, so re-running at a different `--confidence`
 costs nothing.
 
-## `docevals promote [globs...]`
+## `moose-docevals promote [globs...]`
 
 Reviews llm-graded evals and reports which are expressible as deterministic checks. **Report-only by
 default**; `--write` applies the conversions. See
-[Promote to deterministic](/docevals/adopt/promote-to-deterministic/).
+[Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/).
 
-## `docevals calibrate`
+## `moose-docevals calibrate`
 
 Measures judge agreement against a human-verified golden set.
 
 | Flag | Effect |
 |---|---|
-| `--golden <dir>` | Golden set directory. Default `.docevals/golden`. |
+| `--golden <dir>` | Golden set directory. Default `.moose-docevals/golden`. |
 | `--runs <n>` | Ensemble runs per case. |
 | `--no-cache` | Bypass the judge response cache. |
 
-Exits 1 when agreement is below the threshold. See [Calibrate](/docevals/judge/calibrate/).
+Exits 1 when agreement is below the threshold. See [Calibrate](/moose-docevals/judge/calibrate/).
 
-## `docevals init`
+## `moose-docevals init`
 
-Writes a starter `docevals.config.yaml` in the working directory. Takes no options.
+Writes a starter `moose.config.yaml` in the working directory. Takes no options.
 
-## `docevals review [file] [eval] [verdict]`
+## `moose-docevals review [file] [eval] [verdict]`
 
 With no arguments, lists the evals awaiting a human verdict. With all three, records one.
 
@@ -110,7 +110,7 @@ With no arguments, lists the evals awaiting a human verdict. With all three, rec
 | `--note <text>` | Optional note. |
 
 `verdict` is `pass` or `fail`. Supplying a file without an eval and verdict is a usage error. See
-[Human review](/docevals/judge/human-review/).
+[Human review](/moose-docevals/judge/human-review/).
 
 ## Exit codes
 
@@ -120,27 +120,27 @@ With no arguments, lists the evals awaiting a human verdict. With all three, rec
 | `1` | Findings, errors, or a suite below its target pass rate. The author's problem. |
 | `2` | Operational or usage error — bad config, missing provider, malformed flag. Not the author's problem. |
 
-Full detail in [Output and exit codes](/docevals/reference/output-and-exit-codes/).
+Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/).
 
-{/* Verified by docevals itself during `verify-docs` (see .github/workflows/ci.yml),
+{/* Verified by moose-docevals itself during `verify-docs` (see .github/workflows/ci.yml),
     against the committed fixture corpus. Config: .doc-detective.json. */}
 
-{/* step {"description":"The CLI lists all eight commands.","runShell":{"command":"npx docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*init[\\s\\S]*review/"}} */}
+{/* step {"description":"The CLI lists all eight commands.","runShell":{"command":"npx moose-docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*init[\\s\\S]*review/"}} */}
 
-{/* step {"description":"`list` prints the resolved plan with grader, type, and source, and runs nothing.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":", regression, config]"}} */}
+{/* step {"description":"`list` prints the resolved plan with grader, type, and source, and runs nothing.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":", regression, config]"}} */}
 
-{/* step {"description":"Exit 0 when every eval passes.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"Exit 0 when every eval passes.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
 
-{/* step {"description":"Exit 1 when an eval fails.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1]}} */}
+{/* step {"description":"Exit 1 when an eval fails.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1]}} */}
 
-{/* step {"description":"Exit 2 for an operational error, distinct from a finding.","runShell":{"command":"npx docevals run -c does-not-exist.yaml","exitCodes":[2]}} */}
+{/* step {"description":"Exit 2 for an operational error, distinct from a finding.","runShell":{"command":"npx moose-docevals run -c does-not-exist.yaml","exitCodes":[2]}} */}
 
-{/* step {"description":"--confidence above 1 is a usage error.","runShell":{"command":"npx docevals fill --confidence 5 --dry-run","exitCodes":[2]}} */}
+{/* step {"description":"--confidence above 1 is a usage error.","runShell":{"command":"npx moose-docevals fill --confidence 5 --dry-run","exitCodes":[2]}} */}
 
-{/* step {"description":"An unknown --format is a usage error on run, and the message names the allowed set.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --format xml","exitCodes":[2],"stdio":"/must be one of human \\| json \\| markdown \\| github/"}} */}
+{/* step {"description":"An unknown --format is a usage error on run, and the message names the allowed set.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --format xml","exitCodes":[2],"stdio":"/must be one of human \\| json \\| markdown \\| github/"}} */}
 
-{/* step {"description":"list rejects an unknown --format the same way, with its own narrower set.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/find.mdx --format xml","exitCodes":[2],"stdio":"/must be one of human \\| json/"}} */}
+{/* step {"description":"list rejects an unknown --format the same way, with its own narrower set.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/find.mdx --format xml","exitCodes":[2],"stdio":"/must be one of human \\| json/"}} */}
 
-{/* step {"description":"list rejects a format that is valid only for run, rather than falling back to human.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/find.mdx --format markdown","exitCodes":[2]}} */}
+{/* step {"description":"list rejects a format that is valid only for run, rather than falling back to human.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/find.mdx --format markdown","exitCodes":[2]}} */}
 
-{/* step {"description":"fill rejects an unknown --format before doing any work.","runShell":{"command":"npx docevals fill --dry-run --format xml","exitCodes":[2]}} */}
+{/* step {"description":"fill rejects an unknown --format before doing any work.","runShell":{"command":"npx moose-docevals fill --dry-run --format xml","exitCodes":[2]}} */}

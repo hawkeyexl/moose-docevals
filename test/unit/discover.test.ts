@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { resolve } from "node:path";
-import { parseConfig } from "../../src/core/config.js";
+import { parseDocevalsConfig } from "../helpers/config.js";
 import { discoverPages, stripFrontmatterBlock } from "../../src/core/discover.js";
 import { DocevalsError } from "../../src/types.js";
 
@@ -26,9 +26,9 @@ describe("stripFrontmatterBlock", () => {
 });
 
 describe("discoverPages", () => {
-  const config = parseConfig(
+  const config = parseDocevalsConfig(
     'version: 1\nfiles:\n  include: ["test/fixtures/pages/**/*.{md,mdx}"]\n',
-    resolve(ROOT, "docevals.config.yaml"),
+    resolve(ROOT, "moose.config.yaml"),
   );
 
   it("finds the fixture pages with relative forward-slash paths", () => {

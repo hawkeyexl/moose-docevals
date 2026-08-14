@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hawkeyexl.github.io/docevals/schemas/frontmatter-0.1.json",
-  "title": "docevals frontmatter",
-  "description": "Page-level eval declarations for docevals under the `evals` key. Evals are graded by code (command/tool graders), an LLM judge, or a human.",
+  "$id": "https://hawkeyexl.github.io/moose-docevals/schemas/frontmatter-0.1.json",
+  "title": "moose-docevals frontmatter",
+  "description": "Page-level eval declarations for moose-docevals under the `evals` key. Evals are graded by code (command/tool graders), an LLM judge, or a human.",
   "type": "object",
   "properties": {
     "evals": {
@@ -22,7 +22,7 @@
       "properties": {
         "suite": {
           "type": "string",
-          "description": "Named suite from docevals.config.yaml whose evals apply to this page. Page-level evals win on name collision."
+          "description": "Named suite from moose.config.yaml whose evals apply to this page. Page-level evals win on name collision."
         },
         "skip": {
           "type": "boolean",
@@ -31,7 +31,7 @@
         },
         "generatedBy": {
           "type": "string",
-          "description": "Model that generated this page's content, if any. docevals warns when it equals the judge model (self-preference bias)."
+          "description": "Model that generated this page's content, if any. moose-docevals warns when it equals the judge model (self-preference bias)."
         },
         "evals": {
           "type": "array",
@@ -54,7 +54,7 @@
         "use": {
           "type": "string",
           "minLength": 1,
-          "description": "Name of an eval defined in docevals.config.yaml."
+          "description": "Name of an eval defined in moose.config.yaml."
         },
         "type": { "$ref": "#/$defs/evalType" },
         "skip": { "type": "boolean" },
@@ -95,7 +95,7 @@
           "type": "array",
           "items": { "type": "string" },
           "minItems": 1,
-          "description": "Command to execute for command-graded evals. {file} is replaced with the page path. Exit 0 = pass. Omit to have docevals generate a check script from the assertion."
+          "description": "Command to execute for command-graded evals. {file} is replaced with the page path. Exit 0 = pass. Omit to have moose-docevals generate a check script from the assertion."
         },
         "successExitCodes": {
           "type": "array",

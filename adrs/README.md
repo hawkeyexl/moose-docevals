@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Every **behavior change** in docevals ships with an ADR here. The ADR records the intended behavior and the reasoning — write it before or alongside the code, so it is the reviewable source of truth rather than an afterthought. The full rule lives in [CLAUDE.md](../CLAUDE.md#architecture-decision-records-required).
+Every **behavior change** in moose-docevals ships with an ADR here. The ADR records the intended behavior and the reasoning — write it before or alongside the code, so it is the reviewable source of truth rather than an afterthought. The full rule lives in [CLAUDE.md](../CLAUDE.md#architecture-decision-records-required).
 
 ## Conventions
 
@@ -17,10 +17,11 @@ Every **behavior change** in docevals ships with an ADR here. The ADR records th
 | [01001](01001-fill-proposes-llm-evals-with-confidence-gating.md) | `fill` proposes llm-graded evals with a confidence gate | accepted |
 | [01002](01002-take-inference-from-the-shared-library.md) | Take the inference layer from `@hawkeyexl/inference` | accepted |
 | [01003](01003-cuj-first-docs-site-and-content-strategy.md) | A CUJ-first documentation site, driven by a co-located content strategy | accepted |
-| [01004](01004-test-the-docs-through-docevals-itself.md) | Test the docs site through docevals itself, with committed cache fixtures | accepted |
+| [01004](01004-test-the-docs-through-moose-docevals-itself.md) | Test the docs site through moose-docevals itself, with committed cache fixtures | accepted |
 | [01005](01005-fix-the-doc-detective-adapter-invocation-and-finding-granularity.md) | Fix the Doc Detective adapter: invocation, failure detection, and finding granularity | accepted |
-| [01006](01006-publish-the-docs-site-to-github-pages.md) | Publish the docs site to GitHub Pages, gated on docevals evaluating itself | accepted |
+| [01006](01006-publish-the-docs-site-to-github-pages.md) | Publish the docs site to GitHub Pages, gated on moose-docevals evaluating itself | accepted |
 | [01007](01007-validate-format-centrally-as-a-usage-error.md) | Validate `--format` centrally, and reject an unknown value as a usage error | accepted |
+| [01008](01008-rename-to-moose-docevals-and-share-one-family-config.md) | Rename to `moose-docevals`, and read config from a shared `moose.config.yaml` | accepted |
 
 ## To backfill
 

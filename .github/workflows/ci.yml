@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test:
-    # docevals shells out to external tools (markdownlint, Vale, generated
+    # moose-docevals shells out to external tools (markdownlint, Vale, generated
     # check scripts), and the spawn path is genuinely platform-specific:
     # exec.ts leans on cross-spawn to resolve npm `.cmd` shims on Windows, and
     # frontmatter-edit.ts preserves CRLF. Both are developed on Windows and
@@ -53,16 +53,16 @@ jobs:
         # A relative path resolves identically for both.
         run: |
           set +e
-          node dist/cli.js run --deterministic-only --no-generate --format json > docevals-run.json
+          node dist/cli.js run --deterministic-only --no-generate --format json > moose-docevals-run.json
           code=$?
           set -e
           if [ "$code" -ne 1 ]; then
             echo "Expected exit 1 from the fixture corpus, got $code"
-            cat docevals-run.json
+            cat moose-docevals-run.json
             exit 1
           fi
           node -e '
-            let raw = require("fs").readFileSync("docevals-run.json", "utf8");
+            let raw = require("fs").readFileSync("moose-docevals-run.json", "utf8");
             if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1); // tolerate a BOM
             const r = JSON.parse(raw);
             const find = (f, e) => r.evalResults.find((x) => x.file.endsWith(f) && x.evalName === e);
@@ -77,7 +77,7 @@ jobs:
             // Severity-overridden freshness fails; warning-severity does not.
             check("goTo.mdx fresh-enough", find("goTo.mdx", "fresh-enough")?.outcome, "fail");
             check("concepts.md fresh-enough", find("concepts.md", "fresh-enough")?.outcome, "pass");
-            // docevals validates its own frontmatter through published docmeta.
+            // moose-docevals validates its own frontmatter through published docmeta.
             const fm = r.evalResults.filter((x) => x.evalName === "frontmatter-valid");
             if (fm.length === 0) { console.error("no frontmatter-valid results"); process.exitCode = 1; }
             for (const x of fm) check(`${x.file} frontmatter-valid`, x.outcome, "pass");
@@ -111,7 +111,57 @@ jobs:
           # markdown is a `run` format; `list` must reject it, not fall back.
           check_two node dist/cli.js list test/fixtures/pages/docs/actions/find.mdx --format markdown
 
-  # Verify the documentation site: docevals runs over docs/src/content/docs/**,
+      # ADR 01008. Both failure modes here are silent by construction: a config
+      # the loader does not recognize yields a defaults-only run with no evals
+      # and no suites, and exits 0. Unit tests cover the loader; this asserts
+      # the same contract through the built CLI, where `init` and `list` meet.
+      #
+      # Relative paths only — see the note on the dogfood step above.
+      - name: Dogfood the moose config contract
+        shell: bash
+        run: |
+          rm -rf .ci-config-check
+          mkdir -p .ci-config-check/docs
+          printf -- '---\ntitle: Sample\nlast-reviewed: 2026-08-01\nevals:\n  - fresh-enough\n---\n\n# Sample\n\nBody.\n' \
+            > .ci-config-check/docs/page.md
+          cd .ci-config-check
+          node ../dist/cli.js init
+          # The scaffold must be namespaced, or every named eval silently vanishes.
+          grep -q '^docevals:$' moose.config.yaml \
+            || { echo "init scaffolded a config with no docevals: namespace"; cat moose.config.yaml; exit 1; }
+          # ...and the named eval it defines must actually resolve.
+          out=$(node ../dist/cli.js list)
+          case "$out" in
+            *"fresh-enough"*) ;;
+            *) echo "scaffolded config resolved no named evals — got: $out"; exit 1 ;;
+          esac
+          expect_usage_error() {
+            set +e
+            out=$("$@" 2>&1)
+            code=$?
+            set -e
+            if [ "$code" -ne 2 ]; then
+              echo "Expected exit 2 from: $* — got $code"
+              echo "$out"
+              exit 1
+            fi
+            case "$out" in
+              *"docevals:"*) ;;
+              *) echo "Expected the migration message to name the namespace — got: $out"; exit 1 ;;
+            esac
+          }
+          # Guard 1, by filename: a pre-rename name in cwd must stop the run.
+          mv moose.config.yaml docevals.config.yaml
+          expect_usage_error node ../dist/cli.js run --deterministic-only
+          # Guard 2, by shape: --config never reaches the filename check, so an
+          # unmigrated *flat* config has to be caught on its keys. Without this
+          # the run exits 0 having resolved nothing at all.
+          printf 'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n' > flat.yaml
+          expect_usage_error node ../dist/cli.js run -c flat.yaml --deterministic-only
+          cd ..
+          rm -rf .ci-config-check
+
+  # Verify the documentation site: moose-docevals runs over docs/src/content/docs/**,
   # where the tool:doc-detective grader executes the inline test steps embedded
   # in each page. A documented command that drifts from the code fails here.
   #
@@ -123,7 +173,7 @@ jobs:
     # SECURITY GATE — do not remove. The doc-detective grader runs shell
     # commands embedded in page *bodies*, so a fork pull request could execute
     # its author's code on this runner. `scripts.allowFrontmatterCommands:
-    # false` in docs/docevals.config.yaml does NOT cover that path — it only
+    # false` in docs/moose.config.yaml does NOT cover that path — it only
     # gates commands declared in frontmatter. Restricting the job to same-repo
     # pull requests is the complete answer.
     if: >-
@@ -138,14 +188,14 @@ jobs:
       - run: npm install --no-fund --no-audit
       - run: npm run build
 
-      # Expose the freshly built CLI as the `docevals` command the docs invoke.
-      # `npm link` puts it on PATH for a bare `docevals ...`; `npm link
-      # @hawkeyexl/docevals` adds node_modules/.bin/docevals so `npx docevals
+      # Expose the freshly built CLI as the `moose-docevals` command the docs invoke.
+      # `npm link` puts it on PATH for a bare `moose-docevals ...`; `npm link
+      # moose-docevals` adds node_modules/.bin/moose-docevals so `npx moose-docevals
       # ...` resolves the local build. dist/ is gitignored and the package is
       # unpublished, so without these the documented commands have nothing to
       # run.
       - run: npm link
-      - run: npm link @hawkeyexl/docevals
+      - run: npm link moose-docevals
 
       # Guard against silent zero-coverage. A step with a typo'd key (`stdout`
       # instead of `stdio`) is reported "isn't a valid step. Skipping." — and if
@@ -167,9 +217,9 @@ jobs:
 
       # No ANTHROPIC_API_KEY is set, deliberately. The docs-page suite is
       # deterministic today, and judged evals replay from the committed cache in
-      # docs/.docevals-cache/ once they join the suite. A cache miss surfaces as
+      # docs/.moose-docevals-cache/ once they join the suite. A cache miss surfaces as
       # a provider error, so a green run here proves the fixtures are real.
-      - name: Verify docs (docevals over the docs site)
+      - name: Verify docs (moose-docevals over the docs site)
         run: npm run docs:verify -- --format github
 
       # Catch Astro/Starlight breakage — a page can pass its evals and still

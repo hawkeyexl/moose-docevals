@@ -8,7 +8,7 @@ decision-makers: [hawkeyexl]
 
 ## Context and Problem Statement
 
-Wiring the documentation site's verification through `docevals run` (ADR 01004) exercised the
+Wiring the documentation site's verification through `moose-docevals run` (ADR 01004) exercised the
 `tool:doc-detective` grader for the first time. It had never actually been run against the real tool,
 and it was broken in two independent ways:
 
@@ -27,7 +27,7 @@ and it was broken in two independent ways:
    writes its results JSON to a *file* while printing only a coloured summary to stdout. So
    `lastJsonBlob(result.stdout)` found nothing, `collectFailures` returned `[]`, and `result.code`
    was `0` — no finding from either path. Verified end to end: a step asserting `exitCodes: [0]` on a
-   command that exits 9 reported `pass`, and `docevals run` over the docs exited 0.
+   command that exits 9 reported `pass`, and `moose-docevals run` over the docs exited 0.
 
 Defect 3 made ADR 01004's central claim — "a documented command that drifts from the code fails the
 build" — false. The gate existed and verified nothing.
@@ -103,14 +103,14 @@ A FAIL with nothing readable anywhere now yields no findings; the caller's exist
 fallback catches that.
 
 **On `--allow-unsafe`: not needed, and deliberately not set.** Tested empirically — a `runShell` step
-invoking the docevals CLI executes without it, both in a scratch probe and in the four real steps now
+invoking the moose-docevals CLI executes without it, both in a scratch probe and in the four real steps now
 embedded in `reference/index.mdx`. Adding it would widen what a content file can execute for no
 benefit, which cuts directly against the fork-safety posture in ADR 01004.
 
 ### Consequences
 
 - Good: `tool:doc-detective` works out of the box; the workaround override in
-  `docs/docevals.config.yaml` is reduced to the config path it legitimately needs.
+  `docs/moose.config.yaml` is reduced to the config path it legitimately needs.
 - Good: one failed step is one finding, with the message a human can act on.
 - Good: the adapter now has tests — argv shape, override handling, the empty-results pass, the
   one-finding-per-step rule, the exit-code fallback, and spawn errors.

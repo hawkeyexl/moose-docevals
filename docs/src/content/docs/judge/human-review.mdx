@@ -12,7 +12,7 @@ the zone off.
 ## See what is waiting
 
 ```bash
-npx docevals review
+npx moose-docevals review
 ```
 
 With no arguments, `review` lists the evals awaiting a verdict. You do not need to hunt through a
@@ -21,7 +21,7 @@ report — this surprises people, so it is worth knowing on day one.
 ## Record a verdict
 
 ```bash
-npx docevals review docs/install.md explains-why-before-how pass \
+npx moose-docevals review docs/install.md explains-why-before-how pass \
   --reviewer priya \
   --note "Motivation is in the intro paragraph, not a heading."
 ```
@@ -31,7 +31,7 @@ what stops the next person re-litigating the same borderline case.
 
 ## Verdicts persist, and expire on their own
 
-Reviews land in `.docevals/reviews.yaml`:
+Reviews land in `.moose-docevals/reviews.yaml`:
 
 ```yaml
 - file: docs/install.md
@@ -55,7 +55,7 @@ accumulate stale approvals — a page reviewed once in 2024 passing forever rega
 to it since.
 
 Commit `reviews.yaml`. It is team state, not a cache — see
-[Files and state](/docevals/reference/files-and-state/).
+[Files and state](/moose-docevals/reference/files-and-state/).
 
 ## Should review block the build?
 
@@ -77,7 +77,7 @@ so the queue is visible without holding anyone up.
 ## Contributors cannot clear it themselves
 
 Someone whose pull request is blocked by a needs-review eval usually has no standing to resolve it.
-Escalating is the correct outcome for them — see [Fix a failing eval](/docevals/fix/). Make sure your
+Escalating is the correct outcome for them — see [Fix a failing eval](/moose-docevals/fix/). Make sure your
 contributing guide names who to escalate to; "ask someone" is how these sit for a week.
 
 ## A repeat offender is a diagnosis
@@ -85,11 +85,11 @@ contributing guide names who to escalate to; "ask someone" is how these sit for 
 **An eval that lands in review on every single run is telling you its assertion is ambiguous.**
 
 Answering it faster forever is the wrong response. The repair is in
-[Write good assertions](/docevals/evals/write-good-assertions/) — usually adding `evidence` to scope
+[Write good assertions](/moose-docevals/evals/write-good-assertions/) — usually adding `evidence` to scope
 what the judge looks at, or an `examples.fail` that writes down the boundary being disputed.
 
 If you are unsure whether a rewrite helped, add the case to your golden set and
-[calibrate](/docevals/judge/calibrate/). That converts "it feels better" into a measurement.
+[calibrate](/moose-docevals/judge/calibrate/). That converts "it feels better" into a measurement.
 
 ## Tuning how much lands here
 

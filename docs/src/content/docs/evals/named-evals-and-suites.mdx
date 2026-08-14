@@ -6,22 +6,23 @@ description: Turn per-page assertions into a shared library, and measure page ty
 The gate worked on one page, so it got copied. Now the same assertion exists in twelve pages with
 three slightly different wordings and nobody can say what a how-to page is actually checked for.
 
-This is where docevals stops being a linter and becomes a standard.
+This is where moose-docevals stops being a linter and becomes a standard.
 
 ## Name the eval once
 
-Move it into `docevals.config.yaml` under `evals`:
+Move it into `moose.config.yaml` under `evals`:
 
 ```yaml
-evals:
-  no-future-promises:
-    type: regression
-    assertion: The page makes no claims about unreleased or future functionality.
-    grader: llm
-    evidence: All prose sections
-    examples:
-      pass: Describes only shipped behavior.
-      fail: Says "coming soon" or references an unreleased version.
+docevals:
+  evals:
+    no-future-promises:
+      type: regression
+      assertion: The page makes no claims about unreleased or future functionality.
+      grader: llm
+      evidence: All prose sections
+      examples:
+        pass: Describes only shipped behavior.
+        fail: Says "coming soon" or references an unreleased version.
 ```
 
 Pages reference it by name:
@@ -39,16 +40,17 @@ Change the wording in one place and every page that uses it changes. Names match
 A suite is a named group plus a target pass rate — the checks that apply to a *kind* of page.
 
 ```yaml
-suites:
-  reference:
-    targetPassRate: 1.0
-    evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
-  tutorial:
-    targetPassRate: 0.7
-    evals: [explains-why-before-how, no-future-promises]
-  how-to:
-    targetPassRate: 1.0
-    evals: [no-future-promises, readable]
+docevals:
+  suites:
+    reference:
+      targetPassRate: 1.0
+      evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
+    tutorial:
+      targetPassRate: 0.7
+      evals: [explains-why-before-how, no-future-promises]
+    how-to:
+      targetPassRate: 1.0
+      evals: [no-future-promises, readable]
 ```
 
 ```yaml
@@ -64,7 +66,7 @@ when they need something specific.
 
 ## `targetPassRate` is a suite property
 
-This is the piece people miss, and missing it makes docevals look far too strict.
+This is the piece people miss, and missing it makes moose-docevals look far too strict.
 
 Individual verdicts are binary. The nuance lives in the **rate across a suite**:
 
@@ -110,7 +112,7 @@ Suites, references, and inline definitions can all contribute the same name, and
 on collision**. Do not guess:
 
 ```bash
-npx docevals list docs/
+npx moose-docevals list docs/
 ```
 
 ```console
@@ -126,8 +128,8 @@ test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
 `source` — the third item — is `config` or `page`, which is exactly what you need when one page
 behaves unlike its neighbours.
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"`list` reports the suite a page resolved to and the source of each eval.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"/suite: reference/"}} */}
+{/* step {"description":"`list` reports the suite a page resolved to and the source of each eval.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"/suite: reference/"}} */}
 
-{/* step {"description":"A suite below its target pass rate fails the run.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"below target"}} */}
+{/* step {"description":"A suite below its target pass rate fails the run.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"below target"}} */}

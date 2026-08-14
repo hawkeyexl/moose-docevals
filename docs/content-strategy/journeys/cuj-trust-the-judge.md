@@ -44,7 +44,7 @@ is being asked to **know when it is unsure**. Auto-pass, auto-fail, and a human-
 them. Presented this way, the human-review zone stops looking like an admission of failure and starts
 looking like the reason a binary verdict is acceptable at all.
 
-Calibration is the proof. Twenty to fifty human-verified cases in `.docevals/golden/`, `docevals
+Calibration is the proof. Twenty to fifty human-verified cases in `.moose-docevals/golden/`, `moose-docevals
 calibrate`, an agreement rate, and a false-positive rate. The threshold behavior carries a lesson
 worth stating plainly: **below 70% agreement the command exits 1, and the correct response is to
 refine the assertions, not the grader.** Low agreement is nearly always evidence that the assertions

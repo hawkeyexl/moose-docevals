@@ -24,12 +24,13 @@ Triage first. Deprecated sections, generated reference, and archives should be *
 fixed.
 
 ```yaml
-files:
-  include: ["docs/**/*.{md,mdx}"]
-  exclude:
-    - "**/node_modules/**"
-    - "docs/archive/**"
-    - "docs/api/generated/**"
+docevals:
+  files:
+    include: ["docs/**/*.{md,mdx}"]
+    exclude:
+      - "**/node_modules/**"
+      - "docs/archive/**"
+      - "docs/api/generated/**"
 ```
 
 Per page:
@@ -48,21 +49,22 @@ instead spend a week fixing content nobody reads.
 ## 2. Propose evals one directory at a time
 
 ```bash
-npx docevals fill --dry-run --max-cost 5 docs/how-to/
+npx moose-docevals fill --dry-run --max-cost 5 docs/how-to/
 ```
 
 Batching keeps the review reviewable and the spend visible. See
-[Bootstrap a corpus](/docevals/adopt/).
+[Bootstrap a corpus](/moose-docevals/adopt/).
 
 ## 3. Enter at warning severity
 
 ```yaml
-evals:
-  readable:
-    assertion: Page prose reads below grade 12.
-    grader: tool:reading-level
-    options: { maxGrade: 12 }
-    severity: warning        # reports everywhere, blocks nowhere
+docevals:
+  evals:
+    readable:
+      assertion: Page prose reads below grade 12.
+      grader: tool:reading-level
+      options: { maxGrade: 12 }
+      severity: warning        # reports everywhere, blocks nowhere
 ```
 
 Findings appear in every report and every PR annotation. Nothing fails. You now have a burn-down list
@@ -73,20 +75,21 @@ instead of a broken build — and the assertion still says what you actually mea
 Severity is for deterministic graders. The judged analog is the suite target:
 
 ```yaml
-suites:
-  how-to-adopting:
-    targetPassRate: 0.6      # where the corpus is today
-    evals: [explains-why-before-how, no-future-promises]
+docevals:
+  suites:
+    how-to-adopting:
+      targetPassRate: 0.6      # where the corpus is today
+      evals: [explains-why-before-how, no-future-promises]
 ```
 
 Set the target near the current rate, then raise it as pages improve. "60% of how-to pages explain
 why before how, and last quarter it was 45%" is a real report. See
-[Regression vs capability](/docevals/evals/regression-vs-capability/).
+[Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
 ## 5. Burn down one section
 
 Pick the section that matters most — usually the one with the most traffic, not the most findings.
-Fix its pages. [Fix a failing eval](/docevals/fix/) is the page to hand contributors.
+Fix its pages. [Fix a failing eval](/moose-docevals/fix/) is the page to hand contributors.
 
 ## 6. Ratchet that section to error
 
@@ -103,7 +106,7 @@ the whole corpus. Every step is small, green, and mergeable.
 
 A retrofitted corpus is disproportionately llm-graded, because `fill` proposes llm evals by
 construction. Before the recurring cost becomes the story, push them down the hierarchy —
-[Promote to deterministic](/docevals/adopt/promote-to-deterministic/).
+[Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/).
 
 ## What good looks like at the end of a quarter
 

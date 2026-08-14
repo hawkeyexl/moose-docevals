@@ -8,7 +8,7 @@ firmographics: [startup, scaleup, oss-project, docs-in-product-repo, 20-300-page
 relationship_stages: [prospect, customer]
 personas: [persona-solo-owner]
 features_emphasized: [fill, confidence-threshold, dry-run, max-cost, init, deterministic-only]
-evidence_basis: [doc-detective-user-base, docevals-surface, docmeta-content-strategy]
+evidence_basis: [doc-detective-user-base, moose-docevals-surface, docmeta-content-strategy]
 ---
 
 # Audience: Solo docs owner
@@ -46,7 +46,7 @@ pages that contradict the product.
   a spend cap they had to argue for once. An unbounded run is not a risk to manage, it is a reason not
   to start. `--dry-run`, `--max-cost`, and the fact that re-running against cache is free are
   load-bearing.
-- **No appetite for configuration.** Every key in `docevals.config.yaml` they must understand before
+- **No appetite for configuration.** Every key in `moose.config.yaml` they must understand before
   the first useful run is a chance to give up. `init` plus sensible defaults has to carry them.
 
 ## Buying constraints

@@ -38,7 +38,7 @@ He scripts everything, distrusts per-repo snowflakes, and knows from experience 
 is slow, flaky, or expensive gets disabled by the first team it inconveniences. He arrives because a
 docs team asked for a step, or because a docs check started costing money and it landed on his desk.
 
-He inherits two problems from docevals that docmeta never gave him, and they are what make him a
+He inherits two problems from moose-docevals that docmeta never gave him, and they are what make him a
 first-class persona here rather than a footnote.
 
 **A model is in the critical path.** Slow, rate-limitable, nondeterministic, and metered per call —

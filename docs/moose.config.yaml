@@ -1,0 +1,134 @@
+# moose config for the documentation site itself.
+#
+# Separate from the repo-root moose.config.yaml on purpose. The root config
+# runs against test/fixtures/pages/, which deliberately encodes failures so the
+# CI gate is meaningful. This one runs against docs/src/content/docs/**, which
+# must be all-green. Both run; neither replaces the other.
+#
+# See docs/content-strategy/information-architecture/proposed-ia.md
+# ("Authoring convention: pages that show commands") and ADR 01004.
+docevals:
+  version: 1
+
+  files:
+    include:
+      - "docs/src/content/docs/**/*.{md,mdx}"
+    exclude:
+      - "**/node_modules/**"
+
+  defaults:
+    # Every docs page gets this suite without repeating it in frontmatter. Pages
+    # add an `evals:` block only when they need something page-specific.
+    suite: docs-page
+    failFast: false
+    concurrency: 4
+
+  provider:
+    default: anthropic
+    anthropic:
+      model: claude-sonnet-4-5
+      apiKeyEnv: ANTHROPIC_API_KEY
+    claude-cli:
+      model: claude-sonnet-4-5
+
+  judge:
+    ensembleRuns: 3
+    temperature: 0
+    zones:
+      autoPass: 0.8
+      autoFail: 0.8
+    falsePositiveAlert: 0.15
+    # Committed, not gitignored. The repo-root .gitignore excludes `.moose-docevals/`,
+    # so the docs corpus keeps its cache somewhere version-controlled — that is
+    # what lets the verify-docs CI job replay LLM verdicts with no API key.
+    # Regenerate with `npm run docs:refresh-cache` after any PROMPT_VERSION bump.
+    cacheDir: docs/.moose-docevals-cache
+    maxCostUsd: 2.0
+
+  fill:
+    cacheDir: docs/.moose-docevals-cache/fill
+    maxCostUsd: 2.0
+
+  scripts:
+    dir: "{docDir}/moose-docevals"
+    configDir: moose-docevals-scripts
+    # The docs corpus declares no frontmatter commands. Command execution here
+    # comes from the tool:doc-detective grader running steps embedded in page
+    # bodies, which this flag does NOT gate — the verify-docs job is restricted to
+    # same-repo pull requests instead. See docs/src/content/docs/ci/
+    # untrusted-pull-requests.mdx (planned) and ADR 01004.
+    allowFrontmatterCommands: false
+    timeoutMs: 60000
+
+  evals:
+    # --- Deterministic. These run offline with no provider. ---
+    commands-work:
+      assertion: >
+        Every command the page presents runs and produces the documented result.
+      grader: tool:doc-detective
+      options:
+        # Only the config path is overridden — the grader's default argv is
+        # correct as of ADR 01005. It appends `--input <file>`.
+        #
+        # No --allow-unsafe: the inline steps invoke the moose-docevals CLI via
+        # runShell, which Doc Detective permits by default. Adding it would widen
+        # what a content file can execute for no benefit. See ADR 01005.
+        command: ["npx", "--no-install", "doc-detective", "--config", ".doc-detective.json"]
+      severity: error
+
+    frontmatter-valid:
+      assertion: Page frontmatter validates against the moose-docevals frontmatter schema.
+      grader: tool:docmeta
+      options:
+        schemas: ["schemas/frontmatter-0.1.json"]
+      severity: error
+
+    markdownlint:
+      assertion: Page passes markdownlint style rules.
+      grader: tool:markdownlint
+      severity: warning
+
+    # --- LLM-graded. Defined and named, but NOT yet in the docs-page suite. ---
+    # The site is currently section-index stubs; judging placeholder prose would
+    # produce cache fixtures that assert nothing. These join the suite with the
+    # first real page, at which point `npm run docs:refresh-cache` generates the
+    # committed fixtures that keep verify-docs green without an API key.
+    no-future-promises:
+      type: regression
+      assertion: The page makes no claims about unreleased or future functionality.
+      grader: llm
+      evidence: All prose sections
+      examples:
+        pass: Describes only shipped behavior.
+        fail: Says "coming soon" or references an unreleased version.
+
+    serves-one-journey:
+      type: capability
+      assertion: >
+        The page states, near the top, what the reader will be able to do when
+        they finish it.
+      grader: llm
+      evidence: Title, description, and the first section
+      examples:
+        pass: Opens by naming the outcome the reader reaches.
+        fail: Opens with a definition or a feature list and never names an outcome.
+
+    readable:
+      assertion: Page prose reads below grade 12.
+      grader: tool:reading-level
+      options:
+        maxGrade: 12
+      severity: warning
+
+  suites:
+    # Deterministic only, for now — see the note above the LLM evals.
+    docs-page:
+      targetPassRate: 1.0
+      evals: [commands-work, frontmatter-valid, markdownlint]
+
+    # The target state, once real pages and their cache fixtures exist.
+    docs-page-full:
+      targetPassRate: 1.0
+      evals:
+        [commands-work, frontmatter-valid, markdownlint, readable, no-future-promises,
+         serves-one-journey]

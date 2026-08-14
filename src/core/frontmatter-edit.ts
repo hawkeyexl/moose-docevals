@@ -124,7 +124,7 @@ export function updatePageEval(
   return open + newBlock + suffix;
 }
 
-/** Update a named eval in docevals.config.yaml text. */
+/** Update a named eval in moose.config.yaml text. */
 export function updateConfigEval(
   configText: string,
   configPath: string,

@@ -22,7 +22,7 @@ export function renderGithub(report: EngineReport): string {
         `file=${escapeProperty(f.file)}`,
         f.line != null ? `line=${f.line}` : undefined,
         f.col != null ? `col=${f.col}` : undefined,
-        `title=${escapeProperty(`docevals: ${f.evalName}`)}`,
+        `title=${escapeProperty(`moose-docevals: ${f.evalName}`)}`,
       ]
         .filter(Boolean)
         .join(",");
@@ -32,7 +32,7 @@ export function renderGithub(report: EngineReport): string {
       const reasoning =
         r.consensus.runs.find((run) => run.verdict)?.verdict?.reasoning ?? "";
       lines.push(
-        `::error file=${escapeProperty(r.file)},title=${escapeProperty(`docevals: ${r.evalName}`)}::${escapeData(
+        `::error file=${escapeProperty(r.file)},title=${escapeProperty(`moose-docevals: ${r.evalName}`)}::${escapeData(
           `LLM judge: fail (confidence ${r.consensus.meanConfidence.toFixed(2)}). ${reasoning}`,
         )}`,
       );
@@ -43,7 +43,7 @@ export function renderGithub(report: EngineReport): string {
     const props = [
       `file=${escapeProperty(p.file)}`,
       p.line != null ? `line=${p.line}` : undefined,
-      `title=docevals`,
+      `title=moose-docevals`,
     ]
       .filter(Boolean)
       .join(",");

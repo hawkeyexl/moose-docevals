@@ -2,7 +2,7 @@
  * Live smoke test — runs one real eval and one real script generation via the
  * Claude CLI (local auth, no API key). Opt-in:
  *
- *   DOCEVALS_LIVE=1 npm test
+ *   MOOSE_DOCEVALS_LIVE=1 npm test
  *
  * Asserts only shape and zone membership, never exact verdicts — live model
  * output is nondeterministic by nature.
@@ -12,12 +12,13 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { runEvals } from "../../src/core/engine.js";
+import { nestUnderDocevals } from "../helpers/config.js";
 import { makeJudge } from "../../src/judge/judge.js";
 import { makeGenerateScripts } from "../../src/graders/scriptgen.js";
 import { ClaudeCliProvider } from "@hawkeyexl/inference";
 
 const ROOT = resolve(import.meta.dirname, "../..");
-const LIVE = process.env.DOCEVALS_LIVE === "1";
+const LIVE = process.env.MOOSE_DOCEVALS_LIVE === "1";
 
 describe.skipIf(!LIVE)("live smoke via Claude CLI", () => {
   const provider = new ClaudeCliProvider("claude-sonnet-4-5");
@@ -44,7 +45,7 @@ describe.skipIf(!LIVE)("live smoke via Claude CLI", () => {
   }, 300000);
 
   it("generates a real check script for a plain-language assertion", async () => {
-    const root = mkdtempSync(join(tmpdir(), "docevals-live-"));
+    const root = mkdtempSync(join(tmpdir(), "moose-docevals-live-"));
     mkdirSync(join(root, "docs"), { recursive: true });
     writeFileSync(
       join(root, "docs", "page.md"),
@@ -67,8 +68,8 @@ describe.skipIf(!LIVE)("live smoke via Claude CLI", () => {
       ].join("\n"),
     );
     writeFileSync(
-      join(root, "docevals.config.yaml"),
-      'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n',
+      join(root, "moose.config.yaml"),
+      nestUnderDocevals('version: 1\nfiles:\n  include: ["docs/**/*.md"]\n'),
     );
     const report = await runEvals({
       cwd: root,

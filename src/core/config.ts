@@ -1,8 +1,10 @@
 /**
- * Loads and validates `docevals.config.yaml`. The config carries provider and
- * judge settings plus the central library of named evals and suites that page
- * frontmatter references. Validation is JSON Schema (2020-12) via Ajv;
- * defaults are applied in code afterward so the resolved shape is fully typed.
+ * Loads and validates `moose.config.yaml`. The file is shared by the moose
+ * family of documentation tools: moose-docevals reads its own `docevals:`
+ * namespace and leaves every sibling key alone. It carries provider and judge
+ * settings plus the central library of named evals and suites that page
+ * frontmatter references. Validation is JSON Schema (2020-12) via Ajv; defaults
+ * are applied in code afterward so the resolved shape is fully typed.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname, isAbsolute } from "node:path";
@@ -82,7 +84,29 @@ export interface DocevalsConfig {
   configDir: string;
 }
 
-export const DEFAULT_CONFIG_FILENAME = "docevals.config.yaml";
+/** Top-level key moose-docevals owns inside the shared moose config. */
+const NAMESPACE = "docevals";
+
+export const DEFAULT_CONFIG_FILENAME = "moose.config.yaml";
+
+/** The pre-rename filename, kept only to raise a migration error. Never read. */
+const LEGACY_CONFIG_FILENAME = `${NAMESPACE}.config.yaml`;
+
+/**
+ * Root keys that only a pre-rename config has. A moose config namespaces every
+ * tool, so finding these at the root means the file was never migrated.
+ */
+const PRE_RENAME_ROOT_KEYS = [
+  "version",
+  "files",
+  "defaults",
+  "provider",
+  "judge",
+  "scripts",
+  "fill",
+  "evals",
+  "suites",
+];
 
 const ajv = new Ajv2020({ allErrors: true, allowUnionTypes: true });
 const validateConfig = ajv.compile(configSchema);
@@ -105,6 +129,22 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new DocevalsError(`Invalid config in ${configPath}: root must be an object`);
   }
+
+  // `--config <path>` reaches here without passing loadConfig's filename check,
+  // so a pre-rename file named anything at all would otherwise parse to pure
+  // defaults — no evals, no suites, exit 0. Catch it by shape instead.
+  if (!(NAMESPACE in raw)) {
+    const stray = PRE_RENAME_ROOT_KEYS.filter((k) => k in raw);
+    if (stray.length > 0) {
+      throw new DocevalsError(
+        `Invalid config in ${configPath}: found ${stray.join(", ")} at the root, ` +
+          `but no "${NAMESPACE}:" key.\n` +
+          `moose.config.yaml is shared across the moose family, so every docevals ` +
+          `setting belongs under a top-level "${NAMESPACE}:" key. Indent the file's ` +
+          `contents one level and add that key.`,
+      );
+    }
+  }
   if (!validateConfig(raw)) {
     const details = (validateConfig.errors ?? [])
       .map((e) => `  ${e.instancePath || "/"}: ${e.message}`)
@@ -112,7 +152,9 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
     throw new DocevalsError(`Invalid config in ${configPath}:\n${details}`);
   }
 
-  const r = raw as Record<string, any>;
+  // Sibling tools own the other root keys; this reads only its own namespace.
+  // A file that configures no docevals at all leaves every default in place.
+  const r = ((raw as Record<string, any>)[NAMESPACE] ?? {}) as Record<string, any>;
   const abs = resolve(configPath);
   const dir = dirname(abs);
 
@@ -163,12 +205,12 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
         autoFail: r.judge?.zones?.autoFail ?? 0.8,
       },
       falsePositiveAlert: r.judge?.falsePositiveAlert ?? 0.15,
-      cacheDir: r.judge?.cacheDir ?? ".docevals/cache",
+      cacheDir: r.judge?.cacheDir ?? ".moose-docevals/cache",
       maxCostUsd: r.judge?.maxCostUsd ?? null,
     },
     scripts: {
-      dir: r.scripts?.dir ?? "{docDir}/docevals",
-      configDir: r.scripts?.configDir ?? "docevals-scripts",
+      dir: r.scripts?.dir ?? "{docDir}/moose-docevals",
+      configDir: r.scripts?.configDir ?? "moose-docevals-scripts",
       allowFrontmatterCommands: r.scripts?.allowFrontmatterCommands ?? true,
       timeoutMs: r.scripts?.timeoutMs ?? 30000,
     },
@@ -176,7 +218,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       confidenceThreshold: r.fill?.confidenceThreshold ?? 0.7,
       maxEvalsPerPage: r.fill?.maxEvalsPerPage ?? 3,
       temperature: r.fill?.temperature ?? 0,
-      cacheDir: r.fill?.cacheDir ?? ".docevals/cache/fill",
+      cacheDir: r.fill?.cacheDir ?? ".moose-docevals/cache/fill",
       maxCostUsd: r.fill?.maxCostUsd ?? null,
     },
     evals: (r.evals ?? {}) as Record<string, EvalDef>,
@@ -204,7 +246,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
 }
 
 /**
- * Load config from an explicit path, or find `docevals.config.yaml` in the
+ * Load config from an explicit path, or find `moose.config.yaml` in the
  * working directory. With no config file present, built-in defaults apply
  * (no named evals or suites).
  */
@@ -220,5 +262,16 @@ export function loadConfig(path?: string, cwd = process.cwd()): DocevalsConfig {
   if (existsSync(candidate)) {
     return parseConfig(readFileSync(candidate, "utf8"), candidate);
   }
-  return parseConfig("version: 1\n", candidate);
+  // Falling through to defaults here would run with no named evals and no
+  // suites — and pass. Name the migration instead of failing silently.
+  const legacy = resolve(cwd, LEGACY_CONFIG_FILENAME);
+  if (existsSync(legacy)) {
+    throw new DocevalsError(
+      `Found ${LEGACY_CONFIG_FILENAME} but no ${DEFAULT_CONFIG_FILENAME} in ${cwd}. ` +
+        `moose-docevals now reads the shared moose config: rename the file to ` +
+        `${DEFAULT_CONFIG_FILENAME} and indent its contents under a top-level ` +
+        `"${NAMESPACE}:" key.`,
+    );
+  }
+  return parseConfig("{}", candidate);
 }

@@ -28,7 +28,7 @@ exhaustive over `ReportFormat` — but the cast at the call site is what admits 
 it, so the compile-time guarantee buys nothing at the boundary where the string actually arrives.
 
 This surfaced while writing inline Doc Detective steps for the docs site (ADR 01004). A step
-asserting exit 2 for `docevals list --format xml` failed, because the real behavior is exit 0. The
+asserting exit 2 for `moose-docevals list --format xml` failed, because the real behavior is exit 0. The
 step was rewritten to use a genuine operational error rather than encode the defect, so nothing in
 the repo documented or tested this.
 
@@ -95,7 +95,7 @@ output where it asked for JSON, with no error — which is precisely the silent 
 exists to remove. Being reached from a library instead of the CLI does not make it quieter. Three
 equally public functions taking the same flag's value should fail the same way.
 
-The error is a `DocevalsError`, so `fail()` prints `docevals: --format must be one of human | json,
+The error is a `DocevalsError`, so `fail()` prints `moose-docevals: --format must be one of human | json,
 got "xml"` and exits 2.
 
 ### Consequences
@@ -151,7 +151,7 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 - Bad, because commander exits **1** with its own `error: option '-f, --format <format>' argument
   'xml' is invalid` — the code reserved for findings. Distinguishing usage errors from findings is
   the entire point of the contract, and a CI job cannot tell the two apart.
-- Bad, because the message is not a `DocevalsError` and does not match the `docevals: …` prefix
+- Bad, because the message is not a `DocevalsError` and does not match the `moose-docevals: …` prefix
   every other error uses.
 
 ### Option 4 — make the renderers total, with no CLI parsing

@@ -37,9 +37,9 @@ engineer who wires up an eval gate, and the contributor who hits a red frontmatt
 contributor who hits a red eval. Reusing the names keeps that continuity legible to anyone working
 across both repos, and keeps the two strategies comparable rather than parallel-but-unrelated.
 
-The roles are not identical, and the differences are the interesting part: docevals' Devin inherits
+The roles are not identical, and the differences are the interesting part: moose-docevals' Devin inherits
 two problems docmeta's Devin never had — a model in the critical path and content-driven code
-execution — and docevals' Sara owns prose assertions rather than JSON Schema. Priya, Nate, and Iris
+execution — and moose-docevals' Sara owns prose assertions rather than JSON Schema. Priya, Nate, and Iris
 are new here; docmeta's lead persona splits into Priya and Nate along the hours-available axis,
 because `fill` makes the one-person case a genuinely different journey rather than a smaller one.
 

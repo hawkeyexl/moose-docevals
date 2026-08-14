@@ -6,7 +6,7 @@
  *
  * The ensemble mechanics — retry-once, errored runs counting against
  * consensus, cache replay — live in `@hawkeyexl/inference` (ADR 01002). What
- * stays here is docevals' own orchestration: the bounded-concurrency pool
+ * stays here is moose-docevals' own orchestration: the bounded-concurrency pool
  * across targets, the cost budget, the self-judgment warning, and human-review
  * resolution.
  */
@@ -32,7 +32,7 @@ import { providerSpecFor } from "./provider.js";
 import { resolve as resolvePath } from "node:path";
 
 /**
- * docevals' own verdict wording. Structurally identical to the library's
+ * moose-docevals' own verdict wording. Structurally identical to the library's
  * canonical schema, but the field descriptions talk about pages rather than
  * generic subjects — and descriptions are prompt surface that steers the
  * model, so they are worth keeping (the inference library's own ADR 01001,
@@ -58,7 +58,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     const cache = new JsonCache<JudgeRun[]>(
       resolvePath(root, config.judge.cacheDir),
       options.noCache !== true,
-      "docevals",
+      "moose-docevals",
     );
     // Pricing overrides ride on the provider spec, so the same mapping that
     // builds the provider also answers what its model costs.
@@ -82,7 +82,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
       if (by && by === provider.modelName() && !selfJudged.has(by)) {
         selfJudged.add(by);
         console.warn(
-          `docevals: ${t.plan.page.file} declares generatedBy: ${by}, which is also the judge model. A model judging its own output favors it — judge with a different model.`,
+          `moose-docevals: ${t.plan.page.file} declares generatedBy: ${by}, which is also the judge model. A model judging its own output favors it — judge with a different model.`,
         );
       }
     }
@@ -118,7 +118,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
           plan.page.body,
           ev,
         ),
-        label: "docevals",
+        label: "moose-docevals",
       });
 
       const consensusBase = computeConsensus(runs);

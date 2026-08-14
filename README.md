@@ -1,4 +1,4 @@
-# docevals
+# moose-docevals
 
 Deterministic and LLM-as-judge evals for documentation pages, driven by frontmatter.
 
@@ -11,9 +11,9 @@ second, a human last.
 Requires Node.js 24+.
 
 ```bash
-npm i -D @hawkeyexl/docevals
-npx docevals init
-npx docevals run --deterministic-only
+npm i -D moose-docevals
+npx moose-docevals init
+npx moose-docevals run --deterministic-only
 ```
 
 That last command needs no API key and costs nothing — it runs the deterministic graders only. On a
@@ -34,7 +34,7 @@ evals:
 ```
 
 ```console
-$ npx docevals run docs/ --deterministic-only
+$ npx moose-docevals run docs/ --deterministic-only
 docs/actions/goTo.mdx
   FAIL fresh-enough
        error:4 [freshness/stale] Page last reviewed 937 days ago (max 365)
@@ -49,21 +49,21 @@ Exit `1`. A docs regression, caught the way a test catches a code one.
 
 ## Documentation
 
-**<https://hawkeyexl.github.io/docevals/>**
+**<https://hawkeyexl.github.io/moose-docevals/>**
 
-Published from `main` on every push, gated on docevals evaluating its own documentation — the
+Published from `main` on every push, gated on moose-docevals evaluating its own documentation — the
 commands these pages present are executed against the fixture corpus before the site ships.
 
 | Section | Covers |
 |---|---|
-| [Get started](https://hawkeyexl.github.io/docevals/get-started/) | Install, first assertion, first finding |
-| [How docevals works](https://hawkeyexl.github.io/docevals/get-started/how-docevals-works/) | The eval, the grader hierarchy, how a verdict is reached |
-| [Write evals](https://hawkeyexl.github.io/docevals/evals/) | The frontmatter contract, assertion craft, deterministic checks, suites |
-| [Adopt at scale](https://hawkeyexl.github.io/docevals/adopt/) | `fill`, retrofitting a legacy corpus, `promote` |
-| [Run it in CI](https://hawkeyexl.github.io/docevals/ci/) | Recipes, exit codes, cost, and fork safety |
-| [Trust the judge](https://hawkeyexl.github.io/docevals/judge/) | Ensemble, confidence zones, calibration, providers |
-| [Fix a failing eval](https://hawkeyexl.github.io/docevals/fix/) | For contributors whose PR just went red |
-| [Reference](https://hawkeyexl.github.io/docevals/reference/) | CLI, config, frontmatter, graders, output, state |
+| [Get started](https://hawkeyexl.github.io/moose-docevals/get-started/) | Install, first assertion, first finding |
+| [How moose-docevals works](https://hawkeyexl.github.io/moose-docevals/get-started/how-moose-docevals-works/) | The eval, the grader hierarchy, how a verdict is reached |
+| [Write evals](https://hawkeyexl.github.io/moose-docevals/evals/) | The frontmatter contract, assertion craft, deterministic checks, suites |
+| [Adopt at scale](https://hawkeyexl.github.io/moose-docevals/adopt/) | `fill`, retrofitting a legacy corpus, `promote` |
+| [Run it in CI](https://hawkeyexl.github.io/moose-docevals/ci/) | Recipes, exit codes, cost, and fork safety |
+| [Trust the judge](https://hawkeyexl.github.io/moose-docevals/judge/) | Ensemble, confidence zones, calibration, providers |
+| [Fix a failing eval](https://hawkeyexl.github.io/moose-docevals/fix/) | For contributors whose PR just went red |
+| [Reference](https://hawkeyexl.github.io/moose-docevals/reference/) | CLI, config, frontmatter, graders, output, state |
 
 To run the site locally:
 
@@ -75,29 +75,29 @@ cd docs && npm install && npm run dev
 
 | Command | Purpose |
 |---|---|
-| `docevals run [globs]` | Run all evals: deterministic graders first, then the LLM judge |
-| `docevals list` | Dry run — show each page's resolved eval plan |
-| `docevals generate` | Generate scripts for command evals missing a command |
-| `docevals fill [--dry-run]` | Propose new frontmatter evals with an LLM, gated on confidence |
-| `docevals promote [--write]` | Convert llm evals that could be deterministic |
-| `docevals review <file> <eval> <pass\|fail>` | Record a human verdict |
-| `docevals calibrate` | Score the judge against a human-verified golden set |
-| `docevals init` | Scaffold a starter config |
+| `moose-docevals run [globs]` | Run all evals: deterministic graders first, then the LLM judge |
+| `moose-docevals list` | Dry run — show each page's resolved eval plan |
+| `moose-docevals generate` | Generate scripts for command evals missing a command |
+| `moose-docevals fill [--dry-run]` | Propose new frontmatter evals with an LLM, gated on confidence |
+| `moose-docevals promote [--write]` | Convert llm evals that could be deterministic |
+| `moose-docevals review <file> <eval> <pass\|fail>` | Record a human verdict |
+| `moose-docevals calibrate` | Score the judge against a human-verified golden set |
+| `moose-docevals init` | Scaffold a starter config |
 
 Exit codes: `0` pass · `1` failures, errors, or a suite below target · `2` usage or operational
-error. Full flag reference in [the CLI docs](https://hawkeyexl.github.io/docevals/reference/cli/).
+error. Full flag reference in [the CLI docs](https://hawkeyexl.github.io/moose-docevals/reference/cli/).
 
 ## The published schema
 
-docevals ships the frontmatter JSON Schema as a package artifact, so any validator can check your
+moose-docevals ships the frontmatter JSON Schema as a package artifact, so any validator can check your
 pages:
 
 ```bash
-docmeta validate --schema node_modules/@hawkeyexl/docevals/schemas/frontmatter-0.1.json docs/
+docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
 ```
 
 ```js
-import { frontmatterSchema, frontmatterSchemaPath } from "@hawkeyexl/docevals";
+import { frontmatterSchema, frontmatterSchemaPath } from "moose-docevals";
 ```
 
 ## Contributing

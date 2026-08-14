@@ -17,11 +17,13 @@ const ROOT = resolve(import.meta.dirname, "../..");
 describe("full run with mock judge", () => {
   it("judges llm evals, keeps deterministic outcomes, and reports cost", async () => {
     // Cache dir isolated per test run.
-    const cacheRoot = mkdtempSync(join(tmpdir(), "docevals-e2e-"));
-    const configText = readFileSync(join(ROOT, "docevals.config.yaml"), "utf8");
+    const cacheRoot = mkdtempSync(join(tmpdir(), "moose-docevals-e2e-"));
+    const configText = readFileSync(join(ROOT, "moose.config.yaml"), "utf8");
+    // The repo's own config file is already a complete moose config, so it
+    // parses as-is rather than through the nesting helper.
     const config = parseConfig(
-      configText.replace("cacheDir: .docevals/cache", `cacheDir: ${JSON.stringify(join(cacheRoot, "cache"))}`),
-      join(ROOT, "docevals.config.yaml"),
+      configText.replace("cacheDir: .moose-docevals/cache", `cacheDir: ${JSON.stringify(join(cacheRoot, "cache"))}`),
+      join(ROOT, "moose.config.yaml"),
     );
 
     const provider = new MockProvider([mockVerdict("pass", 0.95)]);

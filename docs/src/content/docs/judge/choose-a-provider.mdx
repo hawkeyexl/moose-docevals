@@ -15,11 +15,12 @@ needs.
 ## `anthropic` (default)
 
 ```yaml
-provider:
-  default: anthropic
-  anthropic:
-    model: claude-sonnet-4-5
-    apiKeyEnv: ANTHROPIC_API_KEY
+docevals:
+  provider:
+    default: anthropic
+    anthropic:
+      model: claude-sonnet-4-5
+      apiKeyEnv: ANTHROPIC_API_KEY
 ```
 
 Structured output via forced tool use, so verdicts arrive as validated JSON rather than prose to
@@ -31,12 +32,13 @@ The `baseUrl` is the interesting field. It points at any OpenAI-compatible serve
 Azure, Groq, LM Studio, or an internal gateway.
 
 ```yaml
-provider:
-  default: openai
-  openai:
-    baseUrl: http://localhost:11434/v1   # Ollama
-    model: llama3.1:8b
-    apiKeyEnv: OPENAI_API_KEY
+docevals:
+  provider:
+    default: openai
+    openai:
+      baseUrl: http://localhost:11434/v1   # Ollama
+      model: llama3.1:8b
+      apiKeyEnv: OPENAI_API_KEY
 ```
 
 ```yaml
@@ -47,21 +49,22 @@ Uses strict `json_schema` structured output where the endpoint supports it, fall
 `json_object` automatically where it does not — so smaller local models still work.
 
 **This is the answer to a security review.** If page content cannot leave your infrastructure, point
-`baseUrl` at a model that runs inside it. Nothing else about docevals changes.
+`baseUrl` at a model that runs inside it. Nothing else about moose-docevals changes.
 
 ## `claude-cli` — no API key
 
 ```yaml
-provider:
-  default: claude-cli
-  claude-cli:
-    model: claude-sonnet-4-5
-    command: claude
+docevals:
+  provider:
+    default: claude-cli
+    claude-cli:
+      model: claude-sonnet-4-5
+      command: claude
 ```
 
 Shells out to the local `claude` CLI and uses its existing auth. Useful when:
 
-- You are evaluating docevals and do not want to provision a key.
+- You are evaluating moose-docevals and do not want to provision a key.
 - Developers have CLI access but the team has no shared API key.
 - You would rather not put a long-lived key in CI.
 
@@ -78,22 +81,23 @@ A floating alias means your verdicts change when the alias moves — silently, w
 at. That is the one thing guaranteed to destroy trust in the gate.
 
 When you do change models deliberately: it invalidates every cached verdict (the model is part of the
-cache key), and it invalidates your calibration. [Re-calibrate](/docevals/judge/calibrate/) before
+cache key), and it invalidates your calibration. [Re-calibrate](/moose-docevals/judge/calibrate/) before
 trusting the new one.
 
 ## Cost reporting for non-default models
 
-docevals ships a price table for common models. For a self-hosted or unusual model, supply pricing so
+moose-docevals ships a price table for common models. For a self-hosted or unusual model, supply pricing so
 cost reporting stays meaningful:
 
 ```yaml
-provider:
-  openai:
-    baseUrl: https://llm-gateway.internal.example.com/v1
-    model: internal-model-v2
-    pricing:
-      inputPerMTok: 0.5
-      outputPerMTok: 1.5
+docevals:
+  provider:
+    openai:
+      baseUrl: https://llm-gateway.internal.example.com/v1
+      model: internal-model-v2
+      pricing:
+        inputPerMTok: 0.5
+        outputPerMTok: 1.5
 ```
 
 Set both to `0` for a self-hosted model with no marginal cost — that keeps `--max-cost` from
@@ -102,14 +106,14 @@ misfiring on a model that is free to run.
 ## Overriding per run
 
 ```bash
-npx docevals run --provider claude-cli
-npx docevals run --provider openai --model llama3.1:8b
+npx moose-docevals run --provider claude-cli
+npx moose-docevals run --provider openai --model llama3.1:8b
 ```
 
 Handy for comparing a cheaper model against your golden set before committing to it:
 
 ```bash
-npx docevals calibrate --provider openai --model llama3.1:8b
+npx moose-docevals calibrate --provider openai --model llama3.1:8b
 ```
 
 ## No provider at all
@@ -118,5 +122,5 @@ npx docevals calibrate --provider openai --model llama3.1:8b
 and generated checks all still run.
 
 This is the right configuration for fork pull requests, pre-commit hooks, and anyone evaluating
-docevals before deciding about model access — see
-[Untrusted pull requests](/docevals/ci/untrusted-pull-requests/).
+moose-docevals before deciding about model access — see
+[Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).

@@ -23,7 +23,7 @@ export const SCRIPTGEN_SYSTEM_PROMPT = [
   "",
   "Contract for every script:",
   "- ES module (.mjs) using only Node.js built-in modules. No dependencies.",
-  "- The page's absolute path arrives as process.argv[2] (also DOCEVALS_FILE).",
+  "- The page's absolute path arrives as process.argv[2] (also MOOSE_DOCEVALS_FILE).",
   "- Exit 0 when the assertion holds, 1 when it fails, 2 on operational error.",
   "- On failure, print a short human-readable reason to stderr.",
   "- Deterministic: no network access, no spawning processes, no randomness.",
@@ -104,7 +104,7 @@ export function scriptLocationFor(
 
 function header(assertion: string, evalName: string): string {
   return [
-    "// docevals generated check",
+    "// moose-docevals generated check",
     `// Eval: ${evalName}`,
     `// Assertion: ${assertion.replace(/\s+/g, " ").trim()}`,
     "// Exit 0 = pass, 1 = fail, 2 = operational error.",

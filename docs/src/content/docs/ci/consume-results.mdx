@@ -9,10 +9,10 @@ scorecard — use `--format json` or the library directly.
 ## `--format json`
 
 One object per run. Full field reference in
-[Output and exit codes](/docevals/reference/output-and-exit-codes/).
+[Output and exit codes](/moose-docevals/reference/output-and-exit-codes/).
 
 ```bash
-npx docevals run --format json > docevals.json
+npx moose-docevals run --format json > moose-docevals.json
 ```
 
 ```json
@@ -33,7 +33,7 @@ Primary output goes to stdout, so redirect it. Diagnostics go to stderr.
 Findings, flattened for a table:
 
 ```bash
-npx docevals run --format json \
+npx moose-docevals run --format json \
   | jq -r '.evalResults[] | select(.findings) | .findings[]
            | [.file, .line // "-", .severity, .evalName, .message] | @tsv'
 ```
@@ -41,7 +41,7 @@ npx docevals run --format json \
 Suites missing their target:
 
 ```bash
-npx docevals run --format json \
+npx moose-docevals run --format json \
   | jq -r '.suites[] | select(.meetsTarget | not)
            | "\(.suite): \(.passRate * 100 | floor)% vs \(.targetPassRate * 100)%"'
 ```
@@ -49,13 +49,13 @@ npx docevals run --format json \
 Cache effectiveness — the number that tells you whether your CI cache is working:
 
 ```bash
-npx docevals run --format json | jq '.cost | {cachedEvals, judgedEvals, totalUsd}'
+npx moose-docevals run --format json | jq '.cost | {cachedEvals, judgedEvals, totalUsd}'
 ```
 
 Evals awaiting a person:
 
 ```bash
-npx docevals run --format json \
+npx moose-docevals run --format json \
   | jq -r '.evalResults[] | select(.outcome == "needs-review") | "\(.file) \(.evalName)"'
 ```
 
@@ -64,21 +64,21 @@ npx docevals run --format json \
 `suites[].passRate` is the metric worth storing. Push it wherever your team already looks:
 
 ```bash
-npx docevals run --format json \
+npx moose-docevals run --format json \
   | jq -c '{ts: now, suites: [.suites[] | {suite, passRate, meetsTarget}]}' \
   >> metrics/docs-quality.jsonl
 ```
 
 Capability suites are the interesting series — a regression suite should sit flat at 1.0, while a
 capability suite's rate is the actual measure of a quality goal spreading. See
-[Regression vs capability](/docevals/evals/regression-vs-capability/).
+[Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
 ## The TypeScript API
 
 The package exports the frontmatter schema for consumers that validate pages themselves:
 
 ```js
-import { frontmatterSchema, frontmatterSchemaPath } from "@hawkeyexl/docevals";
+import { frontmatterSchema, frontmatterSchemaPath } from "moose-docevals";
 ```
 
 `frontmatterSchema` is the parsed schema object; `frontmatterSchemaPath` is its resolved path on
@@ -93,10 +93,10 @@ and the wording can change in any release. Parse `json`; it is the shape that is
 
 The JSON carries `exitCode`, and the process exits with it. Scripts should branch on the process exit
 code rather than re-deriving pass/fail from the report — and keep `1` and `2` distinct. See
-[Exit codes and annotations](/docevals/ci/exit-codes-and-annotations/).
+[Exit codes and annotations](/moose-docevals/ci/exit-codes-and-annotations/).
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"--format json emits a parseable object carrying summary counts and the exit code.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate --format json","exitCodes":[1],"stdio":"/\"exitCode\": 1/"}} */}
+{/* step {"description":"--format json emits a parseable object carrying summary counts and the exit code.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate --format json","exitCodes":[1],"stdio":"/\"exitCode\": 1/"}} */}
 
-{/* step {"description":"The documented import specifier resolves and exports both schema symbols.","runShell":{"command":"node --input-type=module -e \"import('@hawkeyexl/docevals').then(m=>{if(!m.frontmatterSchema||!m.frontmatterSchemaPath)throw new Error('missing export');console.log('exports ok')}).catch(e=>{console.error(e);process.exit(2)})\"","exitCodes":[0],"stdio":"exports ok"}} */}
+{/* step {"description":"The documented import specifier resolves and exports both schema symbols.","runShell":{"command":"node --input-type=module -e \"import('moose-docevals').then(m=>{if(!m.frontmatterSchema||!m.frontmatterSchemaPath)throw new Error('missing export');console.log('exports ok')}).catch(e=>{console.error(e);process.exit(2)})\"","exitCodes":[0],"stdio":"exports ok"}} */}

@@ -1,11 +1,11 @@
 ---
 title: Fix a failing eval
-description: Your pull request went red on a docevals check. Work out which one, fix it, and move on.
+description: Your pull request went red on a moose-docevals check. Work out which one, fix it, and move on.
 ---
 
 You did not configure this check and you do not need to learn the tool. Start with the table.
 
-**docevals** runs quality checks — called **evals** — against documentation pages. Each eval is one
+**moose-docevals** runs quality checks — called **evals** — against documentation pages. Each eval is one
 assertion about a page, decided either by a script or by an LLM.
 
 ## Which failure is this?
@@ -48,7 +48,7 @@ the build red — keep reading the log.
 ## An LLM verdict
 
 ```text
-::error file=docs/tutorial.mdx,title=docevals: no-future-promises::LLM judge: fail (confidence 0.93). The "Coming in v3" section describes unreleased functionality.
+::error file=docs/tutorial.mdx,title=moose-docevals: no-future-promises::LLM judge: fail (confidence 0.93). The "Coming in v3" section describes unreleased functionality.
 ```
 
 No line number, because the judgement is about the page rather than a character position.
@@ -56,11 +56,11 @@ No line number, because the judgement is about the page rather than a character 
 **The rationale tells you what is wrong; the assertion tells you what was required.** Look both up:
 
 ```bash
-npx docevals list docs/tutorial.mdx
+npx moose-docevals list docs/tutorial.mdx
 ```
 
 That prints which evals apply. Find the named eval — here `no-future-promises` — in
-`docevals.config.yaml`, or inline in the page's own frontmatter. It looks like this:
+`moose.config.yaml`, or inline in the page's own frontmatter. It looks like this:
 
 ```yaml
   no-future-promises:
@@ -84,7 +84,7 @@ The judge was not confident enough either way, so the eval is waiting on a perso
 
 **You cannot resolve this yourself** — it needs someone with standing to record a verdict. Ask
 whoever owns the docs quality checks in your repo; the command they run is
-`docevals review <file> <eval> pass|fail`.
+`moose-docevals review <file> <eval> pass|fail`.
 
 This is a legitimate outcome, not you having done something wrong.
 
@@ -98,7 +98,7 @@ without regenerating, the script no longer matches it.
 Not yours to fix unless you were the one who edited the assertion — in which case, regenerate:
 
 ```bash
-npx docevals generate <the file>
+npx moose-docevals generate <the file>
 ```
 
 and commit the updated script alongside your change.
@@ -120,7 +120,7 @@ missing credential or costs money.
 Run the deterministic checks on just your file:
 
 ```bash
-npx docevals run docs/your-page.mdx --deterministic-only
+npx moose-docevals run docs/your-page.mdx --deterministic-only
 ```
 
 No API key needed, no cost. This covers everything except LLM verdicts.
@@ -128,7 +128,7 @@ No API key needed, no cost. This covers everything except LLM verdicts.
 To see what applies to a page without running anything:
 
 ```bash
-npx docevals list docs/your-page.mdx
+npx moose-docevals list docs/your-page.mdx
 ```
 
 Exit `0` means clean.
@@ -137,12 +137,12 @@ Exit `0` means clean.
 
 ## Still stuck?
 
-- [FAQ](/docevals/fix/faq/) — the recurring questions
+- [FAQ](/moose-docevals/fix/faq/) — the recurring questions
 - Ask whoever configured the check. A check that blocks contributors who cannot self-serve is a
   problem with the check, and worth saying so.
 
-{/* Verified by docevals itself during `verify-docs`. Config: .doc-detective.json. */}
+{/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"The local reproduction command runs with no API key and exits 0 on a clean page.","runShell":{"command":"npx docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"The local reproduction command runs with no API key and exits 0 on a clean page.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
 
-{/* step {"description":"`list` shows which evals apply to a page without running them.","runShell":{"command":"npx docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"evals resolved"}} */}
+{/* step {"description":"`list` shows which evals apply to a page without running them.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"evals resolved"}} */}

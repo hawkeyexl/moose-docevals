@@ -23,7 +23,7 @@ journeys:
 people are in [`../personas/`](../personas/_overview.md); where each journey's steps land in the site
 is [`../information-architecture/proposed-ia.md`](../information-architecture/proposed-ia.md).
 
-A CUJ is a complete outcome someone reaches **using docevals**, not a topic. Each one lists ordered
+A CUJ is a complete outcome someone reaches **using moose-docevals**, not a topic. Each one lists ordered
 steps, and every step names a real repo-relative doc path with an `exists:` marker — which is what
 turns this directory into a checkable backlog rather than a wish list.
 

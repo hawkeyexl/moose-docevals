@@ -15,7 +15,7 @@ status: content set complete
 restate the target structure — read that file first.
 
 **The content set is complete.** All 34 planned pages are written, all 82 CUJ steps resolve to a real
-page, and `docevals run` over the site passes 102/102 with no API key.
+page, and `moose-docevals run` over the site passes 102/102 with no API key.
 
 This document therefore no longer enumerates a backlog. It keeps three jobs:
 
@@ -37,7 +37,7 @@ it happens when the destination pages exist.
 
 | README section | Destination |
 |---|---|
-| Title, tagline, grader hierarchy | `index.mdx`, `get-started/how-docevals-works.mdx` |
+| Title, tagline, grader hierarchy | `index.mdx`, `get-started/how-moose-docevals-works.mdx` |
 | Install | `get-started/index.mdx` |
 | Declare evals in frontmatter | `evals/index.mdx`, `reference/frontmatter.mdx` |
 | Validating the frontmatter itself | `evals/deterministic-checks.mdx` (`tool:docmeta`), `reference/frontmatter.mdx` |
@@ -67,10 +67,10 @@ them in if the site is ever rebuilt; `state` records what each was before this p
 |---|:--:|---|---|
 | `index.mdx` | partial | all | Nobody can self-route without it; every persona lands here first. |
 | `get-started/index.mdx` | partial | `cuj-first-gate` | Nate's ten-minute window. No finding, no adoption. |
-| `get-started/how-docevals-works.mdx` | new | `cuj-first-gate`, `cuj-orchestrate-tools` | The model every other page assumes. Priya will not commit her team without it. |
+| `get-started/how-moose-docevals-works.mdx` | new | `cuj-first-gate`, `cuj-orchestrate-tools` | The model every other page assumes. Priya will not commit her team without it. |
 | `evals/index.mdx` | partial | `cuj-first-gate`, `cuj-eval-library` | The frontmatter contract — the tool's primary interface. |
 | `evals/write-good-assertions.mdx` | new | `cuj-write-judgeable-assertions` | Highest-leverage page for Sara. Vague assertions are the root cause of flaky evals. |
-| `evals/deterministic-checks.mdx` | new | `cuj-orchestrate-tools`, `cuj-cheapen-evals` | Without it readers conclude docevals means "an LLM grades my docs" and lose the cost argument internally. |
+| `evals/deterministic-checks.mdx` | new | `cuj-orchestrate-tools`, `cuj-cheapen-evals` | Without it readers conclude moose-docevals means "an LLM grades my docs" and lose the cost argument internally. |
 | `adopt/index.mdx` | partial | `cuj-bootstrap-corpus` | `fill` is the entire product for the solo owner. |
 | `ci/index.mdx` | partial | `cuj-ci-wire` | A gate that is not in CI is a linter someone runs sometimes. |
 | `ci/exit-codes-and-annotations.mdx` | new | `cuj-ci-wire`, `cuj-resolve-review` | Conflating exit 1 and exit 2 makes the check look flaky and gets it removed. |
@@ -202,10 +202,10 @@ The content set is complete; these are not.
 
 | Item | Why it is not done | Blocking? |
 |---|---|---|
-| ~~**GitHub Pages deployment**~~ | **Done** (ADR 01006). `docs.yml` runs verify → build → link check → deploy on every push to `main`; the site is live at <https://hawkeyexl.github.io/docevals/>. | — |
+| ~~**GitHub Pages deployment**~~ | **Done** (ADR 01006). `docs.yml` runs verify → build → link check → deploy on every push to `main`; the site is live at <https://hawkeyexl.github.io/moose-docevals/>. | — |
 | **LLM evals on the docs corpus** | The `docs-page` suite is deterministic-only. `docs-page-full` adds `no-future-promises`, `serves-one-journey`, and `readable`, and needs committed cache fixtures generated with a provider (`npm run docs:refresh-cache`). | No — but the prose quality of these pages is currently ungated. |
 | **Slimming the README** | Now unblocked: §1 maps every section to a destination that exists. | No. |
-| **`docevals list --format` validation** | An unknown `--format` on `list` exits 0 rather than erroring. Documented behavior is correct today; the inconsistency with `run` is a code question. | No. |
+| **`moose-docevals list --format` validation** | An unknown `--format` on `list` exits 0 rather than erroring. Documented behavior is correct today; the inconsistency with `run` is a code question. | No. |
 
 ### What will drift first
 

@@ -8,13 +8,13 @@ decision-makers: [hawkeyexl]
 
 ## Context and Problem Statement
 
-docevals declares its evals in page frontmatter under the `evals` key, and that shape needs a JSON Schema so authors get validation and editor support. docmeta already validates documentation frontmatter against JSON Schema and ships built-in schemas addressed by `vendor:name:version` ids, so registering `docevals:frontmatter:0.1` as a docmeta built-in was the obvious first move — and was built, reviewed, and opened as a pull request before being reversed.
+moose-docevals declares its evals in page frontmatter under the `evals` key, and that shape needs a JSON Schema so authors get validation and editor support. docmeta already validates documentation frontmatter against JSON Schema and ships built-in schemas addressed by `vendor:name:version` ids, so registering `docevals:frontmatter:0.1` as a docmeta built-in was the obvious first move — and was built, reviewed, and opened as a pull request before being reversed.
 
 Where should the schema for a tool's own frontmatter live: inside the validator that happens to be popular, or inside the tool that defines the fields?
 
 ## Decision Drivers
 
-- The fields are defined by docevals and change on docevals' schedule.
+- The fields are defined by moose-docevals and change on moose-docevals' schedule.
 - A built-in couples every schema revision to a docmeta release.
 - Consumers should not need a special validator to check their frontmatter.
 - The same question recurs for every tool that defines frontmatter (dockg hit it immediately after).
@@ -22,17 +22,17 @@ Where should the schema for a tool's own frontmatter live: inside the validator 
 ## Considered Options
 
 - Register the schema as a docmeta built-in (`docevals:frontmatter:0.1`).
-- Publish the schema as an artifact of the docevals package and reference it by path or URL.
+- Publish the schema as an artifact of the moose-docevals package and reference it by path or URL.
 
 ## Decision Outcome
 
 Chosen option: **publish from this repo**. `schemas/frontmatter-0.1.json` ships in the package via `files`/`exports`, and consumers point any JSON Schema validator at it:
 
 ```bash
-docmeta validate --schema node_modules/docevals/schemas/frontmatter-0.1.json docs/
+docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
 ```
 
-This works through docmeta's existing `file` and `url` reference kinds, so nothing in its resolution chain needs to know docevals exists. docmeta's only contribution is the `extractFrontmatter` export that docevals consumes as a library.
+This works through docmeta's existing `file` and `url` reference kinds, so nothing in its resolution chain needs to know moose-docevals exists. docmeta's only contribution is the `extractFrontmatter` export that moose-docevals consumes as a library.
 
 ### Consequences
 
