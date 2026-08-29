@@ -54,7 +54,7 @@ Content-addressed. The key is composed in `src/judge/cache.ts` from, among other
 
 So an unchanged page with an unchanged assertion never re-judges, and **changing any of those
 invalidates the entry** rather than serving a stale verdict. That is what makes repeat runs
-approximately free — see [Cost and caching](/moose-docevals/ci/cost-and-caching/).
+approximately free — see [Caching and turn budgets](/moose-docevals/ci/cost-and-caching/).
 
 `fill` caches raw proposals in `fill.cache-dir` **before** the confidence gate is applied, keyed with
 `FILL_PROMPT_VERSION`. Re-running at a different `--confidence` therefore costs nothing.

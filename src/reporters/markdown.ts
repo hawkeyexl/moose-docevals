@@ -55,13 +55,11 @@ export function renderMarkdown(report: EngineReport): string {
     for (const g of report.generated) lines.push(`- \`${g}\``);
   }
 
-  if (report.cost.judgedEvals > 0) {
+  if (report.usage.judgedEvals > 0) {
     lines.push(
       "",
-      `_Judged ${report.cost.judgedEvals} evals (${report.cost.cachedEvals} cached), ` +
-        `${report.cost.totalTokens.toLocaleString()} tokens` +
-        (report.cost.totalUsd > 0 ? `, ~$${report.cost.totalUsd.toFixed(4)}` : "") +
-        `._`,
+      `_Judged ${report.usage.judgedEvals} evals (${report.usage.cachedEvals} cached), ` +
+        `${report.usage.totalTokens.toLocaleString()} tokens._`,
     );
   }
   return lines.join("\n");

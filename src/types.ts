@@ -74,7 +74,6 @@ export interface EvalResult {
   /** Set when a persisted human review resolved a needs-review outcome. */
   via?: "human-review";
   skipReason?: string;
-  costUsd?: number;
   durationMs: number;
 }
 
@@ -99,8 +98,12 @@ export interface RunReport {
   pages: number;
   evalResults: EvalResult[];
   suites: SuiteSummary[];
-  cost: {
-    totalUsd: number;
+  /**
+   * Judge telemetry. Counts, not money: the dollar figure this block used to
+   * carry was only as good as a price table this repo does not own, and was
+   * absent entirely for `claude-cli` and self-hosted endpoints (ADR 01019).
+   */
+  usage: {
     totalTokens: number;
     cachedEvals: number;
     judgedEvals: number;

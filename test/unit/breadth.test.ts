@@ -202,7 +202,7 @@ describe("reporters", () => {
         meetsTarget: false,
       },
     ],
-    cost: { totalUsd: 0, totalTokens: 0, cachedEvals: 0, judgedEvals: 0 },
+    usage: { totalTokens: 0, cachedEvals: 0, judgedEvals: 0 },
     generated: [],
     exitCode: 1,
     problems: [],

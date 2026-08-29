@@ -126,7 +126,7 @@ program
   .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Judge model override")
   .option("--runs <n>", "Ensemble runs per eval", parseIntArg("--runs"))
-  .option("--max-cost <usd>", "Abort judging past this cost", parseFloatArg("--max-cost"))
+  .option("--max-turns <n>", "Stop after this many inference calls (a cached ensemble costs none)", parseIntArg("--max-turns"))
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
       const report = await runRun(globs, {
@@ -143,7 +143,7 @@ program
         provider: opts.provider as string | undefined,
         model: opts.model as string | undefined,
         runs: opts.runs as number | undefined,
-        maxCost: opts.maxCost as number | undefined,
+        maxTurns: opts.maxTurns as number | undefined,
       });
       console.log(render(report, opts.format as ReportFormat));
       process.exitCode = report.exitCode;
@@ -204,7 +204,7 @@ program
     "Minimum confidence to write (0-1, default: config fill.confidenceThreshold)",
     parseFloatArg("--confidence"),
   )
-  .option("--max-cost <usd>", "Stop proposing past this cost", parseFloatArg("--max-cost"))
+  .option("--max-turns <n>", "Stop after this many inference calls (a cached ensemble costs none)", parseIntArg("--max-turns"))
   .option("--no-cache", "Bypass the fill proposal cache")
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
@@ -218,7 +218,7 @@ program
         config: opts.config as string | undefined,
         dryRun: opts.dryRun as boolean | undefined,
         confidence,
-        maxCost: opts.maxCost as number | undefined,
+        maxTurns: opts.maxTurns as number | undefined,
         noCache: opts.cache === false ? true : undefined,
         provider: opts.provider as string | undefined,
         model: opts.model as string | undefined,

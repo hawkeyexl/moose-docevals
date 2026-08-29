@@ -36,7 +36,8 @@ export interface JudgeOptions {
   model?: string;
   runs?: number;
   noCache?: boolean;
-  maxCostUsd?: number | null;
+  /** Stop after this many uncached inference calls (ADR 01019). */
+  maxTurns?: number | null;
 }
 
 /** Injected AI judging stage; absent → ai-graded evals are skipped. */
@@ -411,10 +412,27 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     );
   }
 
+  // A run that ran out of turns has *reduced coverage*, and skipped evals are
+  // excluded from the suite pass rate below — so without this it exits 0
+  // having judged less than it was asked to, which is the silent-green shape
+  // this corpus gate exists to prevent. Warning, not error: the cap was asked
+  // for, so tripping it is expected; going quiet about it is not (ADR 01019).
+  const budgetSkipped = results.filter((r) =>
+    r.skipReason?.includes("turn budget"),
+  );
+  if (budgetSkipped.length > 0) {
+    problems.push({
+      file: budgetSkipped[0]!.file,
+      message:
+        `${budgetSkipped.length} eval(s) were not judged: the turn budget ran out. ` +
+        `This run covered less than it was asked to — raise --max-turns or narrow the run.`,
+      level: "warning",
+    });
+  }
+
   stampSuites(results, plans);
   const suites = summarizeSuites(results, config);
   const judged = results.filter((r) => r.consensus != null);
-  const totalUsd = results.reduce((n, r) => n + (r.costUsd ?? 0), 0);
   const totalTokens = judged.reduce(
     (n, r) =>
       n +
@@ -437,8 +455,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     pages: plans.length,
     evalResults: results,
     suites,
-    cost: {
-      totalUsd,
+    usage: {
       totalTokens,
       cachedEvals: judged.filter((r) =>
         r.consensus!.runs.every((run) => run.cached),

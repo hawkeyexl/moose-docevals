@@ -31,9 +31,6 @@ export function providerSpecFor(
         // A verdict-shaped tool name steers the model better than a generic
         // one, and it is free to keep.
         anthropic: { toolName: "record_verdict" },
-        ...(config.provider.anthropic.pricing
-          ? { pricing: config.provider.anthropic.pricing }
-          : {}),
       };
     case "openai":
       return {
@@ -42,9 +39,6 @@ export function providerSpecFor(
         apiKeyEnv: config.provider.openai.apiKeyEnv,
         baseUrl: config.provider.openai.baseUrl,
         openai: { schemaName: "verdict" },
-        ...(config.provider.openai.pricing
-          ? { pricing: config.provider.openai.pricing }
-          : {}),
       };
     case "claude-cli":
       return {

@@ -143,7 +143,7 @@ omission. Verified against `src/cli.ts`, `src/core/config-schema.json`, and `src
 
 Notable flags with a home beyond the CLI reference: `--deterministic-only` and `--ai-only`
 (`evals/deterministic-checks.mdx`, `fix/index.mdx`); `--no-frontmatter-commands`
-(`ci/untrusted-pull-requests.mdx`); `--no-cache` and `--max-cost` (`ci/cost-and-caching.mdx`);
+(`ci/untrusted-pull-requests.mdx`); `--no-cache` and `--max-turns` (`ci/cost-and-caching.mdx`);
 `--format` (`reference/output-and-exit-codes.mdx`); `--fail-on-review`
 (`ci/exit-codes-and-annotations.mdx`); `--runs` (`judge/index.mdx`); `--provider`/`--model`
 (`judge/choose-a-provider.mdx`); `--dry-run` and `--confidence` (`adopt/index.mdx`); `--write`
@@ -165,7 +165,7 @@ Keys are written fully qualified so this table is greppable against
 | `judge.ensemble-runs`, `judge.temperature`, `judge.zones` | `judge/index.mdx` |
 | `judge.false-positive-alert` | `judge/calibrate.mdx` |
 | `judge.cache-dir`, `fill.cache-dir` | `ci/cost-and-caching.mdx`, `reference/files-and-state.mdx` |
-| `judge.max-cost-usd`, `fill.max-cost-usd` | `ci/cost-and-caching.mdx` |
+| `judge.max-turns`, `fill.max-turns` | `ci/cost-and-caching.mdx` |
 | `scripts.dir`, `scripts.config-dir`, `scripts.timeout-ms` | `adopt/review-generated-scripts.mdx`, `reference/configuration.mdx` |
 | `scripts.allow-frontmatter-commands` | `ci/untrusted-pull-requests.mdx` |
 | `fill.confidence-threshold`, `fill.max-evals-per-page`, `fill.temperature` | `adopt/index.mdx` |

@@ -125,7 +125,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 | `ci/exit-codes-and-annotations.mdx` | `cuj-ci-wire`, `cuj-resolve-review` | ★ | `0`/`1`/`2` and who each routes to. `--format github`. `--fail-on-review` as a policy fork. |
 | `ci/untrusted-pull-requests.mdx` | `cuj-bound-cost-and-risk` | ★ | **Highest-consequence page on the site.** Two execution paths; the flag covers one; forks need a gated job. This repo's `verify-docs` job is the worked example. |
 | `ci/recipes.mdx` | `cuj-ci-wire` | P1 | GitLab CI, Jenkins, pre-commit. |
-| `ci/cost-and-caching.mdx` | `cuj-bound-cost-and-risk`, `cuj-bootstrap-corpus` | P1 | Hard ceilings that abort. Content-addressed caching, what invalidates an entry, what belongs in a CI cache key. |
+| `ci/cost-and-caching.mdx` | `cuj-bound-cost-and-risk`, `cuj-bootstrap-corpus` | P1 | `judge.max-turns` / `fill.max-turns` — a budget in inference calls, not dollars, that *skips* remaining targets rather than aborting. Content-addressed caching, what invalidates an entry, what belongs in a CI cache key. Must not print a dollar figure: the tool reports none (ADR 01019). |
 | `ci/consume-results.mdx` | `cuj-ci-wire` | P2 | `--format json`, the TypeScript API. |
 
 ### Trust the judge — Sara
@@ -150,7 +150,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 |---|---|:--:|---|
 | `reference/index.mdx` | — *(navigation)* | ★ | Shelf index. Disposition in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3. |
 | `reference/cli.mdx` | `cuj-eval-library`, `cuj-bootstrap-corpus` | ★ | Every command and flag. |
-| `reference/configuration.mdx` | `cuj-eval-library`, `cuj-bound-cost-and-risk` | ★ | Every `moose.config.yaml` key, type, and default — including provider blocks and pricing. |
+| `reference/configuration.mdx` | `cuj-eval-library`, `cuj-bound-cost-and-risk` | ★ | Every `moose.config.yaml` key, type, and default — including provider blocks and the `max-turns` budgets. |
 | `reference/frontmatter.mdx` | `cuj-eval-library`, `cuj-cheapen-evals`, `cuj-write-judgeable-assertions` | ★ | Every eval field; resolution order; `generated.assertion-hash`. |
 | `reference/graders.mdx` | `cuj-orchestrate-tools` | ★ | Densest page on the site: every kind in the registry with its `options` table. **Must state that `options.command` is a *partial* override for `tool:doc-detective`** — `--input` and `--exit-on-fail` are appended regardless, the latter because the grader cannot detect a failure without it (ADR 01005). A reader who assumes their array is the whole argv will be wrong. |
 | `reference/output-and-exit-codes.mdx` | `cuj-first-gate` | ★ | `human`/`json`/`markdown`/`github` shapes; exit codes. |

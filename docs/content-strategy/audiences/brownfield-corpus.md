@@ -11,7 +11,7 @@ relationship_stages: [prospect, customer]
 personas: [persona-retrofitter]
 features_emphasized:
   [fill, confidence-threshold, severity-warning, capability-suites, target-pass-rate, skip,
-   promote, generate, max-cost]
+   promote, generate, max-turns]
 evidence_basis: [doc-detective-user-base, docs-as-tests-manuscript, moose-docevals-surface]
 ---
 
@@ -59,15 +59,15 @@ authoring thousands of assertions.
   The correct move is the opposite: keep the assertions honest, start at `severity: warning`, and
   ratchet severity up as pages are fixed. That inversion is unintuitive and must be taught directly.
 - **Hand-authoring does not scale to the corpus size.** `fill` is the only viable entry point, which
-  means its confidence gate, its caching, and its cost cap are adoption-critical here in a way they
+  means its confidence gate, its caching, and its turn budget are adoption-critical here in a way they
   are not for a greenfield corpus.
 - **Machine-proposed evals need triage, and that is a new job.** A proposal above the threshold is not
   automatically a good assertion. Reviewing a few hundred proposed evals is real work that has to be
   planned for, and the docs should say so rather than implying `fill` finishes the job.
 - **Cost is front-loaded and lumpy.** The initial pass over the whole corpus is by far the largest
   spend the team will ever see, and it arrives before any value has been demonstrated. Batching by
-  directory, using `--dry-run` first, and knowing that the raw proposal cache makes re-gating free are
-  what keep it defensible.
+  directory, capping each batch with `--max-turns`, and knowing that the raw proposal cache makes both
+  re-gating and the subsequent write pass free are what keep it defensible.
 - **Not every page is worth evaluating.** Deprecated sections, generated reference, and archives
   should be excluded rather than fixed. `files.exclude` and page-level `skip` are triage tools, and
   triage has to be presented as a legitimate first step, not as giving up.
@@ -77,8 +77,9 @@ authoring thousands of assertions.
 - Must be adoptable **incrementally by directory**. Nobody can review a 3,000-page pull request.
 - Must produce a demonstrable win early — one section under a real gate beats partial coverage
   everywhere — because the initiative needs a result before its budget is questioned.
-- The cost of the initial pass must be estimable in advance. `--dry-run` plus `--max-cost` is that
-  estimate, and it needs to be the first thing this lens is shown.
+- The size of the initial pass must be estimable in advance — and it is, arithmetically: `fill` spends
+  one inference call per uncached page, so the page count *is* the estimate and `--max-turns` caps it
+  before the first call. That arithmetic needs to be the first thing this lens is shown.
 
 ## Qualified reader (for docs targeting)
 

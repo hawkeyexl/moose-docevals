@@ -38,8 +38,7 @@
               "type": "object",
               "properties": {
                 "model": { "type": "string" },
-                "api-key-env": { "type": "string" },
-                "pricing": { "$ref": "#/$defs/pricing" }
+                "api-key-env": { "type": "string" }
               },
               "additionalProperties": false
             },
@@ -48,8 +47,7 @@
               "properties": {
                 "base-url": { "type": "string" },
                 "model": { "type": "string" },
-                "api-key-env": { "type": "string" },
-                "pricing": { "$ref": "#/$defs/pricing" }
+                "api-key-env": { "type": "string" }
               },
               "additionalProperties": false
             },
@@ -79,7 +77,7 @@
             },
             "false-positive-alert": { "type": "number", "minimum": 0, "maximum": 1 },
             "cache-dir": { "type": "string" },
-            "max-cost-usd": { "type": ["number", "null"], "minimum": 0 }
+            "max-turns": { "$ref": "#/$defs/maxTurns" }
           },
           "additionalProperties": false
         },
@@ -100,7 +98,7 @@
             "max-evals-per-page": { "type": "integer", "minimum": 1 },
             "temperature": { "type": "number", "minimum": 0 },
             "cache-dir": { "type": "string" },
-            "max-cost-usd": { "type": ["number", "null"], "minimum": 0 }
+            "max-turns": { "$ref": "#/$defs/maxTurns" }
           },
           "additionalProperties": false
         },
@@ -119,15 +117,10 @@
       "required": ["version"],
       "additionalProperties": false
     },
-    "pricing": {
-      "type": "object",
-      "properties": {
-        "input-per-mtok": { "type": "number", "minimum": 0 },
-        "output-per-mtok": { "type": "number", "minimum": 0 }
-      },
-      "required": ["input-per-mtok", "output-per-mtok"],
-      "additionalProperties": false,
-      "description": "Price override for this provider. Both sides are required: completing a half-filled override with a zero would price those tokens as free, under-reporting cost and letting max-cost-usd ride past a ceiling it exists to enforce."
+    "maxTurns": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Stop after this many inference calls. Counts calls, not pages: one judged eval spends `judge.ensemble-runs` turns, and a cached ensemble spends none. Null (the default) is unbounded. Replaces the `max-cost-usd` ceiling, which could not be honored exactly under concurrency — see ADR 01019."
     },
     "evalDef": {
       "type": "object",

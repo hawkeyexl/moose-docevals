@@ -90,15 +90,12 @@ export function renderHuman(report: EngineReport): string {
     );
   }
 
-  if (report.cost.judgedEvals > 0) {
+  if (report.usage.judgedEvals > 0) {
     lines.push("");
     lines.push(
       pc.dim(
-        `Judged ${report.cost.judgedEvals} evals (${report.cost.cachedEvals} cached), ` +
-          `${report.cost.totalTokens.toLocaleString()} tokens` +
-          (report.cost.totalUsd > 0
-            ? `, ~$${report.cost.totalUsd.toFixed(4)}`
-            : ""),
+        `Judged ${report.usage.judgedEvals} evals (${report.usage.cachedEvals} cached), ` +
+          `${report.usage.totalTokens.toLocaleString()} tokens`,
       ),
     );
   }

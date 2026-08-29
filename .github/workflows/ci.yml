@@ -215,6 +215,45 @@ jobs:
           # the run exits 0 having resolved nothing at all.
           printf 'version: 1\nfiles:\n  include: ["docs/**/*.md"]\n' > flat.yaml
           expect_usage_error node ../dist/cli.js run -c flat.yaml --deterministic-only
+          # ADR 01019. `max-cost-usd` was removed, not renamed, so an
+          # unmigrated config has to stop the run naming the dead key. The
+          # failure mode this guards is the quiet one: were the `docevals:`
+          # subtree not strict, the ceiling would simply never apply and the
+          # run would go green having bounded nothing.
+          expect_dead_key() {
+            set +e
+            out=$(node ../dist/cli.js run -c "$1" --deterministic-only 2>&1)
+            code=$?
+            set -e
+            if [ "$code" -ne 2 ]; then
+              echo "Expected exit 2 for a config carrying max-cost-usd ($1) - got $code"
+              echo "$out"
+              exit 1
+            fi
+            case "$out" in
+              *max-cost-usd*) ;;
+              *) echo "Expected the error to name max-cost-usd - got: $out"; exit 1 ;;
+            esac
+          }
+          # Built with echo rather than a multi-line printf: this file is
+          # YAML, and an embedded newline would end the block scalar.
+          { echo 'docevals:'; echo '  version: 1'; echo '  judge:'; echo '    max-cost-usd: 2'; } > dead-judge.yaml
+          { echo 'docevals:'; echo '  version: 1'; echo '  fill:'; echo '    max-cost-usd: 2'; } > dead-fill.yaml
+          expect_dead_key dead-judge.yaml
+          expect_dead_key dead-fill.yaml
+          # ...and the flag that replaced it rejects a value below its floor
+          # rather than quietly reading it as unbounded.
+          set +e
+          out=$(node ../dist/cli.js run --max-turns 0 --deterministic-only 2>&1)
+          code=$?
+          set -e
+          if [ "$code" -ne 2 ]; then
+            echo "Expected exit 2 from --max-turns 0 - got $code"; echo "$out"; exit 1
+          fi
+          case "$out" in
+            *positive*) ;;
+            *) echo "Expected --max-turns 0 to be rejected as non-positive - got: $out"; exit 1 ;;
+          esac
           cd ..
           rm -rf .ci-config-check
 

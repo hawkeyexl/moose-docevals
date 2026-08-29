@@ -11,7 +11,7 @@ proficiency:
 prerequisites: [exit-code-conventions, ci-artifact-and-cache-model, fork-pr-security-model]
 goals:
   - One parameterized recipe that behaves identically in every repo
-  - A spend ceiling the job cannot exceed
+  - A ceiling on inference calls the job cannot exceed
   - Machine-readable output that flows into existing dashboards without custom parsing
   - Certainty that a fork pull request cannot execute its author's code on a runner
 pains:
@@ -42,10 +42,14 @@ He inherits two problems from moose-docevals that docmeta never gave him, and th
 first-class persona here rather than a footnote.
 
 **A model is in the critical path.** Slow, rate-limitable, nondeterministic, and metered per call —
-four novel failure modes for a CI step. He needs the ensemble, the response cache, `--max-cost`, and
+four novel failure modes for a CI step. He needs the ensemble, the response cache, `--max-turns`, and
 `--deterministic-only` presented as *operational controls* he reaches for, not as quality features he
-reads past. The cache in particular has to survive between runs or the cost model collapses, so where
-it lives and what belongs in a CI cache key is load-bearing reference material for him.
+reads past. The cache in particular has to survive between runs or the economics collapse, so where
+it lives and what belongs in a CI cache key is load-bearing reference material for him. He also needs
+telling that `--max-turns` bounds *work*, not money: the tool counts inference calls and reports no
+dollar figure, and a run that exhausts its budget skips the rest and still exits `0`. Devin is the
+persona most likely to set that number once and never look at it again, which is exactly who a
+silently degraded green run hurts.
 
 **Content files drive arbitrary code execution, by two paths.** Page frontmatter can declare commands,
 gated by `scripts.allow-frontmatter-commands` and `--no-frontmatter-commands`. Separately, the
@@ -59,4 +63,4 @@ on the site even though it is not the highest-traffic one.
 He will notice an unpinned third-party action in a recipe, and he will not trust a page that has one.
 
 Success for Devin is a recipe he pastes into four repos unchanged, that has never woken him up, whose
-cost he can point at on a graph, and that he does not think about again.
+usage he can point at on a graph, and that he does not think about again.

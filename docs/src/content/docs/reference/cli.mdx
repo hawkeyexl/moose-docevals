@@ -35,7 +35,7 @@ human-review resolution.
 | `--no-cache` | Bypass the judge response cache. |
 | `--fail-on-review` | Exit 1 when any eval lands in the human-review zone. |
 | `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensemble-runs` (default 3). |
-| `--max-cost <usd>` | Abort judging once spend passes this ceiling. Overrides `judge.max-cost-usd`. |
+| `--max-turns <n>` | Stop judging after this many uncached inference calls. Counts calls, not pages: one ai eval spends `judge.ensemble-runs` turns, and a cached ensemble spends none. Overrides `judge.max-turns` (default: unbounded). |
 
 ## `moose-docevals list [globs...]`
 
@@ -70,13 +70,13 @@ Proposes evals for each page from its content, gated on a self-reported confiden
 
 | Flag | Effect |
 |---|---|
-| `--dry-run` | Report proposals without writing frontmatter. Run this first — it reports the cost of the whole pass before you spend it. |
+| `--dry-run` | Report proposals without writing frontmatter. Run this first — you see every proposal, and how many inference calls the pass made, before anything touches the repo. |
 | `--confidence <n>` | Minimum confidence to write, 0–1. Overrides `fill.confidence-threshold` (default `0.7`). Values above 1 are a usage error. |
-| `--max-cost <usd>` | Stop proposing past this spend. |
+| `--max-turns <n>` | Stop after this many uncached inference calls — one per page filled. Overrides `fill.max-turns` (default: unbounded). |
 | `--no-cache` | Bypass the proposal cache. |
 
 Raw proposals are cached **before** the confidence gate, so re-running at a different `--confidence`
-costs nothing.
+spends no turns.
 
 ## `moose-docevals promote [globs...]`
 
