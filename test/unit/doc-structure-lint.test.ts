@@ -19,7 +19,10 @@ const CONFIG = parseDocevalsConfig("version: 1\n", "/fake/moose.config.yaml");
 const FIXTURES = join(import.meta.dirname, "..", "fixtures", "tool-output");
 const captured = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
 
-function makeTarget(options = 'options: { template: "how-to" }'): GraderTarget {
+function makeTarget(
+  options = 'options: { template: "how-to" }',
+  extra: string[] = [],
+): GraderTarget {
   const content = [
     "---",
     "evals:",
@@ -27,6 +30,7 @@ function makeTarget(options = 'options: { template: "how-to" }'): GraderTarget {
     "    assertion: The page follows the how-to template.",
     "    grader: tool:doc-structure-lint",
     `    ${options}`,
+    ...extra,
     "---",
     "Body.",
   ].join("\n");
@@ -128,26 +132,33 @@ describe("docStructureLintGrader", () => {
   });
 });
 
-describe("docStructureLintGrader: unreadable output cannot be downgraded", () => {
-  const warned = () =>
-    makeTarget('options: { template: "how-to" }').plan.evals[0]!.severity;
+describe("docStructureLintGrader: output it could not read is a diagnostic", () => {
+  // Every case here runs at `severity: warning`, which is the whole point.
+  // The previous version of this block asserted `severity === "error"` against
+  // the *default* eval — and `severity` defaults to `error`, so it passed
+  // whether the adapter hard-coded `error` or read `ev.severity`. It could not
+  // fail, and the property it named had already been superseded.
+  //
+  // ADR 01022 is the live rule: the finding keeps the eval's severity for
+  // display and carries `diagnostic: true`, and the engine fails on the flag.
+  // So assert the flag, and assert severity is *not* rewritten. That the flag
+  // fails the eval is pinned end-to-end in `test/unit/diagnostic.test.ts`.
+  const warningTarget = () =>
+    makeTarget('options: { template: "how-to" }', ["    severity: warning"]);
 
-  // A deterministic eval fails only on an error-severity finding, so emitting
-  // these at the eval's configured severity let a `severity: warning`
-  // structure check pass on output nobody could read — the silent pass
-  // ADR 01020 closes, still reachable through configuration.
   it.each([
     ["unparseable stdout with exit 0", { code: 0, stdout: "Structure OK!" }],
     ["JSON of the wrong shape", { code: 0, stdout: '{"ok":true}' }],
     ["a list of non-objects", { code: 0, stdout: '["ok"]' }],
     ["a list containing null", { code: 0, stdout: "[null]" }],
     ["a result whose errors is not a list", { code: 0, stdout: '[{"errors":"hi"}]' }],
-  ])("reports %s at error severity", async (_label, execResult) => {
+  ])("marks %s as a diagnostic", async (_label, execResult) => {
     const { exec } = fakeExec(execResult);
-    const findings = await grade(exec);
+    const findings = await grade(exec, warningTarget());
     expect(findings).toHaveLength(1);
-    expect(findings[0]?.severity).toBe("error");
     expect(findings[0]?.ruleId).toBe("doc-structure-lint/unreadable");
+    expect(findings[0]?.diagnostic).toBe(true);
+    expect(findings[0]?.severity).toBe("warning");
   });
 
   // `[null]` used to throw out of grade(), which the engine turns into an
@@ -157,10 +168,14 @@ describe("docStructureLintGrader: unreadable output cannot be downgraded", () =>
     await expect(grade(exec)).resolves.toHaveLength(1);
   });
 
-  it("still reports a real structure error at the eval's severity", async () => {
+  // The complement, and the reason the flag exists: a real page problem is
+  // not a diagnostic, so a warning-severity eval still reports it and still
+  // passes. Without this, `diagnostic: true` on everything would look correct.
+  it("leaves a real structure error a plain finding at the eval's severity", async () => {
     const { exec } = fakeExec({ code: 1, stdout: captured("doc-structure-lint-fail.json") });
-    const findings = await grade(exec);
-    expect(findings[0]?.severity).toBe(warned());
+    const findings = await grade(exec, warningTarget());
     expect(findings[0]?.ruleId).toBe("missing-section");
+    expect(findings[0]?.severity).toBe("warning");
+    expect(findings[0]?.diagnostic).toBeUndefined();
   });
 });

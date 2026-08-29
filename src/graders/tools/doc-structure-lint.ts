@@ -101,11 +101,15 @@ export const docStructureLintGrader: Grader = {
       // to prevent — the same hazard ci.yml added an explicit guard for on
       // doc-detective, where a page whose steps all fail to parse reports
       // success. An eval must not pass because its tool became unreadable.
-      // Unreadable output is reported at `error` regardless of the eval's
-      // configured severity. A deterministic eval fails only on an error-level
-      // finding, so emitting this at `severity: warning` — the natural setting
-      // for a lint-style structure check — would let the tool return garbage
-      // and the eval still pass, which is the silent pass ADR 01020 closes.
+      // Unreadable output is marked `diagnostic: true` and keeps the eval's
+      // configured severity for display. ADR 01020 hard-coded `error` here
+      // instead; ADR 01022 superseded that, because the property is not this
+      // adapter's — it belongs to every grader, and five of the six had it
+      // wrong while each one had to remember. `core/engine.ts` fails an eval
+      // on `severity === "error" || diagnostic === true`, so a
+      // `severity: warning` structure check renders this as a warning and
+      // still fails, and severity keeps meaning what it means for a real page
+      // problem.
 
       let parsed: unknown;
       try {
