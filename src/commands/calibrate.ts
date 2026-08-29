@@ -23,6 +23,7 @@ import { readPage } from "../core/discover.js";
 import { resolvePage } from "../core/resolve.js";
 import { contentHash, loadReviews } from "../core/reviews.js";
 import { makeJudge } from "../judge/judge.js";
+import { isTurnBudgetSkip } from "../judge/budget.js";
 import { makeProvider } from "../judge/provider.js";
 import type { JudgeFn } from "../core/engine.js";
 import type { GraderTarget } from "../graders/types.js";
@@ -357,7 +358,7 @@ export async function runCalibrate(
         // first is a coverage problem that must not be allowed to certify
         // anything, and it used to disappear into the same error bucket.
         const reason = judged[i]?.skipReason;
-        const fromBudget = reason?.includes("turn budget") === true;
+        const fromBudget = isTurnBudgetSkip(reason);
         results[at] = {
           ...slot,
           ...(fromBudget ? { budgetSkipped: true } : {}),

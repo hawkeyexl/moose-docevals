@@ -150,8 +150,8 @@ npx moose-docevals calibrate --golden .moose-docevals/golden --runs 3 --max-turn
 ```
 
 Every case is judged in a single batched call, so cases run concurrently under
-`defaults.concurrency`. `--max-turns` bounds the whole run in inference calls — the same run-wide
-meaning it has on `run` and `fill`, not a per-case budget — and a cached case spends none. See
+`defaults.concurrency`. `--max-turns` bounds the whole run in ensemble runs — the same unit and the
+same run-wide meaning it has on `run`, not a per-case budget — and a cached case spends none. See
 [Caching and turn budgets](/moose-docevals/ci/cost-and-caching/) and the full flag list in
 [the CLI reference](/moose-docevals/reference/cli/).
 

@@ -12,6 +12,10 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { MockProvider, mockVerdict } from "@hawkeyexl/inference";
 import { makeJudge } from "../../src/judge/judge.js";
+import {
+  isTurnBudgetSkip,
+  turnBudgetSkipReason,
+} from "../../src/judge/budget.js";
 import { runEvals } from "../../src/core/engine.js";
 import { parseDocevalsConfig } from "../helpers/config.js";
 import { parseConfig } from "../../src/core/config.js";
@@ -221,5 +225,25 @@ describe("a run truncated by its turn budget", () => {
     expect(report.problems.some((p) => p.message.includes("turn budget"))).toBe(
       false,
     );
+  });
+});
+
+// The marker was a bare string produced in one file and matched with
+// `.includes("turn budget")` in two others. A rename in the producer would
+// have left both detectors quietly matching nothing, and no test would have
+// failed — the tests that exercise truncation write the skip reason themselves.
+// Producer and detector now share a module, and this pins that they agree.
+describe("the turn-budget skip marker", () => {
+  it("is recognized by the predicate its callers use", () => {
+    expect(isTurnBudgetSkip(turnBudgetSkipReason(3))).toBe(true);
+  });
+
+  it("names the cap that was hit, so the message is actionable", () => {
+    expect(turnBudgetSkipReason(7)).toContain("7");
+  });
+
+  it("does not claim an unrelated skip", () => {
+    expect(isTurnBudgetSkip("skipped by --deterministic-only")).toBe(false);
+    expect(isTurnBudgetSkip(undefined)).toBe(false);
   });
 });

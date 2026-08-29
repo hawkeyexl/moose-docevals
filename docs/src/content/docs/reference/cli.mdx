@@ -168,7 +168,7 @@ Measures judge agreement against a human-verified golden set.
 | `--golden <dir>` | Golden set directory. Default `.moose-docevals/golden`. |
 | `--seed` | Write golden candidates from recorded reviews into `<golden>/from-reviews.yaml`, then exit. Judges nothing and constructs no provider, so it runs with no API key. Idempotent on `(file, eval)`: re-running updates rather than duplicates, and never un-reviews a confirmed case. Every new case lands `reviewed: false`. |
 | `--runs <n>` | Ensemble runs per case. |
-| `--max-turns <n>` | Stop judging after this many uncached inference calls. Run-wide, not per case — every case is judged in one batched call. A cached case spends none. |
+| `--max-turns <n>` | Stop judging after this many uncached **ensemble runs** — the same unit as `run`, since calibration goes through the same judge. One case spends `judge.ensemble-runs` turns. Run-wide, not per case: every case is judged in one batched call. A cached case spends none. |
 | `--no-cache` | Bypass the judge response cache. |
 
 Exits 1 when agreement is below the threshold. Unreviewed and stale cases are judged and **counted**

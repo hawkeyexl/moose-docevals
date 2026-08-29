@@ -30,6 +30,7 @@ import { graderFor } from "../graders/registry.js";
 import { realExec } from "../graders/exec.js";
 import type { ExecFn, GraderTarget } from "../graders/types.js";
 import { sha256 } from "../judge/cache.js";
+import { isTurnBudgetSkip } from "../judge/budget.js";
 import { resolve } from "node:path";
 
 export interface RunProblem {
@@ -699,9 +700,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   // having judged less than it was asked to, which is the silent-green shape
   // this corpus gate exists to prevent. Warning, not error: the cap was asked
   // for, so tripping it is expected; going quiet about it is not (ADR 01019).
-  const budgetSkipped = results.filter((r) =>
-    r.skipReason?.includes("turn budget"),
-  );
+  const budgetSkipped = results.filter((r) => isTurnBudgetSkip(r.skipReason));
   if (budgetSkipped.length > 0) {
     problems.push({
       file: budgetSkipped[0]!.file,

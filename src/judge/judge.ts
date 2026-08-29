@@ -25,6 +25,7 @@ import type { JudgeFn, JudgeOptions } from "../core/engine.js";
 import type { GraderTarget } from "../graders/types.js";
 import { findReview, loadReviews } from "../core/reviews.js";
 import { cacheKey } from "./cache.js";
+import { turnBudgetSkipReason } from "./budget.js";
 import { JUDGE_SYSTEM_PROMPT, buildUserContent } from "./prompt.js";
 import { resolve as resolvePath } from "node:path";
 
@@ -104,7 +105,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
             grader: ev.grader,
             file: plan.page.file,
             outcome: "skipped",
-            skipReason: `judge turn budget exhausted (${maxTurns})`,
+            skipReason: turnBudgetSkipReason(maxTurns),
             durationMs: 0,
           };
         }

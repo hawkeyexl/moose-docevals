@@ -260,7 +260,11 @@ program
     "Minimum confidence to write (0-1, default: config fill.confidenceThreshold)",
     parseFloatArg("--confidence"),
   )
-  .option("--max-turns <n>", "Stop after this many inference calls (a cached ensemble costs none)", parseIntArg("--max-turns"))
+  .option(
+    "--max-turns <n>",
+    "Stop after this many inference calls (a cached page costs none)",
+    parseIntArg("--max-turns"),
+  )
   .option("--no-cache", "Bypass the fill proposal cache")
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
@@ -345,7 +349,7 @@ program
   .option("--runs <n>", "Ensemble runs per case", parseIntArg("--runs"))
   .option(
     "--max-turns <n>",
-    "Stop after this many inference calls (a cached ensemble costs none)",
+    "Stop after this many ensemble runs (a cached ensemble costs none)",
     parseIntArg("--max-turns"),
   )
   .option("--no-cache", "Bypass the judge response cache")
