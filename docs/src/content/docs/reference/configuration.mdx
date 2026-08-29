@@ -47,6 +47,33 @@ Required. Must be `1`.
 
 Positional globs on the CLI override `files.include` for that run.
 
+## `baseline`
+
+| Key | Type | Default |
+|---|---|---|
+| `baseline` | string \| null | `null` |
+
+Path to the findings baseline, **relative to the config file** — not to the working directory, so a
+run from a subdirectory finds the same file. `null` means no baseline.
+
+```yaml
+docevals:
+  version: 1
+  baseline: .moose-docevals-baseline.json
+```
+
+Setting it makes every ordinary run subtract the file: pre-existing findings are suppressed and only
+new ones fail. `--baseline [path]` overrides it, `--no-baseline` suppresses it for one run, and a
+bare `--write-baseline` records into **this** path — so a repo that points it somewhere custom cannot
+accidentally record into a file nothing reads.
+
+Leaving this unset while running `--write-baseline` is reported as a warning: the file is written and
+then ignored by every later run. Set the key first.
+
+The ratchet and its limits are on [Retrofit a legacy
+corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file's shape is in
+[Files and state](/moose-docevals/reference/files-and-state/#findings-baseline).
+
 ## `defaults`
 
 | Key | Type | Default | Notes |

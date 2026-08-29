@@ -187,6 +187,7 @@ function resolveBaseline(
   config: DocevalsConfig,
   options: RunOptions,
   cwd: string,
+  problems: RunProblem[],
 ): BaselineOutcome {
   const wants = options.writeBaseline !== undefined && options.writeBaseline !== false;
   if (options.baseline === false && !wants) return { results };
@@ -235,8 +236,26 @@ function resolveBaseline(
   const next = buildBaseline(results, options.toolVersion ?? "unknown", ctx);
   writeBaselineFile(absPath, next, configured);
   const { added, removed } = diffBaselines(previous, next);
+  // Apply the baseline this run just wrote, not the one it replaced. Recording
+  // today's findings *is* declaring them the accepted state, so a recording run
+  // has nothing new left to fail on. Reporting them as failures anyway would
+  // make `--write-baseline` a command you always have to `|| true`, which is a
+  // reliable way to lose the exit code that matters on the next run.
+  const accepted = applyBaseline(results, next, ctx);
+  // Writing a baseline nothing will read is the same silent-nothing-happens
+  // failure as recording into the wrong path: the command succeeds, the file
+  // appears, and the next run ignores it. Say so where the user is looking.
+  if (config.baseline === null && typeof options.baseline !== "string") {
+    problems.push({
+      file: configured,
+      message:
+        `Recorded ${configured}, but no \`baseline:\` is set in ${config.configPath}. ` +
+        `Until it is, an ordinary run ignores this file — add the key, or pass --baseline.`,
+      level: "warning",
+    });
+  }
   return {
-    results: out,
+    results: accepted.results,
     summary: {
       path: configured,
       recorded,
@@ -613,7 +632,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     });
   }
 
-  const baselineOutcome = resolveBaseline(results, config, options, cwd);
+  const baselineOutcome = resolveBaseline(results, config, options, cwd, problems);
   // Copy before clearing: when no baseline applies, `resolveBaseline` hands
   // back the very array it was given, and emptying it first would leave the
   // spread with nothing to read — a run reporting zero results, green.

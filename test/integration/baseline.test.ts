@@ -166,3 +166,27 @@ describe("the baseline ratchet", () => {
     await expect(run(root, { baseline: true })).rejects.toThrow(/invalid JSON/);
   });
 });
+
+describe("--write-baseline is a recording action, not a gate", () => {
+  // Recording today's findings *is* declaring them accepted, so the recording
+  // run has nothing new left to fail on. Exiting 1 here would make the command
+  // one you always wrap in `|| true`, and that habit is how the exit code that
+  // matters on the *next* run gets discarded too.
+  it("exits 0 on the run that records the backlog", async () => {
+    const root = scaffold();
+    const recording = await run(root, { writeBaseline: true });
+    expect(recording.baseline?.written?.total).toBe(1);
+    expect(recording.exitCode).toBe(0);
+  });
+
+  it("does not forgive anything it did not record", async () => {
+    const root = scaffold();
+    await run(root, { writeBaseline: true });
+    writeFileSync(
+      join(root, "docs", "second.md"),
+      ["---", "title: Second", "last-reviewed: 1999-01-01", "evals:", "  - use: fresh-enough", "---", "", "New.", ""].join("\n"),
+    );
+    // The next ordinary run sees the new page's finding as new.
+    expect((await run(root)).exitCode).toBe(1);
+  });
+});

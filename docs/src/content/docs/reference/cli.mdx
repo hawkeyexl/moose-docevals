@@ -38,6 +38,38 @@ human-review resolution.
 | `--fail-on-review` | Exit 1 when any eval lands in the human-review zone. |
 | `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensemble-runs` (default 3). |
 | `--max-turns <n>` | Stop judging after this many uncached inference calls. Counts calls, not pages: one ai eval spends `judge.ensemble-runs` turns, and a cached ensemble spends none. Overrides `judge.max-turns` (default: unbounded). |
+| `--baseline [path]` | Fail only on findings a recorded baseline does not already hold. With no path, the configured `baseline:`, then `.moose-docevals-baseline.json`. |
+| `--no-baseline` | Ignore the configured `baseline:` for this run, so the full backlog reports again. |
+| `--write-baseline [path]` | Record this run's findings as the baseline. **With no path, the configured one** — see below. |
+
+### The findings baseline
+
+A baseline records today's findings so a run fails only on new ones. It covers **findings**, which
+means `command` and `tool:*` graders — not judged verdicts, not an eval that errored, not a suite
+target. Full behavior in [Retrofit a legacy
+corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file itself in
+[Files and state](/moose-docevals/reference/files-and-state/#findings-baseline).
+
+**A bare `--write-baseline` records into the configured path, not the default.** Get that backwards
+and a repo pointing `baseline:` somewhere custom records into a file nothing reads — every run still
+fails, an unreferenced file grows in the diff, and the ratchet does nothing while looking like it
+works. Recording with no `baseline:` set at all is reported as a warning naming the config file.
+
+A recording run applies the baseline it just wrote, so it exits `0` on findings: recording a finding
+is declaring it accepted, and a `--write-baseline` you have to wrap in `|| true` loses the exit code
+that matters on the next run. A suite below target or an errored eval still exits `1`.
+
+Every re-record reports the diff against the previous file:
+
+```console
+Baseline .moose-docevals-baseline.json: recorded 1 finding(s) (+0, -1).
+  1 previously recorded finding(s) are no longer in the baseline. If this run covered less of the
+  corpus than the last one, they have just been forgiven.
+```
+
+`removed` is the number to watch — it is the only thing in a CI log that makes an over-forgiving
+re-record visible. A baseline whose JSON, `version`, or fingerprints are malformed is **exit 2**,
+with the offending entry named.
 
 ### Selecting evals suspends suite enforcement
 
@@ -175,6 +207,8 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
 {/* step {"description":"The CLI lists all eight commands.","runShell":{"command":"npx moose-docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*init[\\s\\S]*review/"}} */}
 
 {/* step {"description":"calibrate exposes --seed and --max-turns.","runShell":{"command":"npx moose-docevals calibrate --help","exitCodes":[0],"stdio":"/--seed[\\s\\S]*--max-turns/"}} */}
+
+{/* step {"description":"run exposes the three baseline flags.","runShell":{"command":"npx moose-docevals run --help","exitCodes":[0],"stdio":"/--baseline[\\s\\S]*--no-baseline[\\s\\S]*--write-baseline/"}} */}
 
 {/* step {"description":"--seed with nothing recorded names the command that records one, and exits 0 without a provider.","runShell":{"command":"npx moose-docevals calibrate --seed","exitCodes":[0],"stdio":"No recorded reviews to seed from"}} */}
 
