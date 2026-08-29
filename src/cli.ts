@@ -149,6 +149,15 @@ program
   )
   .option("--suite <name>", "Run only evals in this suite")
   .option("--max-turns <n>", "Stop after this many inference calls (a cached ensemble costs none)", parseIntArg("--max-turns"))
+  .option(
+    "--baseline [path]",
+    "Fail only on findings a recorded baseline does not already hold",
+  )
+  .option("--no-baseline", "Ignore the configured baseline for this run")
+  .option(
+    "--write-baseline [path]",
+    "Record this run's findings as the baseline; without a path, the configured one",
+  )
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
       const report = await runRun(globs, {
@@ -168,6 +177,11 @@ program
         maxTurns: opts.maxTurns as number | undefined,
         evalNames: opts.eval as string[] | undefined,
         suite: opts.suite as string | undefined,
+        // commander collapses `--baseline` to true and `--no-baseline` to
+        // false on the same key; a string is an explicit path.
+        baseline: opts.baseline as string | boolean | undefined,
+        writeBaseline: opts.writeBaseline as string | boolean | undefined,
+        toolVersion: pkg.version,
       });
       console.log(render(report, opts.format as ReportFormat));
       process.exitCode = report.exitCode;

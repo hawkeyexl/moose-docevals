@@ -73,6 +73,12 @@ export interface EvalResult {
   generated?: boolean;
   /** Set when a persisted human review resolved a needs-review outcome. */
   via?: "human-review";
+  /**
+   * Findings the baseline already recorded and this run therefore suppressed
+   * (ADR 01017). Present only on a run with a baseline in effect, so its
+   * absence means "no baseline", not "nothing was forgiven".
+   */
+  baselined?: number;
   skipReason?: string;
   durationMs: number;
 }

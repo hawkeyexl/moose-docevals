@@ -15,10 +15,21 @@ import type {
 import { loadConfig, type DocevalsConfig } from "./config.js";
 import { discoverPages } from "./discover.js";
 import { resolvePages, type ResolvedPagePlan } from "./resolve.js";
+import {
+  applyBaseline,
+  buildBaseline,
+  countFingerprints,
+  diffBaselines,
+  readBaseline,
+  writeBaselineFile,
+  DEFAULT_BASELINE_PATH,
+  type FingerprintContext,
+} from "./baseline.js";
 import { graderFor } from "../graders/registry.js";
 import { realExec } from "../graders/exec.js";
 import type { ExecFn, GraderTarget } from "../graders/types.js";
 import { sha256 } from "../judge/cache.js";
+import { resolve } from "node:path";
 
 export interface RunProblem {
   file: string;
@@ -30,6 +41,8 @@ export interface RunProblem {
 /** RunReport plus resolution problems (kept off the core type for reporters). */
 export interface EngineReport extends RunReport {
   problems: RunProblem[];
+  /** Present only when a baseline was read or written (ADR 01017). */
+  baseline?: BaselineOutcome["summary"];
 }
 
 export interface JudgeOptions {
@@ -68,6 +81,20 @@ export interface RunOptions {
   evalNames?: string[];
   /** Run only evals belonging to this suite. */
   suite?: string;
+  /**
+   * Baseline in four states, like docmeta's: `undefined` leaves the config in
+   * charge, a string names a file, `true` means "use the resolved path even if
+   * the config names none", and `false` disables it outright.
+   */
+  baseline?: string | boolean;
+  /** Record the run's findings as the new baseline. `true` uses the resolved path. */
+  writeBaseline?: string | boolean;
+  /**
+   * Stamped into a written baseline's `generatedWith`, for diagnosis only. The
+   * engine is a library entry point and cannot read its own package.json in a
+   * bundle, so the CLI supplies it rather than the engine guessing.
+   */
+  toolVersion?: string;
   generate?: boolean;
   failOnReview?: boolean;
   judgeOptions?: JudgeOptions;
@@ -132,6 +159,92 @@ function stampSuites(
   for (const r of results) {
     r.suite = suiteOf.get(resultKey(r.file, r.evalName)) ?? "default";
   }
+}
+
+export interface BaselineOutcome {
+  results: EvalResult[];
+  /** Present only when a baseline was read or written. */
+  summary?: {
+    path: string;
+    recorded: number;
+    suppressed: number;
+    stale: number;
+    written?: { added: number; removed: number; total: number };
+  };
+}
+
+/**
+ * Read, apply, and optionally re-record the findings baseline (ADR 01017).
+ *
+ * The path is resolved once, here, and both reading and writing use it. That is
+ * deliberate: a bare `--write-baseline` must record into the *configured* path,
+ * because a repo that points `baseline:` somewhere custom would otherwise
+ * record into a file nothing ever reads — and the ratchet would silently do
+ * nothing at all. docmeta names this exact trap.
+ */
+function resolveBaseline(
+  results: EvalResult[],
+  config: DocevalsConfig,
+  options: RunOptions,
+  cwd: string,
+): BaselineOutcome {
+  const wants = options.writeBaseline !== undefined && options.writeBaseline !== false;
+  if (options.baseline === false && !wants) return { results };
+
+  // A bare `--baseline` or `--write-baseline` asks for the ratchet without
+  // naming a file, so it falls back to the configured path and then to the
+  // default — never to "no baseline", which would silently do nothing.
+  const asksByFlag = options.baseline === true || wants;
+  const configured =
+    typeof options.baseline === "string"
+      ? options.baseline
+      : typeof options.writeBaseline === "string"
+        ? options.writeBaseline
+        : (config.baseline ?? (asksByFlag ? DEFAULT_BASELINE_PATH : null));
+  if (configured === null) return { results };
+
+  // Relative to the config's directory, not the working directory: the file is
+  // committed beside the config, and a run from a subdirectory has to find the
+  // same one.
+  const absPath = resolve(config.configDir, configured);
+  const ctx: FingerprintContext = { base: config.configDir, runBase: cwd };
+  const previous = readBaseline(absPath, configured);
+
+  let out = results;
+  let recorded = 0;
+  let suppressed = 0;
+  let stale = 0;
+  if (previous && options.baseline !== false) {
+    const applied = applyBaseline(results, previous, ctx);
+    out = applied.results;
+    recorded = applied.recorded;
+    suppressed = applied.suppressed;
+    stale = applied.stale;
+  }
+
+  if (!wants) {
+    return {
+      results: out,
+      summary: { path: configured, recorded, suppressed, stale },
+    };
+  }
+
+  // Recorded from the *unsuppressed* results: a re-record describes what the
+  // corpus contains now, not what this run happened to still be complaining
+  // about after the previous baseline was subtracted.
+  const next = buildBaseline(results, options.toolVersion ?? "unknown", ctx);
+  writeBaselineFile(absPath, next, configured);
+  const { added, removed } = diffBaselines(previous, next);
+  return {
+    results: out,
+    summary: {
+      path: configured,
+      recorded,
+      suppressed,
+      stale,
+      written: { added, removed, total: countFingerprints(next) },
+    },
+  };
 }
 
 /**
@@ -500,6 +613,14 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     });
   }
 
+  const baselineOutcome = resolveBaseline(results, config, options, cwd);
+  // Copy before clearing: when no baseline applies, `resolveBaseline` hands
+  // back the very array it was given, and emptying it first would leave the
+  // spread with nothing to read — a run reporting zero results, green.
+  const baselinedResults = [...baselineOutcome.results];
+  results.length = 0;
+  results.push(...baselinedResults);
+
   stampSuites(results, plans);
   const suites = summarizeSuites(results, config, filtered);
   const judged = results.filter((r) => r.consensus != null);
@@ -535,5 +656,6 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     generated: generatedPaths,
     exitCode: hasFailure ? 1 : 0,
     problems,
+    ...(baselineOutcome.summary ? { baseline: baselineOutcome.summary } : {}),
   };
 }

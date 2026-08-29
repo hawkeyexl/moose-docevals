@@ -21,6 +21,10 @@
           },
           "additionalProperties": false
         },
+        "baseline": {
+          "type": ["string", "null"],
+          "description": "Path to the findings baseline, relative to this config file. A baseline records today's findings so a run fails only on new ones (ADR 01017). Null (the default) means no baseline. `--baseline`/`--no-baseline` override this; a bare `--write-baseline` records into *this* path, so a repo that points it somewhere custom cannot accidentally record into a file nothing reads."
+        },
         "defaults": {
           "type": "object",
           "properties": {

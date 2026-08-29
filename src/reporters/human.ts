@@ -97,6 +97,38 @@ export function renderHuman(report: EngineReport): string {
     );
   }
 
+  // The baseline's line in the summary. `removed` is the load-bearing number
+  // on a re-record: an accidental --write-baseline over a narrowed glob
+  // forgives everything it did not see, and nothing else in a CI log says so.
+  const bl = report.baseline;
+  if (bl) {
+    lines.push("");
+    if (bl.written) {
+      lines.push(
+        pc.dim(
+          `Baseline ${bl.path}: recorded ${bl.written.total} finding(s) ` +
+            `(+${bl.written.added}, -${bl.written.removed}).`,
+        ),
+      );
+      if (bl.written.removed > 0) {
+        lines.push(
+          pc.yellow(
+            `  ${bl.written.removed} previously recorded finding(s) are no longer in the baseline. ` +
+              `If this run covered less of the corpus than the last one, they have just been forgiven.`,
+          ),
+        );
+      }
+    } else {
+      lines.push(
+        pc.dim(
+          `Baseline ${bl.path}: ${bl.suppressed} finding(s) suppressed of ${bl.recorded} recorded` +
+            (bl.stale > 0 ? `, ${bl.stale} no longer occur` : "") +
+            ".",
+        ),
+      );
+    }
+  }
+
   if (report.usage.judgedEvals > 0) {
     lines.push("");
     lines.push(
