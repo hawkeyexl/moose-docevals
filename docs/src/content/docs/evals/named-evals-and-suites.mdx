@@ -92,19 +92,23 @@ npx moose-docevals list --suite reference
 npx moose-docevals run --suite reference --deterministic-only
 ```
 
-It selects by **eval name**, from the list the suite is composed of — so `--suite reference` runs
-those four evals wherever they resolve, including on a `how-to` page, whose two evals `reference`
-also lists.
+It selects the evals that **report under** that suite — the same suite you see in `list` output and
+in the summary, which a page gets from its own `eval-suite` or from `defaults.suite`. So `--suite
+reference` runs everything on the reference pages and nothing on a `how-to` page, even where the two
+suites are composed of overlapping evals.
 
-Two things it does *not* do. It does not redefine anything: each result still reports under the
-suite its own page resolved to, and `target-pass-rate` is untouched. And it does not measure a
-target — the run saw only part of the corpus, so every suite summary comes back `partial`, printing
-its numbers and withholding the verdict:
+Two things it does *not* do. It does not redefine anything: `target-pass-rate` is untouched, and a
+page still reports under its own suite. And it does not measure a target — the run saw only part of
+the corpus, so the summary comes back `partial`, printing its numbers and withholding the verdict:
 
 ```console
 Suites
-  how-to: 2/2 passed — 100% vs target 100% partial — filtered run, target not evaluated
+  reference: 14/15 passed — 93% vs target 100% partial — filtered run, target not evaluated (6 skipped)
 ```
+
+That run still exits `1` — one of the fifteen genuinely failed. Suspending the *target* does not
+suspend the findings: what a filtered run stops claiming is that the suite as a whole is in good
+standing, not that nothing it looked at was wrong.
 
 Naming a suite the config does not define is exit 2, with the defined names in the message. Full
 behavior, including the per-eval `--eval` filter, in
@@ -162,4 +166,4 @@ behaves unlike its neighbours.
 
 {/* step {"description":"--suite narrows `list` to the evals that suite is composed of.","runShell":{"command":"npx moose-docevals list --suite reference","exitCodes":[0],"stdio":"evals resolved"}} */}
 
-{/* step {"description":"A --suite run reports every suite as partial rather than measuring a target.","runShell":{"command":"npx moose-docevals run --deterministic-only --no-generate --suite how-to","exitCodes":[0],"stdio":"filtered run, target not evaluated"}} */}
+{/* step {"description":"A --suite run reports the suite as partial rather than measuring its target, and a real failure inside the filter still exits 1.","runShell":{"command":"npx moose-docevals run --deterministic-only --no-generate --suite reference","exitCodes":[1],"stdio":"filtered run, target not evaluated"}} */}
