@@ -91,10 +91,14 @@ Measures judge agreement against a human-verified golden set.
 | Flag | Effect |
 |---|---|
 | `--golden <dir>` | Golden set directory. Default `.moose-docevals/golden`. |
+| `--seed` | Write golden candidates from recorded reviews into `<golden>/from-reviews.yaml`, then exit. Judges nothing and constructs no provider, so it runs with no API key. Idempotent on `(file, eval)`: re-running updates rather than duplicates, and never un-reviews a confirmed case. Every new case lands `reviewed: false`. |
 | `--runs <n>` | Ensemble runs per case. |
+| `--max-turns <n>` | Stop judging after this many uncached inference calls. Run-wide, not per case — every case is judged in one batched call. A cached case spends none. |
 | `--no-cache` | Bypass the judge response cache. |
 
-Exits 1 when agreement is below the threshold. See [Calibrate](/moose-docevals/judge/calibrate/).
+Exits 1 when agreement is below the threshold. Unreviewed and stale cases are judged and **counted**
+toward that rate, flagged `[unreviewed]` / `[stale]` per case with a summary line naming the counts.
+See [Calibrate](/moose-docevals/judge/calibrate/).
 
 ## `moose-docevals init`
 
@@ -126,6 +130,10 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
     against the committed fixture corpus. Config: .doc-detective.json. */}
 
 {/* step {"description":"The CLI lists all eight commands.","runShell":{"command":"npx moose-docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*init[\\s\\S]*review/"}} */}
+
+{/* step {"description":"calibrate exposes --seed and --max-turns.","runShell":{"command":"npx moose-docevals calibrate --help","exitCodes":[0],"stdio":"/--seed[\\s\\S]*--max-turns/"}} */}
+
+{/* step {"description":"--seed with nothing recorded names the command that records one, and exits 0 without a provider.","runShell":{"command":"npx moose-docevals calibrate --seed","exitCodes":[0],"stdio":"No recorded reviews to seed from"}} */}
 
 {/* step {"description":"`list` prints the resolved plan with grader, type, and source, and runs nothing.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":", regression, config]"}} */}
 
