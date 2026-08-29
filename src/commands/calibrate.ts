@@ -12,32 +12,54 @@
  * more specific, not the grading mechanism. A false-positive rate above
  * judge.falsePositiveAlert flags retuning.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fg from "fast-glob";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import pc from "picocolors";
 import { DocevalsError } from "../types.js";
 import { loadConfig } from "../core/config.js";
 import { readPage } from "../core/discover.js";
 import { resolvePage } from "../core/resolve.js";
+import { contentHash, loadReviews } from "../core/reviews.js";
 import { makeJudge } from "../judge/judge.js";
 import { makeProvider } from "../judge/provider.js";
 import type { JudgeFn } from "../core/engine.js";
+import type { GraderTarget } from "../graders/types.js";
 
 export const AGREEMENT_THRESHOLD = 0.7;
+
+/** Default golden directory, relative to the working directory. */
+export const GOLDEN_DIR = join(".moose-docevals", "golden");
+
+/** File `--seed` writes. Named so a hand-authored set beside it stays distinct. */
+export const SEEDED_GOLDEN_FILE = "from-reviews.yaml";
 
 export interface GoldenCase {
   file: string;
   eval: string;
   expected: "pass" | "fail";
   rationale?: string;
+  /**
+   * Whether a human has confirmed this case belongs in the golden set.
+   *
+   * Absent means `false`, deliberately. This is the instrument that measures
+   * the judge, so a back-compatible default would silently bless every case
+   * that already exists — including the seeded ones the bit exists to surface.
+   */
+  reviewed: boolean;
+  /** Page body hash when the verdict was formed; mismatch means stale. */
+  contentHash?: string;
+  source?: "review" | "manual";
+  reviewedBy?: string;
 }
 
 export interface CalibrationCaseResult extends GoldenCase {
   judged?: "pass" | "fail";
   agrees?: boolean;
   error?: string;
+  /** The page no longer hashes to what this case was verified against. */
+  stale?: boolean;
 }
 
 export interface CalibrationReport {
@@ -50,6 +72,10 @@ export interface CalibrationReport {
   falseNegatives: number;
   meetsThreshold: boolean;
   fpAlert: boolean;
+  /** Judged cases no human has confirmed. Counted, but reported. */
+  unreviewed: number;
+  /** Judged cases whose page has changed since verification. */
+  stale: number;
 }
 
 export interface CalibrateOptions {
@@ -58,16 +84,52 @@ export interface CalibrateOptions {
   provider?: string;
   model?: string;
   runs?: number;
+  maxTurns?: number | null;
   noCache?: boolean;
   cwd?: string;
   /** Injectable judge for tests. */
   judge?: JudgeFn;
 }
 
+/** File keys are kebab-case (ADR 01010); everything downstream is camelCase. */
+function normalizeGoldenCase(raw: Record<string, unknown>): GoldenCase {
+  return {
+    file: raw.file as string,
+    eval: raw.eval as string,
+    expected: raw.expected as "pass" | "fail",
+    ...(typeof raw.rationale === "string" ? { rationale: raw.rationale } : {}),
+    reviewed: raw.reviewed === true,
+    ...(typeof raw["content-hash"] === "string"
+      ? { contentHash: raw["content-hash"] }
+      : {}),
+    ...(raw.source === "review" || raw.source === "manual"
+      ? { source: raw.source }
+      : {}),
+    ...(typeof raw["reviewed-by"] === "string"
+      ? { reviewedBy: raw["reviewed-by"] }
+      : {}),
+  };
+}
+
+/** camelCase back out to the kebab file vocabulary, dropping empty fields. */
+function serializeGoldenCase(c: GoldenCase): Record<string, unknown> {
+  return {
+    file: c.file,
+    eval: c.eval,
+    expected: c.expected,
+    ...(c.rationale === undefined ? {} : { rationale: c.rationale }),
+    reviewed: c.reviewed,
+    ...(c.contentHash === undefined ? {} : { "content-hash": c.contentHash }),
+    ...(c.source === undefined ? {} : { source: c.source }),
+    ...(c.reviewedBy === undefined ? {} : { "reviewed-by": c.reviewedBy }),
+  };
+}
+
 export function loadGoldenCases(dir: string): GoldenCase[] {
   if (!existsSync(dir)) {
     throw new DocevalsError(
-      `Golden set directory not found: ${dir} — create it with 20-50 human-verified cases`,
+      `Golden set directory not found: ${dir} — seed it from recorded reviews with ` +
+        `\`moose-docevals calibrate --seed\`, or hand-author 20-50 verified cases`,
     );
   }
   const files = fg.sync("*.{yaml,yml}", { cwd: dir, absolute: true });
@@ -76,13 +138,13 @@ export function loadGoldenCases(dir: string): GoldenCase[] {
     const raw = parseYaml(readFileSync(file, "utf8")) as unknown;
     if (!Array.isArray(raw)) continue;
     for (const item of raw) {
-      const c = item as Partial<GoldenCase>;
+      const c = item as Record<string, unknown>;
       if (
         typeof c.file === "string" &&
         typeof c.eval === "string" &&
         (c.expected === "pass" || c.expected === "fail")
       ) {
-        cases.push(c as GoldenCase);
+        cases.push(normalizeGoldenCase(c));
       } else {
         throw new DocevalsError(
           `Invalid golden case in ${file}: needs file, eval, expected: pass|fail`,
@@ -96,25 +158,104 @@ export function loadGoldenCases(dir: string): GoldenCase[] {
   return cases;
 }
 
+export interface SeedResult {
+  path: string;
+  added: number;
+  updated: number;
+  total: number;
+  /** Cases in the written file still awaiting human confirmation. */
+  unreviewed: number;
+}
+
+/**
+ * Turn recorded human reviews into golden *candidates* (ADR 01016).
+ *
+ * Judges nothing and constructs no provider, which is what lets this run in CI
+ * where there is no API key. Every case lands `reviewed: false`: a `review`
+ * verdict is a call made on one page to clear a queue, and promoting it to
+ * calibration ground truth without a second look conflates "I unblocked this
+ * build" with "this is what correct looks like".
+ */
+export function seedGoldenCases(options: CalibrateOptions = {}): SeedResult {
+  const cwd = options.cwd ?? process.cwd();
+  const dir = resolve(cwd, options.golden ?? GOLDEN_DIR);
+  const path = join(dir, SEEDED_GOLDEN_FILE);
+
+  // An emptied or hand-broken seed file degrades to "nothing recorded yet"
+  // rather than throwing, the same way `loadReviews` treats its own store: the
+  // next seed then rebuilds it, where a throw would strand the user.
+  const priorRaw: unknown = existsSync(path)
+    ? parseYaml(readFileSync(path, "utf8"))
+    : null;
+  const existing: GoldenCase[] = Array.isArray(priorRaw)
+    ? priorRaw
+        .filter((i): i is Record<string, unknown> => typeof i === "object" && i !== null)
+        .map(normalizeGoldenCase)
+    : [];
+
+  // NUL-separated, as docmeta's fingerprint keys are, and for the same reason:
+  // a printable separator lets ("a b", "c") and ("a", "b c") collide into one
+  // key. A file path may contain a space; nothing may contain a NUL.
+  const byKey = new Map(existing.map((c) => [`${c.file}\0${c.eval}`, c]));
+  let added = 0;
+  let updated = 0;
+
+  for (const review of loadReviews(cwd)) {
+    const key = `${review.file}\0${review.evalName}`;
+    const prior = byKey.get(key);
+    // Re-seeding as reviews accumulate must not duplicate, and must not
+    // silently un-review a case a human has already confirmed. But a confirmed
+    // bit describes a *verdict*, not a filename: if the recorded verdict has
+    // flipped since, this is materially a different case and has to be read
+    // again. Carrying the bit across a flip would let `expected` change under a
+    // human's signature.
+    const confirmedStillApplies =
+      prior?.reviewed === true && prior.expected === review.verdict;
+    byKey.set(key, {
+      file: review.file,
+      eval: review.evalName,
+      expected: review.verdict,
+      ...(review.note === undefined ? {} : { rationale: review.note }),
+      reviewed: confirmedStillApplies,
+      contentHash: review.contentHash,
+      source: "review",
+      ...(confirmedStillApplies && prior.reviewedBy !== undefined
+        ? { reviewedBy: prior.reviewedBy }
+        : {}),
+    });
+    if (prior) updated += 1;
+    else added += 1;
+  }
+
+  const cases = [...byKey.values()];
+  if (cases.length > 0) {
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path, stringifyYaml(cases.map(serializeGoldenCase)));
+  }
+  return {
+    path,
+    added,
+    updated,
+    total: cases.length,
+    unreviewed: cases.filter((c) => !c.reviewed).length,
+  };
+}
+
 export async function runCalibrate(
   options: CalibrateOptions = {},
 ): Promise<CalibrationReport> {
   const cwd = options.cwd ?? process.cwd();
   const config = loadConfig(options.config, cwd);
-  const goldenDir = resolve(cwd, options.golden ?? join(".moose-docevals", "golden"));
+  const goldenDir = resolve(cwd, options.golden ?? GOLDEN_DIR);
   const cases = loadGoldenCases(goldenDir);
 
-  const judge =
-    options.judge ??
-    makeJudge({
-      provider: makeProvider(config, {
-        provider: options.provider,
-        model: options.model,
-      }),
-      root: cwd,
-    });
-
+  // Resolve every case to a target first, then judge the whole set in one call
+  // (ADR 01016). Judging case-by-case left the bounded-concurrency pool inside
+  // makeJudge with one target at a time, and made a turn budget mean *per case*.
   const results: CalibrationCaseResult[] = [];
+  const targets: GraderTarget[] = [];
+  const targetIndex: number[] = [];
+
   for (const goldenCase of cases) {
     const absPath = resolve(cwd, goldenCase.file);
     if (!existsSync(absPath)) {
@@ -133,20 +274,47 @@ export async function runCalibrate(
       });
       continue;
     }
-    const [result] = await judge([{ plan, eval: ev }], config, {
+    // A verdict is about the words a human read. Once the page no longer
+    // hashes to what was verified, the case describes a document that no
+    // longer exists — the same rule `findReview` applies to a review.
+    const stale =
+      goldenCase.contentHash !== undefined &&
+      goldenCase.contentHash !== contentHash(plan.page.body);
+
+    targetIndex.push(results.length);
+    results.push({ ...goldenCase, ...(stale ? { stale } : {}) });
+    targets.push({ plan, eval: ev });
+  }
+
+  if (targets.length > 0) {
+    const judge =
+      options.judge ??
+      makeJudge({
+        provider: makeProvider(config, {
+          provider: options.provider,
+          model: options.model,
+        }),
+        root: cwd,
+      });
+    const judged = await judge(targets, config, {
       runs: options.runs,
       noCache: options.noCache,
+      maxTurns: options.maxTurns,
     });
-    if (!result?.consensus) {
-      results.push({ ...goldenCase, error: "judge returned no consensus" });
-      continue;
+    for (const [i, at] of targetIndex.entries()) {
+      const slot = results[at]!;
+      const consensus = judged[i]?.consensus;
+      if (!consensus) {
+        results[at] = { ...slot, error: "judge returned no consensus" };
+        continue;
+      }
+      const verdict = consensus.verdict === "pass" ? "pass" : "fail";
+      results[at] = {
+        ...slot,
+        judged: verdict,
+        agrees: verdict === slot.expected,
+      };
     }
-    const judged = result.consensus.verdict === "pass" ? "pass" : "fail";
-    results.push({
-      ...goldenCase,
-      judged,
-      agrees: judged === goldenCase.expected,
-    });
   }
 
   const judgedCases = results.filter((r) => r.judged != null);
@@ -163,6 +331,8 @@ export async function runCalibrate(
 
   return {
     cases: results,
+    unreviewed: judgedCases.filter((r) => !r.reviewed).length,
+    stale: judgedCases.filter((r) => r.stale === true).length,
     total: results.length,
     agreements,
     agreementRate,
@@ -182,8 +352,12 @@ export function renderCalibration(report: CalibrationReport): string {
       continue;
     }
     const tag = c.agrees ? pc.green("agree") : pc.red("DISAGREE");
+    const flags = [
+      c.reviewed ? "" : pc.yellow(" [unreviewed]"),
+      c.stale ? pc.yellow(" [stale]") : "",
+    ].join("");
     lines.push(
-      `${tag} ${c.file} ${pc.bold(c.eval)}: judge=${c.judged ?? "(no verdict)"} human=${c.expected}` +
+      `${tag} ${c.file} ${pc.bold(c.eval)}${flags}: judge=${c.judged ?? "(no verdict)"} human=${c.expected}` +
         (!c.agrees && c.rationale ? pc.dim(` — human: ${c.rationale}`) : ""),
     );
   }
@@ -205,6 +379,25 @@ export function renderCalibration(report: CalibrationReport): string {
     lines.push(
       pc.yellow(
         "\nFalse-positive rate exceeds judge.falsePositiveAlert — the judge is flagging content humans accept. Consider tightening assertions or examples.",
+      ),
+    );
+  }
+  // Counted, but never quietly. The rate above is the artifact handed to a
+  // skeptic; a reader has to be able to discount it by exactly this much
+  // (ADR 01016).
+  if (report.unreviewed > 0) {
+    lines.push(
+      pc.yellow(
+        `\n${report.unreviewed} of ${report.total} case(s) are unreviewed — they count toward the rate above, ` +
+          `but no human has confirmed they belong in the golden set. Read them and set \`reviewed: true\`.`,
+      ),
+    );
+  }
+  if (report.stale > 0) {
+    lines.push(
+      pc.yellow(
+        `\n${report.stale} case(s) are stale: the page changed since the verdict was recorded, so the case ` +
+          `describes a document that no longer exists. Re-verify and update \`content-hash\`.`,
       ),
     );
   }

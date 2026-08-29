@@ -11,7 +11,11 @@ import { runGenerate } from "./commands/generate.js";
 import { runFill, renderFill } from "./commands/fill.js";
 import { runPromote } from "./commands/promote.js";
 import { listReviews, renderReviews, runReview } from "./commands/review.js";
-import { runCalibrate, renderCalibration } from "./commands/calibrate.js";
+import {
+  runCalibrate,
+  renderCalibration,
+  seedGoldenCases,
+} from "./commands/calibrate.js";
 import { runInit } from "./commands/init.js";
 import {
   render,
@@ -280,26 +284,63 @@ program
   )
   .option("-c, --config <path>", "Path to moose.config.yaml")
   .option("--golden <dir>", "Golden set directory", ".moose-docevals/golden")
+  .option(
+    "--seed",
+    "Write golden candidates from recorded reviews and exit; judges nothing, needs no provider",
+  )
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
   .option("--runs <n>", "Ensemble runs per case", parseIntArg("--runs"))
+  .option(
+    "--max-turns <n>",
+    "Stop after this many inference calls (a cached ensemble costs none)",
+    parseIntArg("--max-turns"),
+  )
   .option("--no-cache", "Bypass the judge response cache")
   .action(
     async (opts: {
       config?: string;
       golden?: string;
+      seed?: boolean;
       provider?: string;
       model?: string;
       runs?: number;
+      maxTurns?: number;
       cache?: boolean;
     }) => {
       try {
+        if (opts.seed) {
+          // No `config`: reviews.yaml and the golden directory both resolve
+          // against the working directory, not the config's, so passing it
+          // would imply an influence it does not have.
+          const seeded = seedGoldenCases({ golden: opts.golden });
+          if (seeded.total === 0) {
+            console.log(
+              "No recorded reviews to seed from — run `moose-docevals review <file> <eval> <pass|fail>` first.",
+            );
+            return;
+          }
+          console.log(
+            `Wrote ${seeded.total} golden candidate(s) to ${seeded.path} ` +
+              `(${seeded.added} new, ${seeded.updated} updated).`,
+          );
+          if (seeded.unreviewed > 0) {
+            console.log(
+              pc.yellow(
+                `${seeded.unreviewed} case(s) are \`reviewed: false\`. Read them and set ` +
+                  "`reviewed: true` — a golden set assembled without a human is not one.",
+              ),
+            );
+          }
+          return;
+        }
         const report = await runCalibrate({
           config: opts.config,
           golden: opts.golden,
           provider: opts.provider,
           model: opts.model,
           runs: opts.runs,
+          maxTurns: opts.maxTurns,
           noCache: opts.cache === false,
         });
         console.log(renderCalibration(report));

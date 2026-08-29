@@ -30,6 +30,7 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01013](01013-track-docmeta-4x-and-name-the-schema-set.md) | Track docmeta 4.x, and make `tool:docmeta` name its own schema set | accepted |
 | [01014](01014-sarif-and-junit-reporters.md) | SARIF and JUnit reporters, and a suite stamped on every result | accepted |
 | [01015](01015-ship-a-composite-action-after-the-first-publish.md) | Ship a composite Action and pre-commit hook — after the first npm publish | accepted (nothing to ship yet) |
+| [01016](01016-golden-cases-are-seeded-from-reviews-and-gated-on-human-confirmation.md) | Golden cases are seeded from reviews, and gated on human confirmation | accepted |
 | [01019](01019-a-turn-budget-replaces-the-cost-budget.md) | A turn budget replaces the cost budget, and cost accounting is removed | accepted |
 
 ## To backfill

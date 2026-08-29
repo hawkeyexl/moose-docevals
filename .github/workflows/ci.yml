@@ -178,6 +178,36 @@ jobs:
         shell: bash
         run: |
           rm -rf .ci-config-check
+
+      # ADR 01016. The calibration loop only closes if seeding runs where
+      # there is no API key, so assert exactly that: `--seed` reads recorded
+      # reviews and writes candidates without ever constructing a provider.
+      # The second assertion is the gate itself -- a seeded case must land
+      # unreviewed, because a golden set assembled without a human is not one.
+      - name: Dogfood the review -> golden seed loop
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ""
+          OPENAI_API_KEY: ""
+        run: |
+          rm -rf .ci-seed-check
+          mkdir -p .ci-seed-check/docs
+          cd .ci-seed-check
+          { echo '---'; echo 'title: Install'; echo 'evals:'; echo '  - use: no-future-promises'; echo '---'; echo; echo 'Body text.'; } > docs/install.md
+          { echo 'docevals:'; echo '  version: 1'; echo '  files:'; echo '    include: ["docs/**/*.md"]'; echo '  evals:'; echo '    no-future-promises:'; echo '      assertion: The page makes no claims about unreleased functionality.'; echo '      grader: ai'; } > moose.config.yaml
+          node ../dist/cli.js review docs/install.md no-future-promises pass --reviewer ci
+          out=$(node ../dist/cli.js calibrate --seed 2>&1)
+          echo "$out"
+          case "$out" in
+            *"golden candidate"*) ;;
+            *) echo "::error::calibrate --seed wrote nothing"; exit 1 ;;
+          esac
+          seeded=.moose-docevals/golden/from-reviews.yaml
+          if ! grep -q "reviewed: false" "$seeded"; then echo "::error::a seeded golden case must land unreviewed"; cat "$seeded"; exit 1; fi
+          if ! grep -q "source: review" "$seeded"; then echo "::error::a seeded case must record where it came from"; cat "$seeded"; exit 1; fi
+          if ! grep -q "content-hash:" "$seeded"; then echo "::error::a seeded case must carry the hash it was verified against"; cat "$seeded"; exit 1; fi
+          cd ..
+          rm -rf .ci-seed-check
           mkdir -p .ci-config-check/docs
           printf -- '---\ntitle: Sample\nlast-reviewed: 2026-08-01\nevals:\n  - use: fresh-enough\n---\n\n# Sample\n\nBody.\n' \
             > .ci-config-check/docs/page.md
