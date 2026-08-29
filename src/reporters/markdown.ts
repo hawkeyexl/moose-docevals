@@ -25,6 +25,34 @@ export function renderMarkdown(report: EngineReport): string {
     );
   }
 
+  // The baseline line belongs in the CI formats above all: `removed` is the
+  // only signal that an over-narrow re-record just forgave findings, and
+  // `renderGithub` delegates its summary here, so omitting it meant the
+  // warning existed only in the format CI does not read.
+  const bl = report.baseline;
+  if (bl) {
+    lines.push("");
+    if (bl.written) {
+      lines.push(
+        `_Baseline \`${bl.path}\`: recorded ${bl.written.total} finding(s) ` +
+          `(+${bl.written.added}, -${bl.written.removed})._`,
+      );
+      if (bl.written.removed > 0) {
+        lines.push(
+          "",
+          `> **${bl.written.removed} previously recorded finding(s) are no longer in the baseline.** ` +
+            "If this run covered less of the corpus than the last one, they have just been forgiven.",
+        );
+      }
+    } else {
+      lines.push(
+        `_Baseline \`${bl.path}\`: ${bl.suppressed} finding(s) suppressed of ${bl.recorded} recorded` +
+          (bl.stale > 0 ? `, ${bl.stale} no longer occur` : "") +
+          "._",
+      );
+    }
+  }
+
   const notable = report.evalResults.filter(
     (r) => r.outcome === "fail" || r.outcome === "error" || r.outcome === "needs-review",
   );

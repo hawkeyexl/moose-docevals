@@ -23,6 +23,7 @@ import {
   readBaseline,
   writeBaselineFile,
   DEFAULT_BASELINE_PATH,
+  type Baseline,
   type FingerprintContext,
 } from "./baseline.js";
 import { graderFor } from "../graders/registry.js";
@@ -188,28 +189,67 @@ function resolveBaseline(
   options: RunOptions,
   cwd: string,
   problems: RunProblem[],
+  filtered: boolean,
 ): BaselineOutcome {
   const wants = options.writeBaseline !== undefined && options.writeBaseline !== false;
   if (options.baseline === false && !wants) return { results };
+
+  // A re-record rebuilds the file from this run's findings, so recording from a
+  // filtered run would drop every fingerprint the filter excluded — silently,
+  // permanently, and with exit 0. The suite verdict is merely withheld on a
+  // filtered run (ADR 01018); the baseline write has to be refused outright,
+  // because there is nothing to withhold once the file is gone.
+  if (wants && filtered) {
+    throw new DocevalsError(
+      "--write-baseline records the whole corpus, so it cannot be combined with " +
+        "--eval or --suite: the re-record would drop every finding the filter " +
+        "excluded. Re-run without the filter to record.",
+    );
+  }
 
   // A bare `--baseline` or `--write-baseline` asks for the ratchet without
   // naming a file, so it falls back to the configured path and then to the
   // default — never to "no baseline", which would silently do nothing.
   const asksByFlag = options.baseline === true || wants;
-  const configured =
-    typeof options.baseline === "string"
-      ? options.baseline
-      : typeof options.writeBaseline === "string"
-        ? options.writeBaseline
-        : (config.baseline ?? (asksByFlag ? DEFAULT_BASELINE_PATH : null));
+  const fallback = config.baseline ?? (asksByFlag ? DEFAULT_BASELINE_PATH : null);
+  // Read and write paths resolve separately. Sharing one made
+  // `--baseline old.json --write-baseline new.json` read old.json and then
+  // overwrite it, never creating new.json.
+  const readFrom =
+    options.baseline === false
+      ? null
+      : typeof options.baseline === "string"
+        ? options.baseline
+        : fallback;
+  const writeTo = !wants
+    ? null
+    : typeof options.writeBaseline === "string"
+      ? options.writeBaseline
+      : fallback;
+  const configured = writeTo ?? readFrom;
   if (configured === null) return { results };
 
   // Relative to the config's directory, not the working directory: the file is
   // committed beside the config, and a run from a subdirectory has to find the
   // same one.
-  const absPath = resolve(config.configDir, configured);
   const ctx: FingerprintContext = { base: config.configDir, runBase: cwd };
-  const previous = readBaseline(absPath, configured);
+  // A baseline that cannot be parsed must not block the one command documented
+  // to repair it. Reading unconditionally made `--write-baseline` throw the
+  // very error whose message recommends running it.
+  let previous: Baseline | null = null;
+  if (readFrom !== null) {
+    try {
+      previous = readBaseline(resolve(config.configDir, readFrom), readFrom);
+    } catch (e) {
+      if (!wants) throw e;
+      problems.push({
+        file: readFrom,
+        message:
+          `${e instanceof Error ? e.message : String(e)} — re-recording over it.`,
+        level: "warning",
+      });
+    }
+  }
 
   let out = results;
   let recorded = 0;
@@ -234,7 +274,7 @@ function resolveBaseline(
   // corpus contains now, not what this run happened to still be complaining
   // about after the previous baseline was subtracted.
   const next = buildBaseline(results, options.toolVersion ?? "unknown", ctx);
-  writeBaselineFile(absPath, next, configured);
+  writeBaselineFile(resolve(config.configDir, writeTo!), next, writeTo!);
   const { added, removed } = diffBaselines(previous, next);
   // Apply the baseline this run just wrote, not the one it replaced. Recording
   // today's findings *is* declaring them the accepted state, so a recording run
@@ -245,12 +285,16 @@ function resolveBaseline(
   // Writing a baseline nothing will read is the same silent-nothing-happens
   // failure as recording into the wrong path: the command succeeds, the file
   // appears, and the next run ignores it. Say so where the user is looking.
-  if (config.baseline === null && typeof options.baseline !== "string") {
+  // Fires whenever an ordinary run would not read back what was just written:
+  // no `baseline:` at all, or a `--write-baseline <path>` pointing somewhere
+  // the config does not name.
+  if (config.baseline !== writeTo) {
     problems.push({
-      file: configured,
+      file: writeTo!,
       message:
-        `Recorded ${configured}, but no \`baseline:\` is set in ${config.configPath}. ` +
-        `Until it is, an ordinary run ignores this file — add the key, or pass --baseline.`,
+        `Recorded ${writeTo!}, but \`baseline:\` in ${config.configPath} is ` +
+        `${config.baseline === null ? "not set" : `"${config.baseline}"`}. ` +
+        `An ordinary run will not read this file — point the key at it, or pass --baseline ${writeTo!}.`,
       level: "warning",
     });
   }
@@ -292,8 +336,12 @@ export function applySelection(
   }
   const wanted = new Set(names);
 
+  // Counts only evals that will actually be graded. Counting evals on a
+  // skipped page made `--eval x` exit 0 over a run that executed nothing,
+  // which is the outcome ADR 01018 makes a usage error one typo away.
   let matched = 0;
   for (const plan of plans) {
+    const runnable = !plan.skip && !plan.problems.some((p) => p.level === "error");
     plan.evals = plan.evals.filter((ev) => {
       const byName = wanted.size === 0 || wanted.has(ev.name);
       // Match the suite an eval *reports under*, not the membership list in
@@ -304,7 +352,7 @@ export function applySelection(
       // the one asked for, and miss ones that report under it.
       const bySuite = suite === undefined || ev.suite === suite;
       const keep = byName && bySuite;
-      if (keep) matched += 1;
+      if (keep && runnable && !ev.skip) matched += 1;
       return keep;
     });
   }
@@ -317,8 +365,9 @@ export function applySelection(
       .filter(Boolean)
       .join(" and ");
     throw new DocevalsError(
-      `${asked} matched no evals on the pages selected. Nothing would have been checked; ` +
-        `run \`moose-docevals list\` to see the resolved plan.`,
+      `${asked} matched no evals that would run on the pages selected. Nothing ` +
+        `would have been checked — the name may be wrong, or every page carrying ` +
+        `it may be skipped.`,
     );
   }
   return true;
@@ -632,7 +681,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     });
   }
 
-  const baselineOutcome = resolveBaseline(results, config, options, cwd, problems);
+  const baselineOutcome = resolveBaseline(results, config, options, cwd, problems, filtered);
   // Copy before clearing: when no baseline applies, `resolveBaseline` hands
   // back the very array it was given, and emptying it first would leave the
   // spread with nothing to read — a run reporting zero results, green.

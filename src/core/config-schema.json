@@ -124,7 +124,7 @@
     "maxTurns": {
       "type": ["integer", "null"],
       "minimum": 1,
-      "description": "Stop after this many inference calls. Counts calls, not pages: one judged eval spends `judge.ensemble-runs` turns, and a cached ensemble spends none. Null (the default) is unbounded. Replaces the `max-cost-usd` ceiling, which could not be honored exactly under concurrency — see ADR 01019."
+      "description": "Stop after this many turns. Counts work, not pages. Under `judge` a turn is one ensemble run, so a judged eval spends `judge.ensemble-runs` of them; a run may make a second provider call when the first response fails schema validation, so this is a floor on calls rather than an exact count. Under `fill` a turn is exactly one call. A cached result spends none. Null (the default) is unbounded. Replaces the `max-cost-usd` ceiling, which could not be honored exactly under concurrency — see ADR 01019."
     },
     "evalDef": {
       "type": "object",

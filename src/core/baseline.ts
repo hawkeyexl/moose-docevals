@@ -271,10 +271,14 @@ export function applyBaseline(
   const touched = new Set<string>();
 
   const applied = results.map((r) => {
-    const findings = r.findings;
-    if (!findings || findings.length === 0) return r;
+    // Touched before the empty check: a file this run checked and found
+    // clean is exactly the file whose recorded entries are now prunable, and
+    // that is the case `stale` exists to surface. Returning early first made
+    // a completed cleanup report "0 recorded, 0 stale".
     const key = canonicalFilePath(r.file, ctx);
     touched.add(key);
+    const findings = r.findings;
+    if (!findings || findings.length === 0) return r;
     const known = baseline.entries[key];
     if (!known) return r; // no entry: a new or renamed file, everything is new
 

@@ -108,6 +108,11 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
             durationMs: 0,
           };
         }
+        // One turn per ensemble run. A run can make a second provider call
+        // when the first response fails schema validation (the inference
+        // layer retries once), so this is a floor on calls, not an exact
+        // count — the cap is exact in *runs*, which is the unit the ensemble
+        // is configured in.
         turnsSpent += runsPerEval;
       }
 

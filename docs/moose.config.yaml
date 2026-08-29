@@ -43,12 +43,16 @@ docevals:
     # what lets the verify-docs CI job replay LLM verdicts with no API key.
     # Regenerate with `npm run docs:refresh-cache` after any PROMPT_VERSION bump.
     cache-dir: docs/.moose-docevals-cache
-    # No turn budget: the docs corpus replays committed cache fixtures, so a
-    # green verify-docs run makes no inference calls at all. A cap here would
-    # bound work that never happens (ADR 01019).
+    # A green verify-docs run replays committed cache fixtures and makes no
+    # inference calls, so this never trips there. It bounds the *regeneration*
+    # path instead: `npm run docs:refresh-cache` deletes the cache and judges
+    # every page cold, which is what the removed `max-cost-usd` ceiling was
+    # really protecting (ADR 01019).
+    max-turns: 120
 
   fill:
     cache-dir: docs/.moose-docevals-cache/fill
+    max-turns: 60
 
   scripts:
     dir: "{docDir}/moose-docevals"

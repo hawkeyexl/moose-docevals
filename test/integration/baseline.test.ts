@@ -190,3 +190,49 @@ describe("--write-baseline is a recording action, not a gate", () => {
     expect((await run(root)).exitCode).toBe(1);
   });
 });
+
+describe("baseline: paths, filters, and recovery", () => {
+  // A re-record rebuilds the file from this run's findings, so recording from
+  // a filtered run silently dropped every fingerprint the filter excluded.
+  it("refuses to record from a filtered run", async () => {
+    const root = scaffold();
+    await expect(
+      run(root, { writeBaseline: true, evalNames: ["fresh-enough"] }),
+    ).rejects.toThrow(/cannot be combined with --eval or --suite/);
+    // `--suite` is symmetric; the scaffold defines no suites, so a suite name
+    // would be rejected by the earlier undefined-suite guard instead.
+  });
+
+  // Sharing one resolved path made this read old.json and then overwrite it,
+  // never creating new.json.
+  it("reads and writes the two paths it was given", async () => {
+    const root = scaffold();
+    await run(root, { writeBaseline: "old.json" });
+    const before = readFileSync(join(root, "old.json"), "utf8");
+
+    await run(root, { baseline: "old.json", writeBaseline: "new.json" });
+    expect(existsSync(join(root, "new.json"))).toBe(true);
+    expect(readFileSync(join(root, "old.json"), "utf8")).toBe(before);
+  });
+
+  // The parse error's own message recommends `--write-baseline`; that command
+  // took the same read path and threw the identical error.
+  it("lets --write-baseline recover a corrupt baseline", async () => {
+    const root = scaffold(["  baseline: .moose-docevals-baseline.json"]);
+    writeFileSync(join(root, DEFAULT_BASELINE_PATH), '{"version":99,"entries":{}}');
+
+    await expect(run(root, { baseline: true })).rejects.toThrow(/unsupported version/);
+    const repaired = await run(root, { writeBaseline: true });
+    expect(repaired.baseline?.written?.total).toBe(1);
+    expect(repaired.problems.some((p) => p.message.includes("re-recording over it"))).toBe(true);
+    expect((await run(root)).exitCode).toBe(0);
+  });
+
+  // Writing somewhere the config does not name is the same
+  // silent-nothing-happens failure as writing to the wrong path.
+  it("warns when the written path is not the one an ordinary run reads", async () => {
+    const root = scaffold(["  baseline: .moose-docevals-baseline.json"]);
+    const off = await run(root, { writeBaseline: "elsewhere.json" });
+    expect(off.problems.some((p) => p.message.includes("will not read this file"))).toBe(true);
+  });
+});

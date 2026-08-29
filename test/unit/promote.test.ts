@@ -244,3 +244,27 @@ describe("runPromote", () => {
     await expect(runPromote([], { cwd: root })).resolves.toEqual([]);
   });
 });
+
+describe("runPromote: the promoted eval must be able to go stale", () => {
+  // The updates object carried the pre-1.0 `generated: { assertionHash }`
+  // wrapper, which applyUpdates does not read, so a promoted eval was written
+  // with no hash — and both staleness checks require one. Editing the
+  // assertion afterwards never marked the script stale, and `generate`
+  // reported nothing to do.
+  it("writes generated-assertion-hash beside the command", async () => {
+    const root = scaffold();
+    await runPromote([], {
+      cwd: root,
+      write: true,
+      providerInstance: promoter({
+        promotable: true,
+        rationale: "Deterministic.",
+        code: "process.exit(0);\n",
+      }),
+    });
+    const after = readFileSync(pagePath(root), "utf8");
+    expect(after).toContain("grader: command");
+    expect(after).toContain("generated-assertion-hash");
+    expect(after).not.toContain("assertionHash");
+  });
+});

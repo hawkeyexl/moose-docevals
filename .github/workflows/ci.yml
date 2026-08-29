@@ -255,7 +255,6 @@ jobs:
             *) echo "Expected --max-turns 0 to be rejected as non-positive - got: $out"; exit 1 ;;
           esac
           cd ..
-          cd ..
           rm -rf .ci-config-check
 
       # ADR 01016. The calibration loop only closes if seeding runs where
@@ -286,7 +285,6 @@ jobs:
           if ! grep -q "source: review" "$seeded"; then echo "::error::a seeded case must record where it came from"; cat "$seeded"; exit 1; fi
           if ! grep -q "content-hash:" "$seeded"; then echo "::error::a seeded case must carry the hash it was verified against"; cat "$seeded"; exit 1; fi
           cd ..
-          cd ..
           rm -rf .ci-seed-check
 
       # `promote` built its provider before checking whether it had anything
@@ -312,7 +310,6 @@ jobs:
             *"No ai-graded evals found"*) ;;
             *) echo "::error::expected the no-op message, got: $out"; exit 1 ;;
           esac
-          cd ..
           cd ..
           rm -rf .ci-promote-check
 
@@ -351,6 +348,19 @@ jobs:
           esac
           # A genuine failure inside the filter still fails the run.
           expect_code 1 node dist/cli.js run --deterministic-only --no-generate --eval fresh-enough > /dev/null
+          # A variadic --eval would swallow the glob and silently widen the run
+          # to the whole corpus; the flag is repeatable-single instead.
+          out=$(expect_code 0 node dist/cli.js list --eval fresh-enough test/fixtures/pages/docs/actions/goTo.mdx)
+          case "$out" in
+            *"1 pages"*) ;;
+            *) echo "::error::--eval swallowed the positional glob: $out"; exit 1 ;;
+          esac
+          # ...and it accumulates rather than replacing.
+          out=$(expect_code 0 node dist/cli.js list --eval fresh-enough --eval readable test/fixtures/pages/docs/actions/goTo.mdx)
+          case "$out" in
+            *"2 evals resolved"*) ;;
+            *) echo "::error::--eval is not repeatable: $out"; exit 1 ;;
+          esac
 
       # ADR 01017. The ratchet is only useful if a recorded finding actually
       # stops failing the build, and only *safe* if a re-record says what it

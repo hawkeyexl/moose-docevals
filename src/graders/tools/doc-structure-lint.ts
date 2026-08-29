@@ -8,7 +8,13 @@
  * position: { start: { line }, ... } }] }]
  */
 import type { Finding } from "../../types.js";
-import { exited, outputTail } from "../exec.js";
+import { exited } from "../exec.js";
+
+/** Trailing slice of one stream, for a message that must name what it read. */
+function tail(text: string, maxChars = 400): string {
+  const t = text.trim();
+  return t.length <= maxChars ? t : `…${t.slice(-maxChars)}`;
+}
 import type { Grader } from "../types.js";
 
 interface DslError {
@@ -73,31 +79,65 @@ export const docStructureLintGrader: Grader = {
       // to prevent — the same hazard ci.yml added an explicit guard for on
       // doc-detective, where a page whose steps all fail to parse reports
       // success. An eval must not pass because its tool became unreadable.
+      // Unreadable output is reported at `error` regardless of the eval's
+      // configured severity. A deterministic eval fails only on an error-level
+      // finding, so emitting this at `severity: warning` — the natural setting
+      // for a lint-style structure check — would let the tool return garbage
+      // and the eval still pass, which is the silent pass ADR 01020 closes.
+      const unreadable = (detail: string): void => {
+        findings.push({
+          evalName: ev.name,
+          file: plan.page.file,
+          ruleId: "doc-structure-lint/unreadable",
+          message: detail,
+          severity: "error",
+        });
+      };
+
       let parsed: unknown;
       try {
         parsed = JSON.parse(result.stdout);
       } catch {
-        findings.push({
-          evalName: ev.name,
-          file: plan.page.file,
-          message:
-            result.code === 0
-              ? `doc-structure-lint exited 0 but its output could not be read as JSON: ${outputTail(result)}`
-              : `doc-structure-lint ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
-          severity: ev.severity,
-        });
+        if (result.code === 0) {
+          // stdout, not `outputTail`: that prefers stderr, which on this branch
+          // is usually an unrelated Node warning rather than the payload that
+          // failed to parse.
+          unreadable(
+            `doc-structure-lint exited 0 but its output could not be read as JSON: ${tail(result.stdout)}`,
+          );
+        } else {
+          findings.push({
+            evalName: ev.name,
+            file: plan.page.file,
+            message: `doc-structure-lint ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
+            severity: ev.severity,
+          });
+        }
         continue;
       }
       if (!Array.isArray(parsed)) {
-        findings.push({
-          evalName: ev.name,
-          file: plan.page.file,
-          message: `doc-structure-lint returned JSON of an unexpected shape (expected a list of results): ${outputTail(result)}`,
-          severity: ev.severity,
-        });
+        unreadable(
+          `doc-structure-lint returned JSON of an unexpected shape (expected a list of results): ${tail(result.stdout)}`,
+        );
+        continue;
+      }
+      // Validating the container is not enough: `["ok"]` gave `r.errors ===
+      // undefined`, so the eval passed on output nobody could read, and
+      // `[null]` threw out of grade(), which the engine turns into an error on
+      // every target of this kind rather than a finding on the one page.
+      if (parsed.some((r) => typeof r !== "object" || r === null)) {
+        unreadable(
+          `doc-structure-lint returned a list whose entries are not result objects: ${tail(result.stdout)}`,
+        );
         continue;
       }
       for (const r of parsed as DslResult[]) {
+        if (r.errors !== undefined && !Array.isArray(r.errors)) {
+          unreadable(
+            `doc-structure-lint returned a result whose "errors" is not a list: ${tail(result.stdout)}`,
+          );
+          continue;
+        }
         for (const err of r.errors ?? []) {
           findings.push({
             evalName: ev.name,

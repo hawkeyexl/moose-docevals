@@ -306,3 +306,18 @@ describe("diffBaselines", () => {
     expect(diffBaselines(null, after)).toEqual({ added: 1, removed: 0 });
   });
 });
+
+describe("stale counts a file this run found clean", () => {
+  // The case pruning exists for, and the normal outcome of the cleanup the
+  // ratchet is meant to encourage. The early return used to precede
+  // `touched.add`, so a fully-fixed file reported "0 recorded, 0 stale".
+  it("reports a recorded entry whose findings are all gone", () => {
+    const recorded = buildBaseline([result([finding()])], "0.1.0");
+    const clean = applyBaseline(
+      [result([], { outcome: "pass", findings: undefined })],
+      recorded,
+    );
+    expect(clean.recorded).toBe(1);
+    expect(clean.stale).toBe(1);
+  });
+});
