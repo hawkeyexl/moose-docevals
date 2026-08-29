@@ -68,6 +68,11 @@ Suites
 
 The finding line is `severity:line [ruleId] message`. Colour is applied only on a TTY.
 
+A finding may also carry `"diagnostic": true`, which appears in `--format json` and `sarif`. It
+means the grader could not reach a verdict — its tool was missing, timed out, or returned output
+it could not read — and it fails the eval whatever its severity says. Consumers that gate on
+severity alone will miss these; read the eval's `outcome` instead.
+
 Note the suite line: the skipped eval is excluded from the denominator, so the rate is 2/3 rather
 than 2/4.
 

@@ -52,11 +52,16 @@ export const docStructureLintGrader: Grader = {
     for (const { plan, eval: ev } of ctx.targets) {
       const template = ev.options.template as string | undefined;
       if (!template) {
+        // A diagnostic: with no template the tool is never invoked, so this
+        // says nothing about the page. At `severity: warning` it used to
+        // report and pass, which is a structure check that silently checks
+        // nothing (ADR 01023).
         findings.push({
           evalName: ev.name,
           file: plan.page.file,
           message: 'tool:doc-structure-lint needs options.template (e.g. "how-to")',
           severity: ev.severity,
+          diagnostic: true,
         });
         continue;
       }

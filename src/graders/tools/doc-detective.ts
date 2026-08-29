@@ -207,6 +207,10 @@ export const docDetectiveGrader: Grader = {
           file: plan.page.file,
           message: `doc-detective timed out after ${ev.timeoutMs ?? DEFAULT_TIMEOUT_MS}ms`,
           severity: ev.severity,
+          // It was cut off, so it reached no verdict about the page (ADR
+          // 01023). `commandGrader` has always marked its timeout this way;
+          // this branch was written to match it and did not.
+          diagnostic: true,
         });
         continue;
       }
@@ -234,6 +238,11 @@ export const docDetectiveGrader: Grader = {
             ? clampReport(report)
             : `doc-detective ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
           severity: ev.severity,
+          // A readable failure report is a verdict about the page. Without
+          // one, all we know is that the tool exited non-zero and said
+          // nothing we could parse — which is what an uninstalled or
+          // misconfigured doc-detective produces (ADR 01023).
+          ...(report ? {} : { diagnostic: true }),
         });
       }
     }

@@ -19,6 +19,11 @@ explicable wins; see [How moose-docevals works](/moose-docevals/get-started/how-
 
 Deterministic evals fail only on **`error`**-severity findings. Warnings and info report and pass.
 
+The exception: a finding marked **`diagnostic`** fails the eval at any severity. A grader emits one
+when it could not reach a verdict — the tool is missing, timed out, exited without readable output,
+or a required option is absent — so there is nothing to be lenient about. It still *displays* at the
+eval's configured severity.
+
 ## `command`
 
 Runs any executable. `{file}` in an argument expands to the page's absolute path.

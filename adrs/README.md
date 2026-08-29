@@ -37,6 +37,7 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01020](01020-unreadable-tool-output-is-a-finding-not-a-pass.md) | Unreadable tool output is a finding, not a pass | superseded by [01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md) |
 | [01021](01021-a-config-eval-is-one-generation-target.md) | A config-defined eval is one generation target, however many pages use it | accepted |
 | [01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md) | A grader that reached no verdict fails the eval, at any severity | accepted |
+| [01023](01023-the-diagnostic-invariant-is-enforced-by-enumeration.md) | The diagnostic invariant is enforced by enumeration, not by inspection | accepted |
 
 ## To backfill
 
