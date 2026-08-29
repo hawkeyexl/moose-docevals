@@ -18,7 +18,10 @@ export function renderMarkdown(report: EngineReport): string {
     lines.push(
       `| ${s.suite} | ${s.passed} | ${s.failed + s.errored} | ${s.needsReview} | ` +
         `${(s.passRate * 100).toFixed(0)}% | ${(s.targetPassRate * 100).toFixed(0)}% | ` +
-        `${s.meetsTarget ? "✅" : "❌"} |`,
+        // A filtered run measured part of the suite: no verdict, so
+        // neither mark. Rendering ❌ made every filtered run look failed
+        // (ADR 01018).
+        `${s.partial ? "➖ partial" : s.meetsTarget ? "✅" : "❌"} |`,
     );
   }
 

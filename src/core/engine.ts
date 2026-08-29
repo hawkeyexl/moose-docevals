@@ -5,6 +5,7 @@
  * The judge is injected (`options.judge`) so the deterministic pipeline and
  * tests run without any provider configured.
  */
+import { DocevalsError } from "../types.js";
 import type {
   EvalResult,
   Finding,
@@ -63,6 +64,10 @@ export interface RunOptions {
   deterministicOnly?: boolean;
   aiOnly?: boolean;
   frontmatterCommands?: boolean;
+  /** Run only these evals by name. Empty match is a usage error (ADR 01018). */
+  evalNames?: string[];
+  /** Run only evals belonging to this suite. */
+  suite?: string;
   generate?: boolean;
   failOnReview?: boolean;
   judgeOptions?: JudgeOptions;
@@ -130,6 +135,64 @@ function stampSuites(
 }
 
 /**
+ * Narrow each plan's evals to the requested names and/or suite, in place.
+ *
+ * Returns whether a filter was applied, which is what suspends suite
+ * enforcement downstream. A filter matching nothing is a usage error rather
+ * than a green run over zero evals — the same contract `discoverPages` already
+ * enforces for an empty input set (ADR 01018).
+ */
+export function applySelection(
+  plans: ResolvedPagePlan[],
+  config: DocevalsConfig,
+  options: { evalNames?: string[]; suite?: string },
+): boolean {
+  const names = options.evalNames?.filter((n) => n.trim() !== "") ?? [];
+  const suite = options.suite;
+  if (names.length === 0 && suite === undefined) return false;
+
+  if (suite !== undefined && !(suite in config.suites)) {
+    throw new DocevalsError(
+      `--suite "${suite}" is not a defined suite. Defined: ${
+        Object.keys(config.suites).sort().join(", ") || "(none)"
+      }`,
+    );
+  }
+  const wanted = new Set(names);
+
+  let matched = 0;
+  for (const plan of plans) {
+    plan.evals = plan.evals.filter((ev) => {
+      const byName = wanted.size === 0 || wanted.has(ev.name);
+      // Match the suite an eval *reports under*, not the membership list in
+      // `config.suites[x].evals`. A page inherits its suite from `eval-suite`
+      // or `defaults.suite` and stamps it on every eval it carries, including
+      // page-inline ones the membership list never mentions — so filtering on
+      // the list would select evals that report under a different suite than
+      // the one asked for, and miss ones that report under it.
+      const bySuite = suite === undefined || ev.suite === suite;
+      const keep = byName && bySuite;
+      if (keep) matched += 1;
+      return keep;
+    });
+  }
+
+  if (matched === 0) {
+    const asked = [
+      names.length > 0 ? `--eval ${names.join(", ")}` : "",
+      suite === undefined ? "" : `--suite ${suite}`,
+    ]
+      .filter(Boolean)
+      .join(" and ");
+    throw new DocevalsError(
+      `${asked} matched no evals on the pages selected. Nothing would have been checked; ` +
+        `run \`moose-docevals list\` to see the resolved plan.`,
+    );
+  }
+  return true;
+}
+
+/**
  * Per-suite aggregates. Reads the suite `stampSuites` recorded on each result
  * rather than rebuilding the plan-to-suite map a second time — two copies of
  * one derivation are two things to keep in agreement.
@@ -137,6 +200,7 @@ function stampSuites(
 function summarizeSuites(
   results: EvalResult[],
   config: DocevalsConfig,
+  partial = false,
 ): SuiteSummary[] {
   const bySuite = new Map<string, EvalResult[]>();
   for (const r of results) {
@@ -165,7 +229,12 @@ function summarizeSuites(
       errored,
       passRate,
       targetPassRate,
-      meetsTarget: passRate >= targetPassRate,
+      // A suite target is a claim about a body of checks. A filtered run
+      // measured part of it, so it reports the numbers and withholds the
+      // verdict — erring toward false confidence is what gets a gate removed
+      // rather than fixed (ADR 01018).
+      meetsTarget: partial ? false : passRate >= targetPassRate,
+      ...(partial ? { partial: true } : {}),
     });
   }
   return summaries;
@@ -177,6 +246,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   const exec = options.exec ?? realExec;
   const pages = discoverPages(config, options.globs ?? [], cwd);
   const plans = resolvePages(pages, config);
+  const filtered = applySelection(plans, config, options);
   const judgeOptions = options.judgeOptions ?? {};
 
   const problems: RunProblem[] = plans.flatMap((p) =>
@@ -431,7 +501,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   }
 
   stampSuites(results, plans);
-  const suites = summarizeSuites(results, config);
+  const suites = summarizeSuites(results, config, filtered);
   const judged = results.filter((r) => r.consensus != null);
   const totalTokens = judged.reduce(
     (n, r) =>
@@ -446,7 +516,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
 
   const hasFailure =
     results.some((r) => r.outcome === "fail" || r.outcome === "error") ||
-    suites.some((s) => !s.meetsTarget) ||
+    suites.some((s) => s.partial !== true && !s.meetsTarget) ||
     problems.some((p) => p.level === "error") ||
     (options.failOnReview === true &&
       results.some((r) => r.outcome === "needs-review"));

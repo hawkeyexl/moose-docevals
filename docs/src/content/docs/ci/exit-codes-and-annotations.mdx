@@ -108,6 +108,28 @@ Exit `1`, even if no individual eval errored. A capability suite left at the def
 is the most common cause of a surprising red build — see
 [Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
+### A filtered run is not a gate
+
+`--eval` and `--suite` narrow a run to named evals. They are local debugging flags, and they are not
+a CI invocation: **while either is active, suite targets are reported but not enforced.**
+
+```console
+Suites
+  reference: 4/4 passed — 100% vs target 100% partial — filtered run, target not evaluated
+```
+
+That is deliberate. A run narrowed to one passing eval out of a suite of twelve would otherwise
+compute `1/1 = 100%`, clear a target of `1.0`, and exit `0` having checked almost nothing — a green
+check indistinguishable from a real one. So a job built around `moose-docevals run --eval …` does not
+get a faster gate; it gives the gate up, on every suite line of its own report.
+
+A filter that matches nothing exits `2` rather than `0`, which is the right routing: an eval renamed
+out from under a pipeline is the pipeline owner's problem, and it stops the job instead of passing
+it.
+
+Full behavior in
+[Selecting evals suspends suite enforcement](/moose-docevals/reference/cli/#selecting-evals-suspends-suite-enforcement).
+
 ## Job summary
 
 ```yaml
@@ -123,3 +145,5 @@ is the most common cause of a surprising red build — see
 {/* step {"description":"Exit 2: an operational error, distinct from a finding.","runShell":{"command":"npx moose-docevals run -c does-not-exist.yaml","exitCodes":[2]}} */}
 
 {/* step {"description":"github format emits an ::error with file and line for a finding with a known line.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate --format github","exitCodes":[1],"stdio":"/::error file=.*,line=4,/"}} */}
+
+{/* step {"description":"An eval renamed out from under a pipeline exits 2, so the job stops rather than passing over nothing.","runShell":{"command":"npx moose-docevals run --deterministic-only --eval renamed-away","exitCodes":[2],"stdio":"matched no evals"}} */}

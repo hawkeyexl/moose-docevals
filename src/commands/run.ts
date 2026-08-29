@@ -25,6 +25,8 @@ export interface RunCommandOptions {
   model?: string;
   runs?: number;
   maxTurns?: number;
+  evalNames?: string[];
+  suite?: string;
   cwd?: string;
 }
 
@@ -79,6 +81,8 @@ export async function runRun(
     frontmatterCommands: options.frontmatterCommands,
     generate: options.generate,
     failOnReview: options.failOnReview,
+    evalNames: options.evalNames,
+    suite: options.suite,
     judgeOptions,
     ...engineOverrides,
   });

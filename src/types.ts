@@ -91,6 +91,12 @@ export interface SuiteSummary {
   /** From config: ~1.0 for regression suites, ~0.7 for capability suites. */
   targetPassRate: number;
   meetsTarget: boolean;
+  /**
+   * Set when a selection filter (`--eval` / `--suite`) was active, meaning the
+   * run measured part of this suite. `meetsTarget` is then always false and the
+   * suite cannot fail the run either: it has numbers, but no verdict.
+   */
+  partial?: boolean;
 }
 
 /** Full run output consumed by reporters. */

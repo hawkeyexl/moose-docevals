@@ -79,7 +79,14 @@ export function renderHuman(report: EngineReport): string {
   lines.push("");
   lines.push(pc.bold("Suites"));
   for (const s of report.suites) {
-    const status = s.meetsTarget ? pc.green("ok") : pc.red("below target");
+    // A filtered run measured part of the suite, so it has numbers but no
+    // verdict. Rendering that as "below target" would read as a failure the
+    // run never established (ADR 01018).
+    const status = s.partial
+      ? pc.yellow("partial — filtered run, target not evaluated")
+      : s.meetsTarget
+        ? pc.green("ok")
+        : pc.red("below target");
     const extras: string[] = [];
     if (s.needsReview > 0) extras.push(`${s.needsReview} to review`);
     if (s.skipped > 0) extras.push(`${s.skipped} skipped`);

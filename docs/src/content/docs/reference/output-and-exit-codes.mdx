@@ -20,6 +20,10 @@ earns the check a reputation for flakiness it does not deserve.
 
 `--fail-on-review` additionally makes exit 1 cover evals sitting in the human-review zone.
 
+A run narrowed by `--eval` or `--suite` **cannot** exit `1` on a suite target: its suite summaries
+are marked [`partial`](#suites) and are not enforced. Exit `1` then comes only from the evals that
+actually ran, or from an `error`-level resolution problem.
+
 ## Which formats each command accepts
 
 `-f/--format` is not one shared set. `run` has four reporters; `list` and `fill` render only two.
@@ -129,6 +133,34 @@ One object, for programmatic consumers.
 
 `passRate` is `passed / (total - skipped)`, and `1` when nothing ran. `meetsTarget` compares it to
 the suite's `target-pass-rate` from the config.
+
+`partial` is present, and `true`, only when `--eval` or `--suite` filtered the run. It says the run
+measured part of the suite, so the summary carries numbers but no verdict:
+
+```json
+{
+  "suite": "reference",
+  "total": 5,
+  "passed": 4,
+  "failed": 0,
+  "needsReview": 0,
+  "skipped": 1,
+  "errored": 0,
+  "passRate": 1,
+  "targetPassRate": 1,
+  "meetsTarget": false,
+  "partial": true
+}
+```
+
+- `meetsTarget` is `false` on every partial summary — including this one, where `passRate` clears
+  the target. It is not a claim that the suite failed.
+- A partial suite neither passes nor fails the run, so it contributes nothing to the exit code.
+
+**Read `partial` first.** A consumer that reads `meetsTarget` on its own will read a filtered run as
+a failing suite. An unfiltered run omits the key entirely, so `partial !== true` is the test for
+"this verdict is real". See
+[Selecting evals suspends suite enforcement](/moose-docevals/reference/cli/#selecting-evals-suspends-suite-enforcement).
 
 :::note[JSON keys are camelCase]
 Every *file* key — config and frontmatter — is kebab-case. The JSON report is not a file you write;

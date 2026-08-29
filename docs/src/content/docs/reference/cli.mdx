@@ -30,12 +30,46 @@ human-review resolution.
 |---|---|
 | `--deterministic-only` | Run only `command` and `tool:*` graders. AI-graded evals report as `skipped`. No provider needed — this is the offline path. |
 | `--ai-only` | Run only AI-judged evals; skip deterministic graders. |
+| `--eval <name...>` | Run only the evals with these names, space-separated. **Suite targets are not evaluated while a filter is active** — see below. A name that matches nothing is a usage error: **exit 2**. |
+| `--suite <name>` | Run only the evals the named suite lists. Same suspension of suite targets; a suite the config does not define is **exit 2**, with the defined names in the message. |
 | `--no-frontmatter-commands` | Skip `command` evals declared in **page frontmatter**. See [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/) — this does **not** gate `tool:doc-detective`. |
 | `--no-generate` | Do not generate scripts for command evals that lack a `command`. |
 | `--no-cache` | Bypass the judge response cache. |
 | `--fail-on-review` | Exit 1 when any eval lands in the human-review zone. |
 | `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensemble-runs` (default 3). |
 | `--max-turns <n>` | Stop judging after this many uncached inference calls. Counts calls, not pages: one ai eval spends `judge.ensemble-runs` turns, and a cached ensemble spends none. Overrides `judge.max-turns` (default: unbounded). |
+
+### Selecting evals suspends suite enforcement
+
+`--eval` and `--suite` narrow the run after resolution and before grading. Resolution still happens
+in full, so a bad `eval-*` key or an unknown grader on a page you filtered out still reports.
+
+A suite target is a claim about a body of checks. A run narrowed to one passing eval out of a suite
+of twelve would compute `1/1 = 100%`, clear a target of `1.0`, and exit `0` having checked almost
+nothing — so **while either flag is active, suite targets are reported but not enforced**. Each
+summary carries the numbers it measured and withholds the verdict:
+
+```console
+$ moose-docevals run --deterministic-only --no-generate --eval readable
+...
+Suites
+  how-to: 2/2 passed — 100% vs target 100% partial — filtered run, target not evaluated
+  reference: 4/4 passed — 100% vs target 100% partial — filtered run, target not evaluated
+```
+
+What still holds:
+
+- A `fail` or an `error` among the evals that ran exits **1**.
+- An `error`-level resolution problem exits **1**.
+- A filter matching no evals exits **2**. A green run over zero evals is never the answer.
+- `--suite` filters, it does not redefine. It selects the evals the named suite lists, wherever
+  those evals resolve; each result still reports under the suite its own page resolved to, and
+  `target-pass-rate` is untouched.
+
+This is why `--eval` is a local debugging flag and not a CI invocation — see
+[Exit codes and annotations](/moose-docevals/ci/exit-codes-and-annotations/#a-filtered-run-is-not-a-gate)
+and the `partial` field in
+[Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#suites).
 
 ## `moose-docevals list [globs...]`
 
@@ -55,6 +89,15 @@ test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
 ```
 
 Each line is `name [grader, type, source]`, where source is `config` or `page`.
+
+| Flag | Effect |
+|---|---|
+| `--eval <name...>` | Show only the evals with these names. |
+| `--suite <name>` | Show only the evals the named suite lists. |
+
+These are the same two filters `run` takes, and they fail the same way: a name that matches nothing
+is **exit 2**. Reach for them to answer "what would `--eval X` actually have run" without spending a
+grading pass.
 
 ## `moose-docevals generate [globs...]`
 
@@ -152,3 +195,11 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
 {/* step {"description":"list rejects a format that is valid only for run, rather than falling back to human.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/find.mdx --format markdown","exitCodes":[2]}} */}
 
 {/* step {"description":"fill rejects an unknown --format before doing any work.","runShell":{"command":"npx moose-docevals fill --dry-run --format xml","exitCodes":[2]}} */}
+
+{/* step {"description":"A filtered run reports its suites as partial instead of passing their targets.","runShell":{"command":"npx moose-docevals run --deterministic-only --no-generate --eval readable","exitCodes":[0],"stdio":"filtered run, target not evaluated"}} */}
+
+{/* step {"description":"An --eval name that matches nothing is a usage error, not a green run over zero evals.","runShell":{"command":"npx moose-docevals run --deterministic-only --eval no-such-eval","exitCodes":[2],"stdio":"matched no evals"}} */}
+
+{/* step {"description":"An undefined --suite is a usage error, and the message names the suites that are defined.","runShell":{"command":"npx moose-docevals run --deterministic-only --suite no-such-suite","exitCodes":[2],"stdio":"is not a defined suite"}} */}
+
+{/* step {"description":"list takes the same filters and rejects an unmatched name the same way.","runShell":{"command":"npx moose-docevals list --eval no-such-eval","exitCodes":[2]}} */}

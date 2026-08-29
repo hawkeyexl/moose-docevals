@@ -97,11 +97,24 @@ program
     parseFormatArg("--format", SUMMARY_FORMATS),
     "human" as SummaryFormat,
   )
-  .action((globs: string[], opts: { config?: string; format: SummaryFormat }) => {
+  .option("--eval <name...>", "Show only these evals by name")
+  .option("--suite <name>", "Show only evals in this suite")
+  .action(
+    (
+      globs: string[],
+      opts: {
+        config?: string;
+        format: SummaryFormat;
+        eval?: string[];
+        suite?: string;
+      },
+    ) => {
     try {
       const run = runList(globs, {
         config: opts.config,
         format: opts.format,
+        evalNames: opts.eval,
+        suite: opts.suite,
       });
       console.log(renderList(run, opts.format));
       process.exitCode = run.exitCode;
@@ -130,6 +143,11 @@ program
   .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Judge model override")
   .option("--runs <n>", "Ensemble runs per eval", parseIntArg("--runs"))
+  .option(
+    "--eval <name...>",
+    "Run only these evals by name; suite targets are not evaluated on a filtered run",
+  )
+  .option("--suite <name>", "Run only evals in this suite")
   .option("--max-turns <n>", "Stop after this many inference calls (a cached ensemble costs none)", parseIntArg("--max-turns"))
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
@@ -148,6 +166,8 @@ program
         model: opts.model as string | undefined,
         runs: opts.runs as number | undefined,
         maxTurns: opts.maxTurns as number | undefined,
+        evalNames: opts.eval as string[] | undefined,
+        suite: opts.suite as string | undefined,
       });
       console.log(render(report, opts.format as ReportFormat));
       process.exitCode = report.exitCode;
