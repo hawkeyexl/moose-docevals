@@ -44,7 +44,7 @@ at what each admits.
 npx moose-docevals fill --max-cost 5 docs/
 ```
 
-`--max-cost` (and `fill.maxCostUsd`) is a **hard ceiling that aborts**, not a warning. Set it even
+`--max-cost` (and `fill.max-cost-usd`) is a **hard ceiling that aborts**, not a warning. Set it even
 when you are confident; the run you regret is the one you did not bound.
 
 ## Write the proposals
@@ -55,7 +55,7 @@ Drop `--dry-run`:
 npx moose-docevals fill docs/
 ```
 
-Only proposals at or above the threshold (default `0.7`, config `fill.confidenceThreshold`) are
+Only proposals at or above the threshold (default `0.7`, config `fill.confidence-threshold`) are
 appended to the page's frontmatter. The rest are reported so you can see what was nearly good enough.
 
 What `fill` will **not** do:
@@ -65,13 +65,13 @@ What `fill` will **not** do:
   referenced, or suite-expanded — is dropped.
 - **Touch a skipped page.** `evals: {skip: true}` is respected.
 
-`fill.maxEvalsPerPage` (default 3) bounds how many it proposes per page.
+`fill.max-evals-per-page` (default 3) bounds how many it proposes per page.
 
 ## Then review what landed
 
 `fill` proposes; it does not decide. This step is the job, not a formality.
 
-Proposals are **always llm-graded** with explicit `examples` — which is the right conservative
+Proposals are **always ai-graded** with explicit `examples` — which is the right conservative
 default for a machine-written assertion, and also means an unreviewed corpus is now an expensive
 corpus. Read them as assertions:
 
@@ -89,7 +89,7 @@ Batch by directory so the review stays reviewable. Nobody can approve a 3,000-pa
 | Situation | Page |
 |---|---|
 | The corpus has never been measured and an honest run would be all red | [Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/) |
-| Everything is an llm eval and the bill scales with the corpus | [Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/) |
+| Everything is an ai eval and the bill scales with the corpus | [Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/) |
 | You want the generated scripts reviewed properly | [Review generated scripts](/moose-docevals/adopt/review-generated-scripts/) |
 
 {/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}

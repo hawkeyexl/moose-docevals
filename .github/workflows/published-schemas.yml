@@ -1,0 +1,38 @@
+# Does the published schema URL actually serve the schema?
+#
+# `npm run schemas:check` (in ci.yml) asserts that `schemas/**` and
+# `docs/public/schemas/**` agree. Every one of its checks passes on a repo whose
+# docs site is 404ing, because none of them leaves the disk — which is exactly
+# the state this repo was in while `frontmatter-0.1.json` advertised a `$id`
+# nothing served.
+#
+# This one fetches each `$id` for real. It runs on a schedule rather than on a
+# pull request for two reasons: a PR has no network guarantee, and a contributor
+# should not see red because GitHub Pages had a bad morning.
+name: Published schemas
+
+on:
+  schedule:
+    # Daily, at a quiet-ish minute. A schema URL breaking is not an emergency,
+    # but noticing within a day is the whole point.
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      base-url:
+        description: >-
+          Optional origin to check instead of each schema's own $id — for
+          pointing the same check at a preview deployment.
+        required: false
+
+jobs:
+  liveness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      # No install: the check reads schemas/ and calls fetch. Nothing else.
+      - name: Fetch each published schema URL
+        run: node scripts/check-published-schemas.mjs ${{ inputs.base-url }}

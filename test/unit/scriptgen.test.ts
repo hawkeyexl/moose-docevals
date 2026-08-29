@@ -23,10 +23,9 @@ const PAGE = [
   "title: Sample",
   "# a comment that must survive",
   "evals:",
-  "  evals:",
-  "    - name: gen-me",
-  "      assertion: The page has a heading.",
-  "      grader: command",
+  "  - id: gen-me",
+  "    assertion: The page has a heading.",
+  "    grader: command",
   "---",
   "",
   "# Heading",
@@ -36,13 +35,13 @@ const PAGE = [
 ].join("\n");
 
 describe("updatePageEval", () => {
-  it("adds command and generated fields, preserving body and comments", () => {
+  it("adds command and the assertion hash, preserving body and comments", () => {
     const updated = updatePageEval(PAGE, "page.md", "gen-me", {
       command: ["node", "moose-docevals/sample.gen-me.mjs", "{file}"],
-      generated: { assertionHash: "abc" },
+      "generated-assertion-hash": "abc",
     });
     expect(updated).toContain('command: [ node, moose-docevals/sample.gen-me.mjs, "{file}" ]');
-    expect(updated).toContain("assertionHash: abc");
+    expect(updated).toContain("generated-assertion-hash: abc");
     expect(updated).toContain("# a comment that must survive");
     // Body after the closing fence is byte-identical.
     const bodyOf = (s: string) => s.slice(s.indexOf("\n---\n", 4) + 5);
@@ -64,9 +63,9 @@ describe("updatePageEval", () => {
   it("preserves CRLF line endings in the frontmatter block", () => {
     const crlf = PAGE.replaceAll("\n", "\r\n");
     const updated = updatePageEval(crlf, "page.md", "gen-me", {
-      generated: { assertionHash: "abc" },
+      "generated-assertion-hash": "abc",
     });
-    expect(updated).toContain("assertionHash: abc\r\n");
+    expect(updated).toContain("generated-assertion-hash: abc\r\n");
   });
 
   it("hasEditableEval finds inline evals only", () => {
@@ -78,20 +77,22 @@ describe("updatePageEval", () => {
 describe("updateConfigEval", () => {
   it("rewrites a named eval in place", () => {
     const config = [
-      "version: 1",
-      "evals:",
-      "  check-links:",
-      "    assertion: All links resolve.",
-      "    grader: command",
-      "suites: {}",
+      "docevals:",
+      "  version: 1",
+      "  evals:",
+      "    check-links:",
+      "      assertion: All links resolve.",
+      "      grader: command",
+      "  suites: {}",
     ].join("\n");
     const updated = updateConfigEval(config, "cfg.yaml", "check-links", {
       command: ["node", "moose-docevals-scripts/check-links.mjs", "{file}"],
-      generated: { assertionHash: "xyz" },
+      "generated-assertion-hash": "xyz",
     });
     expect(updated).toContain("moose-docevals-scripts/check-links.mjs");
-    expect(updated).toContain("assertionHash: xyz");
+    expect(updated).toContain("generated-assertion-hash: xyz");
     expect(updated).toContain("version: 1");
+    expect(updated).toContain("docevals:");
   });
 });
 
@@ -178,8 +179,7 @@ describe("makeGenerateScripts", () => {
         [
           "      grader: command",
           '      command: ["node", "moose-docevals/old.mjs", "{file}"]',
-          "      generated:",
-          "        assertionHash: stale-hash",
+          "      generated-assertion-hash: stale-hash",
         ].join("\n"),
       ),
     );
@@ -223,7 +223,7 @@ describe("makeGenerateScripts", () => {
     );
     const page = readPage(pagePath, root);
     const plan = resolvePage(
-      { ...page, frontmatter: { ...page.frontmatter, data: { evals: { suite: "s" } } } },
+      { ...page, frontmatter: { ...page.frontmatter, data: { "eval-suite": "s" } } },
       config,
     );
     const location = scriptLocationFor(

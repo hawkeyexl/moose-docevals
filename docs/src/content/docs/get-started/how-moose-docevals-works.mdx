@@ -12,7 +12,7 @@ An **eval** is a named, testable assertion about a page, plus a **grader** that 
 fail.
 
 ```yaml
-- name: install-command-present
+- id: install-command-present
   assertion: The page contains a bash code block with `npm i -g doc-detective`.
   grader: command
 ```
@@ -36,12 +36,12 @@ and cross-page differentiation.
 moose-docevals **orchestrates; it does not reimplement**. Vale keeps doing what Vale does, and its findings
 arrive as a named eval with a severity alongside everything else.
 
-**2. The LLM judge — `llm`.** For assertions that need interpretation: "does this page explain why
+**2. The AI judge — `ai`.** For assertions that need interpretation: "does this page explain why
 before how?" No linter expresses that. The judge does, with safeguards described below.
 
 **3. A human — `human`, and the review zone.** For what neither code nor judge should decide alone.
 
-The rule to carry: **if you can express the criterion as code, do.** An llm eval is the choice of
+The rule to carry: **if you can express the criterion as code, do.** An ai eval is the choice of
 last resort, not the default. Left alone, everything drifts upward into the expensive tier — which
 is why [`promote` and `generate`](/moose-docevals/adopt/promote-to-deterministic/) exist.
 
@@ -58,8 +58,8 @@ decides the zone:
 
 | Zone | Condition | Outcome |
 |---|---|---|
-| auto-pass | passing consensus, mean confidence ≥ `judge.zones.autoPass` | `pass` |
-| auto-fail | failing consensus, mean confidence ≥ `judge.zones.autoFail` | `fail` |
+| auto-pass | passing consensus, mean confidence ≥ `judge.zones.auto-pass` | `pass` |
+| auto-fail | failing consensus, mean confidence ≥ `judge.zones.auto-fail` | `fail` |
 | human review | anything between | `needs-review` |
 
 Two asymmetries are deliberate: a `partial` verdict counts as a **fail**, and an errored run counts
@@ -87,7 +87,7 @@ discover pages
   → resolve frontmatter against config (suites, named evals, inline evals)
   → generation pass (write scripts for command evals that lack one)
   → deterministic graders (cheap first)
-  → LLM judge
+  → AI judge
   → apply persisted human reviews
   → aggregate per suite → exit code
 ```

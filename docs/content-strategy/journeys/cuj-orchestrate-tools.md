@@ -23,7 +23,7 @@ steps:
 **Scope:** consolidating existing deterministic tooling behind moose-docevals, and reaching for the native
 graders where no existing tool covers the gap. It does not cover LLM judging — that is
 [`cuj-write-judgeable-assertions`](cuj-write-judgeable-assertions.md) — and it does not cover
-converting an llm eval into a deterministic one, which is
+converting an ai eval into a deterministic one, which is
 [`cuj-cheapen-evals`](cuj-cheapen-evals.md).
 
 **Trigger.** The pipeline already runs several docs linters. Each has its own config file, its own CI
@@ -36,7 +36,7 @@ does and its findings arrive as a named eval with a severity, alongside a freshn
 verdict, in one report with one exit code.
 
 That framing is also the answer to the cost and trust objections that dominate every other journey. A
-pipeline where most evals are `command` or `tool:*` and only a handful are `llm` is cheap, fast, and
+pipeline where most evals are `command` or `tool:*` and only a handful are `ai` is cheap, fast, and
 explicable — and a reader who walks this journey early is inoculated against the impression that
 moose-docevals means "a model grades my docs."
 

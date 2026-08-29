@@ -8,7 +8,7 @@ Short answers for people who just want their pull request green. The triage tabl
 
 ## Why did this fail when I only changed one sentence?
 
-An LLM verdict is cached against the **page body**. Editing any part of the page invalidates that
+An AI verdict is cached against the **page body**. Editing any part of the page invalidates that
 cache, so an eval that was passing gets judged again — and a page that was borderline can land
 differently.
 
@@ -21,7 +21,7 @@ Usually one of:
 
 - Someone edited the **assertion**, so every page using it was re-judged.
 - The **model was changed**, which invalidates every cached verdict.
-- A **freshness** check crossed its threshold. `maxAgeDays` is measured from the page's
+- A **freshness** check crossed its threshold. `max-age-days` is measured from the page's
   `last-reviewed` date, so a page can go stale while nobody touches it.
 
 The last one is not a bug — it is the check doing its job.
@@ -33,8 +33,7 @@ You can, and you should ask first. A page-level skip:
 ```yaml
 ---
 title: My page
-evals:
-  skip: true
+eval-skip: true
 ---
 ```
 
@@ -43,9 +42,9 @@ check is inconvenient" — that is a conversation with whoever owns the eval.
 
 ## Why does the message have no line number?
 
-LLM verdicts are about the page, not a character position. Read the rationale alongside the eval's
+AI verdicts are about the page, not a character position. Read the rationale alongside the eval's
 `assertion` and `examples.fail` — see
-[An LLM verdict](/moose-docevals/fix/#an-llm-verdict).
+[An AI verdict](/moose-docevals/fix/#an-ai-verdict).
 
 ## What does `needs-review` mean and how do I clear it?
 
@@ -54,7 +53,7 @@ The judge was not confident enough either way. **You cannot clear it** — someo
 
 ## I ran it locally and got a different result
 
-Most likely you ran without a provider key, so LLM evals reported as `skipped` rather than running.
+Most likely you ran without a provider key, so AI-graded evals reported as `skipped` rather than running.
 That is expected — `--deterministic-only` is the local check for everything except judged evals.
 
 Also check you are running against the same config. CI may pass `-c` with a specific path.

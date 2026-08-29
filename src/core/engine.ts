@@ -1,6 +1,6 @@
 /**
  * Pipeline orchestration: discover → resolve → deterministic graders (cheap
- * first, the book's hybrid pattern) → LLM judge → aggregate → report.
+ * first, the book's hybrid pattern) → AI judge → aggregate → report.
  *
  * The judge is injected (`options.judge`) so the deterministic pipeline and
  * tests run without any provider configured.
@@ -39,7 +39,7 @@ export interface JudgeOptions {
   maxCostUsd?: number | null;
 }
 
-/** Injected LLM judging stage; absent → llm evals are skipped. */
+/** Injected AI judging stage; absent → ai-graded evals are skipped. */
 export type JudgeFn = (
   targets: GraderTarget[],
   config: DocevalsConfig,
@@ -60,7 +60,7 @@ export interface RunOptions {
   globs?: string[];
   cwd?: string;
   deterministicOnly?: boolean;
-  llmOnly?: boolean;
+  aiOnly?: boolean;
   frontmatterCommands?: boolean;
   generate?: boolean;
   failOnReview?: boolean;
@@ -105,21 +105,41 @@ function groupFindings(findings: Finding[]): Map<string, Finding[]> {
   return map;
 }
 
-function summarizeSuites(
+/**
+ * Record each result's suite on the result itself.
+ *
+ * The mapping is already computed here for the summaries; without stamping it,
+ * a reporter that wants to group by suite (JUnit) has no way to, and a
+ * consumer of `--format json` sees pass rates per suite with no way to tell
+ * which results produced them.
+ */
+function stampSuites(
   results: EvalResult[],
   plans: ResolvedPagePlan[],
-  config: DocevalsConfig,
-): SuiteSummary[] {
-  // Suite membership comes from the resolved eval, recorded per result.
+): void {
   const suiteOf = new Map<string, string>();
   for (const plan of plans) {
     for (const ev of plan.evals) {
       suiteOf.set(resultKey(plan.page.file, ev.name), ev.suite);
     }
   }
+  for (const r of results) {
+    r.suite = suiteOf.get(resultKey(r.file, r.evalName)) ?? "default";
+  }
+}
+
+/**
+ * Per-suite aggregates. Reads the suite `stampSuites` recorded on each result
+ * rather than rebuilding the plan-to-suite map a second time — two copies of
+ * one derivation are two things to keep in agreement.
+ */
+function summarizeSuites(
+  results: EvalResult[],
+  config: DocevalsConfig,
+): SuiteSummary[] {
   const bySuite = new Map<string, EvalResult[]>();
   for (const r of results) {
-    const suite = suiteOf.get(resultKey(r.file, r.evalName)) ?? "default";
+    const suite = r.suite ?? "default";
     const list = bySuite.get(suite) ?? [];
     list.push(r);
     bySuite.set(suite, list);
@@ -169,7 +189,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
 
   const results: EvalResult[] = [];
   const deterministicTargets: GraderTarget[] = [];
-  const llmTargets: GraderTarget[] = [];
+  const aiTargets: GraderTarget[] = [];
   const generationTargets: GraderTarget[] = [];
   const generatedPaths: string[] = [];
   /** "<file> <evalName>" keys whose check script this run generated. */
@@ -201,19 +221,19 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         });
         continue;
       }
-      if (ev.grader === "llm") {
+      if (ev.grader === "ai") {
         if (options.deterministicOnly) {
           results.push(skippedResult(plan, ev, "judge skipped (--deterministic-only)"));
         } else if (!options.judge) {
           results.push(skippedResult(plan, ev, "judge unavailable (no provider)"));
         } else {
-          llmTargets.push({ plan, eval: ev });
+          aiTargets.push({ plan, eval: ev });
         }
         continue;
       }
       // command / tool:* — deterministic.
-      if (options.llmOnly) {
-        results.push(skippedResult(plan, ev, "deterministic evals skipped (--llm-only)"));
+      if (options.aiOnly) {
+        results.push(skippedResult(plan, ev, "deterministic evals skipped (--ai-only)"));
         continue;
       }
       if (ev.grader === "command" && ev.source === "page" && !allowFrontmatterCommands) {
@@ -230,9 +250,9 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       if (
         ev.grader === "command" &&
         ev.command &&
-        ev.generated &&
+        ev.generatedAssertionHash &&
         ev.assertion &&
-        ev.generated.assertionHash !== sha256(ev.assertion)
+        ev.generatedAssertionHash !== sha256(ev.assertion)
       ) {
         if (options.generate !== false && options.generateScripts) {
           generationTargets.push({ plan, eval: ev });
@@ -344,34 +364,35 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     }
   }
 
-  // failFast: a page with an error-severity deterministic failure skips its LLM evals.
-  let effectiveLlmTargets = llmTargets;
+  // failFast: a page with an error-severity deterministic failure skips its ai evals.
+  let effectiveAiTargets = aiTargets;
   if (config.defaults.failFast) {
     const failedPages = new Set(
       results
         .filter((r) => r.outcome === "fail" || r.outcome === "error")
         .map((r) => r.file),
     );
-    effectiveLlmTargets = [];
-    for (const t of llmTargets) {
+    effectiveAiTargets = [];
+    for (const t of aiTargets) {
       if (failedPages.has(t.plan.page.file)) {
         results.push(
           skippedResult(t.plan, t.eval, "deterministic-precondition-failed"),
         );
       } else {
-        effectiveLlmTargets.push(t);
+        effectiveAiTargets.push(t);
       }
     }
   }
 
-  // LLM judge stage.
-  if (effectiveLlmTargets.length > 0 && options.judge) {
+  // AI judge stage.
+  if (effectiveAiTargets.length > 0 && options.judge) {
     results.push(
-      ...(await options.judge(effectiveLlmTargets, config, judgeOptions)),
+      ...(await options.judge(effectiveAiTargets, config, judgeOptions)),
     );
   }
 
-  const suites = summarizeSuites(results, plans, config);
+  stampSuites(results, plans);
+  const suites = summarizeSuites(results, config);
   const judged = results.filter((r) => r.consensus != null);
   const totalUsd = results.reduce((n, r) => n + (r.costUsd ?? 0), 0);
   const totalTokens = judged.reduce(

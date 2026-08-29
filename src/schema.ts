@@ -1,17 +1,19 @@
 /**
- * The published frontmatter schema. moose-docevals owns and ships this schema
- * rather than registering it as a built-in inside a validator — consumers
- * point their validator at the shipped file (or import the object directly).
+ * The published frontmatter schema — moose-docevals' implementation of the
+ * common vocabulary docmeta proposes as `docmeta:evals:1.0.0-proposal.1`
+ * (docmeta proposal 0023). docmeta publishes the vocabulary; this repo ships a
+ * schema for it and implements the graders behind it. Consumers point their
+ * validator at the shipped file (or import the object directly).
  *
- *   docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
+ *   docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-1.0.0.json docs/
  *
  * In a moose-docevals config, a `tool:docmeta` eval references it the same way:
  *
  *   options:
- *     schemas: ["node_modules/moose-docevals/schemas/frontmatter-0.1.json"]
+ *     schemas: ["node_modules/moose-docevals/schemas/frontmatter-1.0.0.json"]
  */
 import { fileURLToPath } from "node:url";
-import schema from "../schemas/frontmatter-0.1.json" with { type: "json" };
+import schema from "../schemas/frontmatter-1.0.0.json" with { type: "json" };
 
 /** The schema object, for validators that accept an inline schema. */
 export const frontmatterSchema = schema as Record<string, unknown>;
@@ -26,6 +28,6 @@ export const FRONTMATTER_SCHEMA_ID = frontmatterSchema.$id as string;
  */
 export function frontmatterSchemaPath(): string {
   return fileURLToPath(
-    new URL("../schemas/frontmatter-0.1.json", import.meta.url),
+    new URL("../schemas/frontmatter-1.0.0.json", import.meta.url),
   );
 }

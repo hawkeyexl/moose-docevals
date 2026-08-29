@@ -41,7 +41,7 @@ expands to more, all at once — and on a name collision the page wins. That is 
 `moose-docevals list` shows the resolved plan per page without running anything. Teaching `list` as the
 dry-run for this journey saves readers from debugging by running.
 
-Second, **`targetPassRate` is a suite property, not a page one**. The nuance that binary verdicts seem
+Second, **`target-pass-rate` is a suite property, not a page one**. The nuance that binary verdicts seem
 to lose lives here: a regression suite targets 1.0 because those checks must all hold, and a
 capability suite targets something like 0.7 because it measures reach rather than correctness. Readers
 who miss this treat every capability finding as a build break and conclude the tool is too strict.

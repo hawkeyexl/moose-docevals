@@ -44,9 +44,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      # npm install, not ci — see the note in ci.yml. The lockfile is authored
-      # on Windows and `npm ci` fails its sync check on every runner.
-      - run: npm install --no-fund --no-audit
+      - run: npm ci --no-fund --no-audit
       - run: npm run build
 
       # Expose the freshly built CLI as the `moose-docevals` command the docs invoke.
@@ -90,7 +88,7 @@ jobs:
           cache: npm
           cache-dependency-path: docs/package-lock.json
       - name: Install docs dependencies
-        run: npm install --no-fund --no-audit
+        run: npm ci --no-fund --no-audit
         working-directory: docs
       - name: Build docs site
         run: npm run build

@@ -6,7 +6,7 @@ description: Your pull request went red on a moose-docevals check. Work out whic
 You did not configure this check and you do not need to learn the tool. Start with the table.
 
 **moose-docevals** runs quality checks — called **evals** — against documentation pages. Each eval is one
-assertion about a page, decided either by a script or by an LLM.
+assertion about a page, decided either by a script or by an AI judge.
 
 ## Which failure is this?
 
@@ -15,9 +15,9 @@ Find your CI output in the left column.
 | What you see | What it is | What to do |
 |---|---|---|
 | A message with a **file and line**, like `error:4 [freshness/stale] …` | A script-based check | [Fix the line](#a-finding-with-a-line) |
-| A message with **reasoning but no line**, mentioning "LLM judge" | An LLM verdict | [Read the assertion](#an-llm-verdict) |
+| A message with **reasoning but no line**, mentioning "AI judge" | An AI verdict | [Read the assertion](#an-ai-verdict) |
 | **`needs-review`** | Waiting on a person | [Not yours to fix](#needs-review) |
-| Something about a **stale `assertionHash`** | A generated script is out of date | [Not yours to fix](#stale-generated-script) |
+| Something about a **stale `assertion-hash`** | A generated script is out of date | [Not yours to fix](#stale-generated-script) |
 | **Exit code 2**, or "could not run" / missing key / bad config | The tool itself failed | [Not your fault](#exit-2) |
 
 The distinction that matters most: **exit 1 means a docs problem, exit 2 means a pipeline problem.**
@@ -45,10 +45,10 @@ the build red — keep reading the log.
 
 ---
 
-## An LLM verdict
+## An AI verdict
 
 ```text
-::error file=docs/tutorial.mdx,title=moose-docevals: no-future-promises::LLM judge: fail (confidence 0.93). The "Coming in v3" section describes unreleased functionality.
+::error file=docs/tutorial.mdx,title=moose-docevals: no-future-promises::AI judge: fail (confidence 0.93). The "Coming in v3" section describes unreleased functionality.
 ```
 
 No line number, because the judgement is about the page rather than a character position.
@@ -123,7 +123,7 @@ Run the deterministic checks on just your file:
 npx moose-docevals run docs/your-page.mdx --deterministic-only
 ```
 
-No API key needed, no cost. This covers everything except LLM verdicts.
+No API key needed, no cost. This covers everything except AI verdicts.
 
 To see what applies to a page without running anything:
 

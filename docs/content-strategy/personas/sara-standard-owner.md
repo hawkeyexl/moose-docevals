@@ -18,7 +18,7 @@ pains:
   - Writing a judgeable assertion is a skill nobody has yet
   - Without a golden set she cannot answer "is the judge right?"
   - Binary verdicts feel lossy until the suite-pass-rate reframe lands
-  - Left alone, everything becomes an llm eval
+  - Left alone, everything becomes an ai eval
 content_types:
   [assertion-craft-guide, calibration-walkthrough, conceptual-explainer, human-review-runbook]
 journeys:
@@ -51,7 +51,7 @@ not as optional frontmatter fields.
 
 Her second problem is **proof**. A quality bar resting on trust will not survive contact with a
 skeptical engineering org, so she needs the golden set, `calibrate`, the 70% agreement floor, and
-`judge.falsePositiveAlert` as artifacts she can take to that conversation. She cares more about false
+`judge.false-positive-alert` as artifacts she can take to that conversation. She cares more about false
 positives than about raw accuracy, because a check that fails good pages gets disabled inside a week
 and a check that misses a few bad ones does not.
 
@@ -62,7 +62,7 @@ makes a binary verdict acceptable in the first place. Both are counterintuitive 
 both are load-bearing for her adoption.
 
 She is also the persona who owns the discipline that keeps the tool affordable: if nobody applies
-`promote` and `generate`, every eval stays an llm eval and cost grows with the corpus forever.
+`promote` and `generate`, every eval stays an ai eval and cost grows with the corpus forever.
 
 Success for Sara is a calibration report showing 88% agreement and a 6% false-positive rate, printed
 in a doc she hands to an engineering director who then stops asking whether the check is trustworthy.

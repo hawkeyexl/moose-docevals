@@ -7,7 +7,7 @@ import { FillCache, fillCacheKey } from "../../src/fill/cache.js";
 const PROPOSAL = {
   evals: [
     {
-      name: "has-overview",
+      id: "has-overview",
       assertion: "The page opens with an overview.",
       confidence: 0.9,
       examples: { pass: "Overview present.", fail: "No overview." },

@@ -46,7 +46,7 @@ describe("deterministic run over fixtures", () => {
       )?.outcome,
     ).toBe("error");
 
-    // LLM evals are skipped under --deterministic-only.
+    // AI evals are skipped under --deterministic-only.
     expect(
       byKey.get("test/fixtures/pages/docs/get-started/concepts.md defines-core-terms")
         ?.outcome,

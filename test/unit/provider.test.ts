@@ -23,7 +23,7 @@ afterEach(() => {
 describe("providerSpecFor", () => {
   it("maps the anthropic section and keeps a verdict-shaped tool name", () => {
     const config = parseDocevalsConfig(
-      "version: 1\nprovider:\n  default: anthropic\n  anthropic:\n    model: claude-haiku-4-5\n    apiKeyEnv: MY_KEY\n",
+      "version: 1\nprovider:\n  default: anthropic\n  anthropic:\n    model: claude-haiku-4-5\n    api-key-env: MY_KEY\n",
       PATH,
     );
     const spec = providerSpecFor(config);
@@ -37,7 +37,7 @@ describe("providerSpecFor", () => {
 
   it("maps the openai section including baseUrl", () => {
     const config = parseDocevalsConfig(
-      "version: 1\nprovider:\n  openai:\n    baseUrl: http://localhost:11434/v1\n    model: qwen2.5\n",
+      "version: 1\nprovider:\n  openai:\n    base-url: http://localhost:11434/v1\n    model: qwen2.5\n",
       PATH,
     );
     const spec = providerSpecFor(config, { provider: "openai" });
@@ -57,7 +57,7 @@ describe("providerSpecFor", () => {
 
   it("carries a configured pricing override onto the spec", () => {
     const config = parseDocevalsConfig(
-      "version: 1\nprovider:\n  anthropic:\n    pricing:\n      inputPerMTok: 1\n      outputPerMTok: 2\n",
+      "version: 1\nprovider:\n  anthropic:\n    pricing:\n      input-per-mtok: 1\n      output-per-mtok: 2\n",
       PATH,
     );
     expect(providerSpecFor(config).pricing).toEqual({
@@ -78,7 +78,7 @@ describe("providerSpecFor", () => {
 
   it("rejects an unknown provider name", () => {
     const config = parseDocevalsConfig("version: 1\n", PATH);
-    expect(() => providerSpecFor(config, { provider: "gemini" as never })).toThrow(
+    expect(() => providerSpecFor(config, { provider: "gemini" })).toThrow(
       DocevalsError,
     );
   });
@@ -132,7 +132,7 @@ describe("makeProvider", () => {
   it("raises a DocevalsError for an unknown provider too", () => {
     const config = parseDocevalsConfig("version: 1\n", PATH);
     expect(() =>
-      makeProvider(config, { provider: "gemini" as never }),
+      makeProvider(config, { provider: "gemini" }),
     ).toThrow(DocevalsError);
   });
 
@@ -140,7 +140,7 @@ describe("makeProvider", () => {
     delete process.env["ANTHROPIC_API_KEY"];
     process.env["MY_KEY"] = "test-key";
     const config = parseDocevalsConfig(
-      "version: 1\nprovider:\n  anthropic:\n    apiKeyEnv: MY_KEY\n",
+      "version: 1\nprovider:\n  anthropic:\n    api-key-env: MY_KEY\n",
       PATH,
     );
     expect(makeProvider(config).provider()).toBe("anthropic");

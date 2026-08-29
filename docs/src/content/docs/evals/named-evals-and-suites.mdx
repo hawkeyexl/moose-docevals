@@ -18,7 +18,7 @@ docevals:
     no-future-promises:
       type: regression
       assertion: The page makes no claims about unreleased or future functionality.
-      grader: llm
+      grader: ai
       evidence: All prose sections
       examples:
         pass: Describes only shipped behavior.
@@ -29,7 +29,7 @@ Pages reference it by name:
 
 ```yaml
 evals:
-  - no-future-promises
+  - use: no-future-promises
 ```
 
 Change the wording in one place and every page that uses it changes. Names match
@@ -43,28 +43,27 @@ A suite is a named group plus a target pass rate — the checks that apply to a 
 docevals:
   suites:
     reference:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
     tutorial:
-      targetPassRate: 0.7
+      target-pass-rate: 0.7
       evals: [explains-why-before-how, no-future-promises]
     how-to:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals: [no-future-promises, readable]
 ```
 
 ```yaml
 ---
 title: Installation
-evals:
-  suite: how-to
+eval-suite: how-to
 ---
 ```
 
 Set `defaults.suite` to apply one to every page that names none, and pages only carry an `evals` key
 when they need something specific.
 
-## `targetPassRate` is a suite property
+## `target-pass-rate` is a suite property
 
 This is the piece people miss, and missing it makes moose-docevals look far too strict.
 
@@ -100,10 +99,10 @@ When one page needs a variant, override at the reference rather than defining a 
 evals:
   - use: fresh-enough
     severity: warning
-    options: { maxAgeDays: 180 }
+    options: { max-age-days: 180 }
 ```
 
-`options` merges over the base; `type`, `severity`, and `skip` replace. A second eval named
+`options` merges over the base; `type`, `severity`, and `skip` replace. A second eval with the id
 `fresh-enough-but-stricter` is how a library rots.
 
 ## Check what resolved
@@ -117,7 +116,7 @@ npx moose-docevals list docs/
 
 ```console
 test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
-  - no-future-promises [llm, regression, config]
+  - no-future-promises [ai, regression, config]
   - fresh-enough [tool:freshness, regression, config]
   - readable [tool:reading-level, regression, config]
   - frontmatter-valid [tool:docmeta, regression, config]

@@ -3,13 +3,13 @@ id: cuj-cheapen-evals
 type: cuj
 title: Move evals down the grader hierarchy
 personas: [persona-standard-owner, persona-solo-owner, persona-retrofitter]
-trigger: "Every eval is an llm eval, and the bill and the run time both grow with the corpus"
+trigger: "Every eval is an ai eval, and the bill and the run time both grow with the corpus"
 entry_point: docs/src/content/docs/adopt/promote-to-deterministic.mdx
 success_criteria: >
   Evals that could always have been code are now command evals with committed, reviewable scripts,
   and the next run costs measurably less with no loss of coverage.
 steps:
-  - { stage: "Find which llm evals could be code", doc: docs/src/content/docs/adopt/promote-to-deterministic.mdx, exists: true }
+  - { stage: "Find which ai evals could be code", doc: docs/src/content/docs/adopt/promote-to-deterministic.mdx, exists: true }
   - { stage: "Convert them", doc: docs/src/content/docs/adopt/promote-to-deterministic.mdx, exists: true }
   - { stage: "Generate a script for a plain-language command eval", doc: docs/src/content/docs/evals/deterministic-checks.mdx, exists: true }
   - { stage: "Review the generated script like any other source", doc: docs/src/content/docs/adopt/review-generated-scripts.mdx, exists: true }
@@ -22,18 +22,18 @@ steps:
 **Scope:** converting judged evals into deterministic ones, and generating scripts for plain-language
 deterministic assertions. Wrapping *existing* tools is
 [`cuj-orchestrate-tools`](cuj-orchestrate-tools.md); this journey is about evals that started life as
-llm evals and should not have stayed that way.
+ai evals and should not have stayed that way.
 
 **Trigger.** A `fill` pass, or ordinary drift, has left a corpus where nearly every eval is judged.
 Run time and cost now scale with the corpus, and both are trending the wrong way.
 
 **Narrative.** The grader hierarchy is a claim about *preference*, and preferences decay without a
 mechanism. Left alone every eval stays wherever it was born, and since llm is the default grader and
-`fill` proposes llm-graded evals by construction, "left alone" means expensive. `promote` and
+`fill` proposes ai-graded evals by construction, "left alone" means expensive. `promote` and
 `generate` are that mechanism, and this journey is the discipline of applying them.
 
 The rule is the manuscript's: **if you can express the eval criterion as code, do it.** `promote` asks
-the model to apply exactly that test to the existing llm evals and reports which ones pass it.
+the model to apply exactly that test to the existing ai evals and reports which ones pass it.
 Crucially it is **report-only by default** — `--write` is a separate, deliberate act — because
 converting an assertion changes what is being checked, and that deserves a human decision rather than
 a flag someone set once.
@@ -42,10 +42,10 @@ The step readers underestimate is **reviewing the generated script**. Generated 
 version-controlled source, written to a file parallel to the doc and referenced from frontmatter as a
 `command` — never embedded in the frontmatter itself. That design exists so they show up in pull
 requests and can be edited by hand, and it only pays off if someone actually reads them. A generated
-script that passes for the wrong reason is worse than the llm eval it replaced, because it is now
+script that passes for the wrong reason is worse than the ai eval it replaced, because it is now
 silent and cheap.
 
-`generated.assertionHash` closes the loop: edit the assertion and the hash no longer matches, so the
+`generated.assertion-hash` closes the loop: edit the assertion and the hash no longer matches, so the
 script is stale and regenerates rather than quietly checking the old thing. Readers meet this field
 first as a confusing failure in [`cuj-fix-red-check`](cuj-fix-red-check.md); explaining it here, where
 it is created, is what makes that later encounter legible.

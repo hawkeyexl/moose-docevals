@@ -4,7 +4,7 @@
  * Golden cases live in YAML files under .moose-docevals/golden/ by default:
  *
  *   - file: docs/install.md
- *     eval: no-future-promises      # llm-graded eval resolvable on that page
+ *     eval: no-future-promises      # ai-graded eval resolvable on that page
  *     expected: pass
  *     rationale: Mentions only shipped features.
  *
@@ -124,12 +124,12 @@ export async function runCalibrate(
     const page = readPage(absPath, cwd);
     const plan = resolvePage(page, config);
     const ev = plan.evals.find(
-      (e) => e.name === goldenCase.eval && e.grader === "llm",
+      (e) => e.name === goldenCase.eval && e.grader === "ai",
     );
     if (!ev) {
       results.push({
         ...goldenCase,
-        error: `llm-graded eval "${goldenCase.eval}" not resolvable on this page`,
+        error: `ai-graded eval "${goldenCase.eval}" not resolvable on this page`,
       });
       continue;
     }
@@ -183,7 +183,7 @@ export function renderCalibration(report: CalibrationReport): string {
     }
     const tag = c.agrees ? pc.green("agree") : pc.red("DISAGREE");
     lines.push(
-      `${tag} ${c.file} ${pc.bold(c.eval)}: judge=${c.judged} human=${c.expected}` +
+      `${tag} ${c.file} ${pc.bold(c.eval)}: judge=${c.judged ?? "(no verdict)"} human=${c.expected}` +
         (!c.agrees && c.rationale ? pc.dim(` — human: ${c.rationale}`) : ""),
     );
   }

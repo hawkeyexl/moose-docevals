@@ -3,7 +3,7 @@
 Deterministic and LLM-as-judge evals for documentation pages, driven by frontmatter.
 
 Every quality check on a documentation page is an **eval**: a named, testable assertion with a
-**grader** that decides pass or fail. Graders run in preference order — code first, an LLM judge
+**grader** that decides pass or fail. Graders run in preference order — code first, an AI judge
 second, a human last.
 
 ## Quickstart
@@ -26,8 +26,8 @@ Declare an assertion in a page's frontmatter:
 title: Installation
 last-reviewed: 2026-06-01
 evals:
-  - no-future-promises
-  - name: install-command-present
+  - use: no-future-promises
+  - id: install-command-present
     assertion: The page contains a bash code block with `npm i -g doc-detective`.
     grader: command
 ---
@@ -68,18 +68,18 @@ commands these pages present are executed against the fixture corpus before the 
 To run the site locally:
 
 ```bash
-cd docs && npm install && npm run dev
+cd docs && npm ci && npm run dev
 ```
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
-| `moose-docevals run [globs]` | Run all evals: deterministic graders first, then the LLM judge |
+| `moose-docevals run [globs]` | Run all evals: deterministic graders first, then the AI judge |
 | `moose-docevals list` | Dry run — show each page's resolved eval plan |
 | `moose-docevals generate` | Generate scripts for command evals missing a command |
 | `moose-docevals fill [--dry-run]` | Propose new frontmatter evals with an LLM, gated on confidence |
-| `moose-docevals promote [--write]` | Convert llm evals that could be deterministic |
+| `moose-docevals promote [--write]` | Convert ai evals that could be deterministic |
 | `moose-docevals review <file> <eval> <pass\|fail>` | Record a human verdict |
 | `moose-docevals calibrate` | Score the judge against a human-verified golden set |
 | `moose-docevals init` | Scaffold a starter config |
@@ -93,7 +93,7 @@ moose-docevals ships the frontmatter JSON Schema as a package artifact, so any v
 pages:
 
 ```bash
-docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
+docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-1.0.0.json docs/
 ```
 
 ```js

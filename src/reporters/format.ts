@@ -10,7 +10,14 @@
 import { DocevalsError } from "../types.js";
 
 /** Formats `run` can emit — one per module in this directory. */
-export const REPORT_FORMATS = ["human", "json", "markdown", "github"] as const;
+export const REPORT_FORMATS = [
+  "human",
+  "json",
+  "markdown",
+  "github",
+  "sarif",
+  "junit",
+] as const;
 
 /** Formats the summary commands (`list`, `fill`) can emit. */
 export const SUMMARY_FORMATS = ["human", "json"] as const;

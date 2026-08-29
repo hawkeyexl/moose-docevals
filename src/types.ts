@@ -12,7 +12,7 @@
 // definition would be a second thing to keep in sync.
 //
 //   Match          — a single run's verdict; `partial` counts as fail
-//   Zone           — confidence-zone routing for LLM-judged evals
+//   Zone           — confidence-zone routing for AI-judged evals
 //   JudgeVerdict   — the structured verdict of one run (the book's shape)
 //   JudgeRun       — one run within an ensemble
 //   ConsensusResult — the aggregated outcome for one (page, eval) pair
@@ -36,7 +36,7 @@ export type EvalType = "capability" | "regression";
 export type Severity = "error" | "warning" | "info";
 
 /** How an eval is graded. `tool:*` kinds are built-in adapters for external tools. */
-export type GraderKind = "llm" | "command" | "human" | `tool:${string}`;
+export type GraderKind = "ai" | "command" | "human" | `tool:${string}`;
 
 /** A normalized finding from a deterministically graded eval (command or tool). */
 export interface Finding {
@@ -55,11 +55,17 @@ export interface Finding {
 /** Result of one eval applied to one page. */
 export interface EvalResult {
   evalName: string;
+  /**
+   * Suite this result reports under. Stamped centrally by the engine, which
+   * already computes the mapping for the suite summaries — the alternative is
+   * threading it through every one of the ~30 places a result is constructed.
+   */
+  suite?: string;
   type: EvalType;
   grader: GraderKind;
   file: string;
   outcome: "pass" | "fail" | "needs-review" | "skipped" | "error";
-  /** Present for llm-graded evals. */
+  /** Present for ai-graded evals. */
   consensus?: ConsensusResult;
   /** Present for command/tool-graded evals that produced findings. */
   findings?: Finding[];

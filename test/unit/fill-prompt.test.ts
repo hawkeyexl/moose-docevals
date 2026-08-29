@@ -11,7 +11,7 @@ const ajv = new Ajv2020({ allErrors: true });
 const validate = ajv.compile(PROPOSAL_SCHEMA as Record<string, unknown>);
 
 const GOOD_EVAL = {
-  name: "has-overview",
+  id: "has-overview",
   assertion: "The page opens with an overview.",
   confidence: 0.9,
   examples: { pass: "Overview present.", fail: "No overview." },
@@ -22,7 +22,7 @@ describe("buildFillUser", () => {
     const user = buildFillUser(
       "docs/page.mdx",
       "body text",
-      [{ name: "existing-check", assertion: "Something holds." }],
+      [{ id: "existing-check", assertion: "Something holds." }],
       3,
     );
     expect(user).toContain("docs/page.mdx");
@@ -59,7 +59,7 @@ describe("PROPOSAL_SCHEMA", () => {
   });
 
   it("rejects bad names, out-of-range confidence, and stray keys", () => {
-    expect(validate({ evals: [{ ...GOOD_EVAL, name: "Bad_Name" }] })).toBe(false);
+    expect(validate({ evals: [{ ...GOOD_EVAL, id: "Bad_Name" }] })).toBe(false);
     expect(validate({ evals: [{ ...GOOD_EVAL, confidence: 1.5 }] })).toBe(false);
     expect(validate({ evals: [{ ...GOOD_EVAL, grader: "command" }] })).toBe(false);
   });

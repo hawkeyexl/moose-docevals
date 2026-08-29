@@ -52,7 +52,7 @@ structural treatment rather than a footnote on one persona's page:
    `calibrate` exist to answer it — so the site gives them a whole section (`judge/`) rather than
    burying them in reference.
 2. **"What does this cost, and can it surprise me?"** Per-run cost is a live variable, not a fixed
-   licence. `judge.maxCostUsd`, `fill.maxCostUsd`, and response caching are adoption features, not
+   licence. `judge.max-cost-usd`, `fill.max-cost-usd`, and response caching are adoption features, not
    tuning knobs, and are documented as such.
 3. **"What executes when I run this on a stranger's pull request?"** Frontmatter-declared commands and
    Doc Detective steps embedded in content are arbitrary code execution driven by the content files

@@ -141,7 +141,7 @@ omission. Verified against `src/cli.ts`, `src/core/config-schema.json`, and `src
 | `review` | `judge/human-review.mdx`, `reference/cli.mdx` |
 | `init` | `get-started/index.mdx`, `reference/cli.mdx` |
 
-Notable flags with a home beyond the CLI reference: `--deterministic-only` and `--llm-only`
+Notable flags with a home beyond the CLI reference: `--deterministic-only` and `--ai-only`
 (`evals/deterministic-checks.mdx`, `fix/index.mdx`); `--no-frontmatter-commands`
 (`ci/untrusted-pull-requests.mdx`); `--no-cache` and `--max-cost` (`ci/cost-and-caching.mdx`);
 `--format` (`reference/output-and-exit-codes.mdx`); `--fail-on-review`
@@ -160,27 +160,27 @@ Keys are written fully qualified so this table is greppable against
 | `version` | `reference/configuration.mdx` |
 | `files.include`, `files.exclude` | `reference/configuration.mdx`, `adopt/retrofit-a-legacy-corpus.mdx` |
 | `defaults.suite` | `evals/named-evals-and-suites.mdx` |
-| `defaults.failFast`, `defaults.concurrency` | `reference/configuration.mdx` |
+| `defaults.fail-fast`, `defaults.concurrency` | `reference/configuration.mdx` |
 | `provider.default`, `provider.anthropic`, `provider.openai`, `provider.claude-cli` | `judge/choose-a-provider.mdx`, `reference/configuration.mdx` |
-| `judge.ensembleRuns`, `judge.temperature`, `judge.zones` | `judge/index.mdx` |
-| `judge.falsePositiveAlert` | `judge/calibrate.mdx` |
-| `judge.cacheDir`, `fill.cacheDir` | `ci/cost-and-caching.mdx`, `reference/files-and-state.mdx` |
-| `judge.maxCostUsd`, `fill.maxCostUsd` | `ci/cost-and-caching.mdx` |
-| `scripts.dir`, `scripts.configDir`, `scripts.timeoutMs` | `adopt/review-generated-scripts.mdx`, `reference/configuration.mdx` |
-| `scripts.allowFrontmatterCommands` | `ci/untrusted-pull-requests.mdx` |
-| `fill.confidenceThreshold`, `fill.maxEvalsPerPage`, `fill.temperature` | `adopt/index.mdx` |
-| `evals` (named evals), `suites` (incl. `targetPassRate`) | `evals/named-evals-and-suites.mdx` |
+| `judge.ensemble-runs`, `judge.temperature`, `judge.zones` | `judge/index.mdx` |
+| `judge.false-positive-alert` | `judge/calibrate.mdx` |
+| `judge.cache-dir`, `fill.cache-dir` | `ci/cost-and-caching.mdx`, `reference/files-and-state.mdx` |
+| `judge.max-cost-usd`, `fill.max-cost-usd` | `ci/cost-and-caching.mdx` |
+| `scripts.dir`, `scripts.config-dir`, `scripts.timeout-ms` | `adopt/review-generated-scripts.mdx`, `reference/configuration.mdx` |
+| `scripts.allow-frontmatter-commands` | `ci/untrusted-pull-requests.mdx` |
+| `fill.confidence-threshold`, `fill.max-evals-per-page`, `fill.temperature` | `adopt/index.mdx` |
+| `evals` (named evals), `suites` (incl. `target-pass-rate`) | `evals/named-evals-and-suites.mdx` |
 
-Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`, `successExitCodes`,
-`timeoutMs`, `generated`, `options`, `severity`, `severityMap` — are all covered by
+Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`, `success-exit-codes`,
+`timeout-ms`, `generated`, `options`, `severity`, `severity-map` — are all covered by
 `reference/frontmatter.mdx`, with `assertion`/`evidence`/`examples` taught in
-`evals/write-good-assertions.mdx` and `severity`/`severityMap` in `evals/severity-and-findings.mdx`.
+`evals/write-good-assertions.mdx` and `severity`/`severity-map` in `evals/severity-and-findings.mdx`.
 
 ### Grader kinds
 
 | Kind | Documented in |
 |---|---|
-| `llm` | `judge/index.mdx`, `evals/write-good-assertions.mdx` |
+| `ai` | `judge/index.mdx`, `evals/write-good-assertions.mdx` |
 | `command` | `evals/deterministic-checks.mdx` |
 | `human` | `judge/human-review.mdx` |
 | `tool:docmeta` | `evals/deterministic-checks.mdx`, `reference/graders.mdx` |

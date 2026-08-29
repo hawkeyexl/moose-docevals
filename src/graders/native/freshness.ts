@@ -8,10 +8,25 @@ import type { Grader } from "./../types.js";
 
 interface FreshnessOptions {
   field?: string;
-  maxAgeDays?: number;
+  "max-age-days"?: number;
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * A frontmatter value, as a string a reader can act on.
+ *
+ * The value comes from YAML, so it can be a mapping or a list. `String(...)`
+ * renders those as "[object Object]", which names neither the mistake nor the
+ * value — in a message whose whole job is to show what was written.
+ */
+function describe(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "number" || typeof raw === "boolean") return String(raw);
+  // Objects, arrays and null. Anything JSON cannot render (a function, a
+  // symbol) cannot come out of a YAML parser.
+  return JSON.stringify(raw);
+}
 
 export const freshnessGrader: Grader = {
   kind: "tool:freshness",
@@ -21,7 +36,7 @@ export const freshnessGrader: Grader = {
     for (const { plan, eval: ev } of ctx.targets) {
       const opts = ev.options as FreshnessOptions;
       const field = opts.field ?? "last-reviewed";
-      const maxAgeDays = opts.maxAgeDays ?? 365;
+      const maxAgeDays = opts["max-age-days"] ?? 365;
       const raw = plan.page.frontmatter.data[field];
 
       if (raw == null) {
@@ -35,14 +50,13 @@ export const freshnessGrader: Grader = {
         });
         continue;
       }
-      const date =
-        raw instanceof Date ? raw : new Date(String(raw));
+      const date = raw instanceof Date ? raw : new Date(describe(raw));
       if (Number.isNaN(date.getTime())) {
         findings.push({
           evalName: ev.name,
           file: plan.page.file,
           ruleId: "freshness/invalid",
-          message: `Unparseable "${field}" date: ${String(raw)}`,
+          message: `Unparseable "${field}" date: ${describe(raw)}`,
           severity: ev.severity,
           line: plan.page.frontmatter.lineFor(`/${field}`),
         });

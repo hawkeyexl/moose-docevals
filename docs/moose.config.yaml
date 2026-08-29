@@ -20,45 +20,45 @@ docevals:
     # Every docs page gets this suite without repeating it in frontmatter. Pages
     # add an `evals:` block only when they need something page-specific.
     suite: docs-page
-    failFast: false
+    fail-fast: false
     concurrency: 4
 
   provider:
     default: anthropic
     anthropic:
       model: claude-sonnet-4-5
-      apiKeyEnv: ANTHROPIC_API_KEY
+      api-key-env: ANTHROPIC_API_KEY
     claude-cli:
       model: claude-sonnet-4-5
 
   judge:
-    ensembleRuns: 3
+    ensemble-runs: 3
     temperature: 0
     zones:
-      autoPass: 0.8
-      autoFail: 0.8
-    falsePositiveAlert: 0.15
+      auto-pass: 0.8
+      auto-fail: 0.8
+    false-positive-alert: 0.15
     # Committed, not gitignored. The repo-root .gitignore excludes `.moose-docevals/`,
     # so the docs corpus keeps its cache somewhere version-controlled — that is
     # what lets the verify-docs CI job replay LLM verdicts with no API key.
     # Regenerate with `npm run docs:refresh-cache` after any PROMPT_VERSION bump.
-    cacheDir: docs/.moose-docevals-cache
-    maxCostUsd: 2.0
+    cache-dir: docs/.moose-docevals-cache
+    max-cost-usd: 2.0
 
   fill:
-    cacheDir: docs/.moose-docevals-cache/fill
-    maxCostUsd: 2.0
+    cache-dir: docs/.moose-docevals-cache/fill
+    max-cost-usd: 2.0
 
   scripts:
     dir: "{docDir}/moose-docevals"
-    configDir: moose-docevals-scripts
+    config-dir: moose-docevals-scripts
     # The docs corpus declares no frontmatter commands. Command execution here
     # comes from the tool:doc-detective grader running steps embedded in page
     # bodies, which this flag does NOT gate — the verify-docs job is restricted to
     # same-repo pull requests instead. See docs/src/content/docs/ci/
     # untrusted-pull-requests.mdx (planned) and ADR 01004.
-    allowFrontmatterCommands: false
-    timeoutMs: 60000
+    allow-frontmatter-commands: false
+    timeout-ms: 60000
 
   evals:
     # --- Deterministic. These run offline with no provider. ---
@@ -80,7 +80,7 @@ docevals:
       assertion: Page frontmatter validates against the moose-docevals frontmatter schema.
       grader: tool:docmeta
       options:
-        schemas: ["schemas/frontmatter-0.1.json"]
+        schemas: ["schemas/frontmatter-1.0.0.json"]
       severity: error
 
     markdownlint:
@@ -96,7 +96,7 @@ docevals:
     no-future-promises:
       type: regression
       assertion: The page makes no claims about unreleased or future functionality.
-      grader: llm
+      grader: ai
       evidence: All prose sections
       examples:
         pass: Describes only shipped behavior.
@@ -107,7 +107,7 @@ docevals:
       assertion: >
         The page states, near the top, what the reader will be able to do when
         they finish it.
-      grader: llm
+      grader: ai
       evidence: Title, description, and the first section
       examples:
         pass: Opens by naming the outcome the reader reaches.
@@ -117,18 +117,18 @@ docevals:
       assertion: Page prose reads below grade 12.
       grader: tool:reading-level
       options:
-        maxGrade: 12
+        max-grade: 12
       severity: warning
 
   suites:
     # Deterministic only, for now — see the note above the LLM evals.
     docs-page:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals: [commands-work, frontmatter-valid, markdownlint]
 
     # The target state, once real pages and their cache fixtures exist.
     docs-page-full:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals:
         [commands-work, frontmatter-valid, markdownlint, readable, no-future-promises,
          serves-one-journey]

@@ -94,10 +94,9 @@ function makeTarget(body: string, name = "claim-check"): GraderTarget {
     "---",
     "title: x",
     "evals:",
-    "  evals:",
-    `    - name: ${name}`,
-    "      assertion: The page satisfies the claim.",
-    "      examples: { pass: yes, fail: no }",
+    `  - id: ${name}`,
+    "    assertion: The page satisfies the claim.",
+    "    examples: { pass: yes, fail: no }",
     "---",
     body,
   ].join("\n");
@@ -185,7 +184,12 @@ describe("makeJudge", () => {
     ]);
     const judge = makeJudge({ provider, root: tempRoot() });
     const results = await judge([makeTarget("Body.")], config, {});
-    const consensus = results[0]?.consensus!;
+    // `?.` then `!` says "this may be undefined, and it isn't" in one
+    // expression. Assert it instead, so a missing result fails here with a
+    // readable message rather than a property access on undefined.
+    const consensus = results[0]?.consensus;
+    expect(consensus, "judge returned a consensus").toBeDefined();
+    if (!consensus) return;
     expect(consensus.votes.error).toBe(1);
     expect(consensus.votes.pass).toBe(2);
     // Errored run blocks auto-pass.

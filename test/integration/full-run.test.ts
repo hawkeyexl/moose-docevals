@@ -15,14 +15,14 @@ import { readFileSync } from "node:fs";
 const ROOT = resolve(import.meta.dirname, "../..");
 
 describe("full run with mock judge", () => {
-  it("judges llm evals, keeps deterministic outcomes, and reports cost", async () => {
+  it("judges ai evals, keeps deterministic outcomes, and reports cost", async () => {
     // Cache dir isolated per test run.
     const cacheRoot = mkdtempSync(join(tmpdir(), "moose-docevals-e2e-"));
     const configText = readFileSync(join(ROOT, "moose.config.yaml"), "utf8");
     // The repo's own config file is already a complete moose config, so it
     // parses as-is rather than through the nesting helper.
     const config = parseConfig(
-      configText.replace("cacheDir: .moose-docevals/cache", `cacheDir: ${JSON.stringify(join(cacheRoot, "cache"))}`),
+      configText.replace("cache-dir: .moose-docevals/cache", `cache-dir: ${JSON.stringify(join(cacheRoot, "cache"))}`),
       join(ROOT, "moose.config.yaml"),
     );
 
@@ -40,7 +40,7 @@ describe("full run with mock judge", () => {
       report.evalResults.map((r) => [`${r.file} ${r.evalName}`, r] as const),
     );
 
-    // LLM evals judged with consensus attached.
+    // AI evals judged with consensus attached.
     const judged = byKey.get(
       "test/fixtures/pages/docs/get-started/concepts.md defines-core-terms",
     );

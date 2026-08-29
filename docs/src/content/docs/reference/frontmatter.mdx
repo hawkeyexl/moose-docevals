@@ -3,20 +3,35 @@ title: Frontmatter reference
 description: Every field an eval can carry, and how page evals resolve against config evals and suites.
 ---
 
-All eval declarations live under the `evals` key in page frontmatter, validated by the JSON Schema
-this package publishes at `schemas/frontmatter-0.1.json`. Verified against that schema and
-`src/core/resolve.ts`.
+Eval declarations live in page frontmatter under four keys, validated by the JSON Schema this
+package publishes at `schemas/frontmatter-1.0.0.json`. That schema implements
+`docmeta:evals:1.0.0-proposal.1`, the common vocabulary docmeta proposes for per-page quality
+assertions — docmeta publishes the vocabulary, moose-docevals implements the graders behind it.
+Verified against that schema and `src/core/resolve.ts`.
 
-## The `evals` key
+## The four page keys
 
-Takes either an **array** (just the evals) or an **object** (when you need `suite` or `skip`).
+Settings are page-level facts, not an enclosing object. The page root stays open, so a sibling
+tool's keys pass untouched — but the **`eval-` prefix is reserved**: an unrecognized `eval-*` key is
+an error, not something silently ignored.
+
+| Key | Type | Meaning |
+|---|---|---|
+| `evals` | string, or non-empty list | One assertion, or the list of entries |
+| `eval-suite` | string | Named suite from the config whose evals apply. An unknown name is a page error. |
+| `eval-skip` | boolean (`false`) | Skip this page entirely; it reports as skipped. |
+| `eval-provenance` | list | The machine-proposal trail `fill` writes. See below. |
+
+The page's own top-level `generated-by` — not an `eval-*` key — records the model that wrote the
+page's content. The judge reads it to warn about self-preference bias when it matches the judging
+model.
 
 ```yaml
 ---
 title: Installation
 evals:
-  - no-future-promises
-  - name: install-command-present
+  - use: no-future-promises
+  - id: install-command-present
     assertion: The page contains a bash code block with `npm i -g doc-detective`.
     grader: command
 ---
@@ -25,31 +40,37 @@ evals:
 ```yaml
 ---
 title: Concepts
+eval-suite: how-to
+eval-skip: false
 evals:
-  suite: how-to
-  skip: false
-  evals:
-    - no-future-promises
+  - use: no-future-promises
 ---
 ```
 
-| Object key | Type | Meaning |
-|---|---|---|
-| `suite` | string | Named suite from the config whose evals apply. Unknown suite names are a page error. |
-| `skip` | boolean | Skip this page entirely; it reports as skipped. |
-| `evals` | array | The entries below. |
-| `generatedBy` | string | Recorded when tooling wrote the block. |
-
 ## Entry forms
 
-An entry in the `evals` array takes one of three forms.
+An entry in the `evals` list takes one of three forms.
 
-**A bare string** references a named eval from the config:
+**A bare string** is an assertion, judged by AI at error severity. It is the one form with no id of
+its own, which is the trade for being one line.
 
 ```yaml
 evals:
-  - no-future-promises
+  - The documented install command matches the current package name.
 ```
+
+A single assertion needs no list at all:
+
+```yaml
+evals: The documented install command matches the current package name.
+```
+
+:::caution[This changed]
+In the 0.1 schema a bare string *referenced* a config-defined eval. It is an assertion now, so a
+page that still says `- fresh-enough` no longer runs the freshness grader — it sends those words to
+the judge. moose-docevals warns when a string shorthand matches a defined eval id, but the fix is
+yours: write `use:`.
+:::
 
 **A reference with overrides** narrows a named eval for this page only:
 
@@ -57,7 +78,7 @@ evals:
 evals:
   - use: fresh-enough
     severity: warning
-    options: { maxAgeDays: 180 }
+    options: { max-age-days: 180 }
 ```
 
 | Override | Effect |
@@ -67,8 +88,9 @@ evals:
 | `options` | **Merged** over the base options, not replaced. |
 | `skip` | Skips this one eval on this page. |
 
-**An inline definition** declares an eval that exists only on this page. It requires a `name`, and
-takes every field below.
+**An inline definition** declares an eval that exists only on this page. It requires an `id` —
+kebab-case, unique on the page — and takes every field below. Ids are required rather than derived
+from position, because a position-derived name orphans every cached verdict as soon as entries move.
 
 ## Eval fields
 
@@ -76,26 +98,27 @@ takes every field below.
 |---|---|---|---|
 | `assertion` | string | — | Required when `grader` is set. The claim about the page that is true or false. |
 | `type` | `regression` \| `capability` | `regression` | Most evals guard behavior that must keep working. |
-| `grader` | string | `llm` | `llm`, `command`, `human`, or `tool:<name>`. |
+| `grader` | string | `ai` | `ai`, `command`, `human`, or `tool:<name>`. It is `ai`, not `llm`, because the judge may be an agent rather than a bare model. |
+| `provider` | string | config default | Which configured provider or agent judges this `ai` eval. |
 | `evidence` | string | — | Scopes what the judge looks at. |
-| `examples.pass` / `examples.fail` | string | — | Pins the boundary. An inline llm eval without them raises a warning. |
+| `examples.pass` / `examples.fail` | string or string[] | — | Pins the boundary; one anchor or several. An inline ai eval without them raises a warning. |
 | `command` | string[] | — | For `command` graders. `{file}` expands to the page's absolute path. |
-| `successExitCodes` | integer[] | `[0]` | Exit codes treated as a pass. |
-| `timeoutMs` | integer ≥ 1 | grader-specific | |
-| `generated.assertionHash` | string | — | Written by script generation; a mismatch means the script is stale. |
+| `success-exit-codes` | integer[] | `[0]` | Exit codes treated as a pass. |
+| `timeout-ms` | integer ≥ 1 | grader-specific | |
+| `generated-assertion-hash` | string | — | Written by script generation, always beside `command`; a mismatch means the script is stale. |
 | `options` | object | `{}` | Grader-specific. See [Graders](/moose-docevals/reference/graders/). |
 | `severity` | `error` \| `warning` \| `info` | `error` | Only `error` findings fail the build. |
-| `severityMap` | object | — | Maps a tool's own severities onto moose-docevals severities. |
+| `severity-map` | object | — | Maps a tool's own severities onto moose-docevals severities. |
 
 ## Resolution order
 
 For each page, the plan is built in this order:
 
-1. **Suite evals** from the config — the page's `suite`, or `defaults.suite`.
+1. **Suite evals** from the config — the page's `eval-suite`, or `defaults.suite`.
 2. **Page entries**, in document order. A reference merges onto the suite's version of that eval; an
    inline definition replaces it.
 
-**Page entries win on name collision.** Local override beats global default, which is the right
+**Page entries win on id collision.** Local override beats global default, which is the right
 behavior and invisible until it bites — so check the resolved plan with `moose-docevals list` rather than
 by running.
 
@@ -110,17 +133,49 @@ These are reported per page rather than thrown, so one bad page does not stop th
 | Frontmatter fails schema validation | error |
 | Unknown suite name | error |
 | Unknown eval reference | error |
-| Duplicate eval name on one page | warning |
-| Inline llm eval with no `examples` | warning |
+| Duplicate eval id on one page | warning |
+| Unrecognized `eval-*` page key | error |
+| String shorthand matching a config eval id | warning |
+| Inline ai eval with no `examples` | warning |
 
 Errors carry the source line, resolved through docmeta's JSON-Pointer line map.
+
+## `eval-provenance`
+
+The durable record of which evals a machine proposed, and how sure it was. `moose-docevals fill`
+writes one entry per model; a **human deletes the entry** once those evals are reviewed, so a
+surviving entry means unreviewed machine-proposed evals.
+
+```yaml
+---
+title: Install the operator
+eval-provenance:
+  - generated-by: claude-fable-5
+    evals: [install-verified, eks-coverage]
+    confidence:
+      install-verified: 0.88
+      eks-coverage: 0.74
+evals:
+  - id: install-verified
+    assertion: The Helm install steps produce a Ready operator pod.
+---
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `generated-by` | string | Required. The model or agent that proposed the evals. |
+| `evals` | string[] | Ids it proposed. |
+| `confidence` | object | 0–1 per eval, keyed by the same ids. |
+
+A second `fill` run by the same model extends its existing entry rather than adding a near-duplicate.
+A different model gets its own.
 
 ## Validating the frontmatter itself
 
 The schema ships in the package, so any JSON Schema validator can check your pages:
 
 ```bash
-docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
+docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-1.0.0.json docs/
 ```
 
 Or wire it in as an eval, so bad declarations fail the run like any other check:
@@ -132,7 +187,7 @@ docevals:
       assertion: Page frontmatter matches the moose-docevals schema.
       grader: tool:docmeta
       options:
-        schemas: ["node_modules/moose-docevals/schemas/frontmatter-0.1.json"]
+        schemas: ["node_modules/moose-docevals/schemas/frontmatter-1.0.0.json"]
       severity: error
 ```
 

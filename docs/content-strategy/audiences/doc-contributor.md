@@ -37,9 +37,9 @@ back to the work they were actually doing.
 ## Defining pains
 
 - **They cannot tell which kind of failure they are looking at.** moose-docevals has several with different
-  remedies: a deterministic tool finding pinned to a line; an LLM verdict with a rationale but no
+  remedies: a deterministic tool finding pinned to a line; an AI verdict with a rationale but no
   line; an eval sitting in the human-review zone that they cannot resolve themselves; a stale
-  `assertionHash` meaning the generated script no longer matches its assertion; an operational error
+  `assertion-hash` meaning the generated script no longer matches its assertion; an operational error
   that is not their fault at all. Sorting these is step one and nothing else works until it is done.
 - **A judge rationale is not a remediation.** "The page promises unreleased functionality" identifies
   the problem without pointing at the sentence. The gap between rationale and edit is where this

@@ -46,7 +46,7 @@ reason it is a first-class audience rather than a note on the lead persona's pag
   failure mode for a CI step. This segment needs the ensemble, the cache, `--max-cost`, and
   `--deterministic-only` presented as *operational controls*, not as quality features.
 - **Content files drive arbitrary code execution.** Two distinct paths, and conflating them is a real
-  hazard: `scripts.allowFrontmatterCommands` / `--no-frontmatter-commands` gates commands declared in
+  hazard: `scripts.allow-frontmatter-commands` / `--no-frontmatter-commands` gates commands declared in
   page frontmatter, and the `tool:doc-detective` grader executes steps embedded in page bodies. The
   flag governs the first and **not** the second. On a fork pull request, an attacker controls both.
   The only complete answer is a fork gate on the job itself, and the docs must say so plainly rather

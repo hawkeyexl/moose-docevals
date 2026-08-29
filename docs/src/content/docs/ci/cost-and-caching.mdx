@@ -13,9 +13,9 @@ Two mechanisms make the steady-state cost of a docs pull request approximately z
 ```yaml
 docevals:
   judge:
-    maxCostUsd: 2.0
+    max-cost-usd: 2.0
   fill:
-    maxCostUsd: 5.0
+    max-cost-usd: 5.0
 ```
 
 ```bash
@@ -48,8 +48,8 @@ is why re-running at a different `--confidence` costs nothing.
 
 | Path | Default | Commit? |
 |---|---|---|
-| `judge.cacheDir` | `.moose-docevals/cache` | No |
-| `fill.cacheDir` | `.moose-docevals/cache/fill` | No |
+| `judge.cache-dir` | `.moose-docevals/cache` | No |
+| `fill.cache-dir` | `.moose-docevals/cache/fill` | No |
 
 ## Cache persistence is a correctness concern
 
@@ -96,7 +96,7 @@ on:
 **Run deterministic on every push, judged on pull requests.** `--deterministic-only` costs nothing
 and catches most regressions.
 
-**Lower `judge.ensembleRuns` deliberately, or not at all.** Three runs is the calibrated default;
+**Lower `judge.ensemble-runs` deliberately, or not at all.** Three runs is the calibrated default;
 dropping to one saves two thirds of the cost and removes the consensus signal that makes the
 human-review zone meaningful. Measure with [calibrate](/moose-docevals/judge/calibrate/) before you decide
 that trade is worth it.

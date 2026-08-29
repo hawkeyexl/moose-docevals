@@ -33,7 +33,7 @@ export function renderGithub(report: EngineReport): string {
         r.consensus.runs.find((run) => run.verdict)?.verdict?.reasoning ?? "";
       lines.push(
         `::error file=${escapeProperty(r.file)},title=${escapeProperty(`moose-docevals: ${r.evalName}`)}::${escapeData(
-          `LLM judge: fail (confidence ${r.consensus.meanConfidence.toFixed(2)}). ${reasoning}`,
+          `AI judge: fail (confidence ${r.consensus.meanConfidence.toFixed(2)}). ${reasoning}`,
         )}`,
       );
     }

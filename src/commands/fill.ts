@@ -1,7 +1,7 @@
 /**
  * `moose-docevals fill` — ask an LLM provider to propose frontmatter evals for each
  * page, gate the proposals on self-reported confidence, and append the
- * survivors to the page's frontmatter. Proposals are llm-graded only and
+ * survivors to the page's frontmatter. Proposals are ai-graded only and
  * deduplicated against the page's resolved plan; existing evals are never
  * touched. See ADR 01001.
  */
@@ -57,7 +57,7 @@ export type FillStatus =
   | "error";
 
 export interface ProposedEval {
-  name: string;
+  id: string;
   assertion: string;
   confidence: number;
   examples: { pass: string; fail: string };
@@ -76,7 +76,7 @@ export interface FillPageResult {
   belowThreshold: ProposedEval[];
   /** Fresh proposals dropped for exceeding `fill.maxEvalsPerPage`. */
   capped: ProposedEval[];
-  /** Proposed names that already exist in the page's resolved plan. */
+  /** Proposed ids that already exist in the page's resolved plan. */
   duplicates: string[];
   cached: boolean;
   error?: string;
@@ -89,13 +89,18 @@ export interface FillReport {
   exitCode: 0 | 1;
 }
 
-/** Proposals become inline evals with explicit grader/type; confidence and rationale stay report-only. */
+/**
+ * Proposals become inline evals with explicit grader/type. Confidence is no
+ * longer report-only — it is written to `eval-provenance` alongside the model
+ * that proposed it, so the page itself records what a machine wrote and how
+ * sure it was, and a reviewer retires the entry when they have checked it.
+ */
 function toEntry(p: ProposedEval): NewEvalEntry {
   return {
-    name: p.name,
+    id: p.id,
     assertion: p.assertion,
     type: p.type ?? "regression",
-    grader: "llm",
+    grader: "ai",
     evidence: p.evidence,
     examples: p.examples,
     severity: p.severity,
@@ -189,10 +194,10 @@ export async function runFill(
     }
 
     const existing = plan.evals.map((e) => ({
-      name: e.name,
+      id: e.name,
       assertion: e.assertion,
     }));
-    const existingNames = existing.map((e) => e.name).sort();
+    const existingNames = existing.map((e) => e.id).sort();
     const key = fillCacheKey(
       identity.provider,
       identity.model,
@@ -212,7 +217,7 @@ export async function runFill(
         const response = await getProvider().completeJSON({
           system: FILL_SYSTEM_PROMPT,
           user: buildFillUser(plan.page.file, plan.page.body, existing, maxEvals),
-          schema: PROPOSAL_SCHEMA as unknown as Record<string, unknown>,
+          schema: PROPOSAL_SCHEMA,
           temperature,
         });
         costUsd += costOfUsage(response.usage, pricing);
@@ -241,11 +246,11 @@ export async function runFill(
     const duplicates: string[] = [];
     const fresh: ProposedEval[] = [];
     for (const p of raw.evals as ProposedEval[]) {
-      if (seen.has(p.name)) {
-        duplicates.push(p.name);
+      if (seen.has(p.id)) {
+        duplicates.push(p.id);
         continue;
       }
-      seen.add(p.name);
+      seen.add(p.id);
       fresh.push(p);
     }
     // Proposals beyond the per-page cap are reported as `capped` rather than
@@ -273,6 +278,13 @@ export async function runFill(
         plan.page.content,
         plan.page.file,
         written.map(toEntry),
+        {
+          generatedBy: identity.model,
+          evals: written.map((p) => p.id),
+          confidence: Object.fromEntries(
+            written.map((p) => [p.id, p.confidence]),
+          ),
+        },
       );
       if (!options.dryRun) writeFileSync(plan.page.absPath, updated);
     } catch (e) {
@@ -305,7 +317,7 @@ export function renderFill(
   if (format === "json") return JSON.stringify(report, null, 2);
   const lines: string[] = [];
   const names = (evals: ProposedEval[]) =>
-    evals.map((p) => `${p.name} ${p.confidence.toFixed(2)}`).join(", ");
+    evals.map((p) => `${p.id} ${p.confidence.toFixed(2)}`).join(", ");
   for (const r of report.results) {
     const label = STATUS_LABELS[r.status].padEnd(8);
     const cachedTag = r.cached ? " [cached]" : "";

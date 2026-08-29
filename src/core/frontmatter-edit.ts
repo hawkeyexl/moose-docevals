@@ -8,10 +8,14 @@ import { parseDocument, Document, YAMLMap, YAMLSeq, isMap, isScalar } from "yaml
 import { DocevalsError } from "../types.js";
 import { leadingFrontmatterFormat } from "./discover.js";
 
+/** Top-level key moose-docevals owns inside the shared moose config. */
+const NAMESPACE = "docevals";
+
 export interface EvalUpdates {
   grader?: string;
   command?: string[];
-  generated?: { assertionHash: string };
+  /** sha256 of the assertion at generation time; flat, per the vocabulary. */
+  "generated-assertion-hash"?: string;
 }
 
 interface Split {
@@ -64,20 +68,17 @@ function applyUpdates(
     seq.flow = true; // ["node", "script.mjs", "{file}"] on one line
     node.set("command", seq);
   }
-  if (updates.generated !== undefined) {
-    node.set("generated", doc.createNode(updates.generated));
-  }
+  const hash = updates["generated-assertion-hash"];
+  if (hash !== undefined) node.set("generated-assertion-hash", hash);
 }
 
 /**
- * The `evals` key is either the eval list itself (array form) or an object
- * whose `evals` field holds the list.
+ * The eval list. `evals` is the list itself, or the single-assertion string
+ * shorthand — which has no map node to edit, so it is not a sequence here.
  */
 function evalSeq(doc: Document): YAMLSeq | undefined {
   const node = doc.get("evals", true);
-  if (node instanceof YAMLSeq) return node;
-  const nested = doc.getIn(["evals", "evals"]);
-  return nested instanceof YAMLSeq ? nested : undefined;
+  return node instanceof YAMLSeq ? node : undefined;
 }
 
 function findEvalNode(
@@ -88,8 +89,8 @@ function findEvalNode(
   if (!evals) return undefined;
   for (const item of evals.items) {
     if (isMap(item)) {
-      const name = item.get("name") ?? item.get("use");
-      if (name === evalName) return item as YAMLMap;
+      const name = item.get("id") ?? item.get("use");
+      if (name === evalName) return item;
     }
   }
   return undefined;
@@ -124,7 +125,14 @@ export function updatePageEval(
   return open + newBlock + suffix;
 }
 
-/** Update a named eval in moose.config.yaml text. */
+/**
+ * Update a named eval in moose.config.yaml text.
+ *
+ * The eval library lives under the tool's own namespace — `moose.config.yaml`
+ * is shared across the moose family. Navigating to a root `evals:` finds
+ * nothing in a real config, so generation for a config-sourced eval failed
+ * with "eval not found in config" against every file the loader accepts.
+ */
 export function updateConfigEval(
   configText: string,
   configPath: string,
@@ -137,29 +145,31 @@ export function updateConfigEval(
       `${configPath}: cannot edit config — ${doc.errors[0]?.message ?? "parse error"}`,
     );
   }
-  const node = doc.getIn(["evals", evalName]);
+  const node = doc.getIn([NAMESPACE, "evals", evalName]);
   if (!isMap(node)) {
     throw new DocevalsError(
       `${configPath}: eval "${evalName}" not found in config`,
     );
   }
-  applyUpdates(doc, node as YAMLMap, updates);
+  applyUpdates(doc, node, updates);
   return doc.toString();
 }
 
 export interface NewEvalEntry {
-  name: string;
+  /** Kebab-case id. Required on object entries — position-derived names
+   *  orphan cached verdicts whenever entries move. */
+  id: string;
   assertion: string;
   type?: string;
   grader?: string;
   evidence?: string;
-  examples?: { pass: string; fail: string };
+  examples?: { pass?: string | string[]; fail?: string | string[] };
   severity?: string;
 }
 
 /** Ordered plain object for a new inline eval, with undefined fields dropped. */
 function entryObject(entry: NewEvalEntry): Record<string, unknown> {
-  const obj: Record<string, unknown> = { name: entry.name, assertion: entry.assertion };
+  const obj: Record<string, unknown> = { id: entry.id, assertion: entry.assertion };
   if (entry.type !== undefined) obj.type = entry.type;
   if (entry.grader !== undefined) obj.grader = entry.grader;
   if (entry.evidence !== undefined) obj.evidence = entry.evidence;
@@ -168,10 +178,85 @@ function entryObject(entry: NewEvalEntry): Record<string, unknown> {
   return obj;
 }
 
+/**
+ * One model's claim about the evals it proposed, written to
+ * `eval-provenance`. A human deletes the entry once those evals are reviewed,
+ * so a surviving entry means unreviewed machine-proposed evals — which is the
+ * whole point: before this, `fill` reported confidence to the terminal and
+ * wrote nothing durable, so a page could not say which of its evals a model
+ * had written or how sure it had been.
+ */
+export interface ProvenanceUpdate {
+  generatedBy: string;
+  evals: string[];
+  confidence: Record<string, number>;
+}
+
+/**
+ * Merge a provenance entry into `eval-provenance`, by `generated-by`.
+ *
+ * One entry per model, so a second `fill` run with the same model extends the
+ * existing entry rather than stacking a near-duplicate a reviewer then has to
+ * reconcile.
+ */
+function mergeProvenance(
+  doc: Document,
+  path: string,
+  update: ProvenanceUpdate,
+): void {
+  let seq = doc.get("eval-provenance", true);
+  if (seq !== undefined && !(seq instanceof YAMLSeq)) {
+    // Replacing it would destroy someone's attribution trail without a word.
+    // `fill` never reaches this — it refuses a page with schema errors first —
+    // but `appendPageEvals` is a public export, so the guard belongs here, the
+    // same way the `evals` string shorthand is refused rather than rewritten.
+    throw new DocevalsError(
+      `${path}: eval-provenance is not a list — fix or remove it before writing a new trail`,
+    );
+  }
+  if (seq === undefined) {
+    seq = doc.createNode([]);
+    doc.set("eval-provenance", seq);
+  }
+  const existing = (seq as YAMLSeq).items.find(
+    (i) => isMap(i) && i.get("generated-by") === update.generatedBy,
+  );
+  if (existing === undefined) {
+    (seq as YAMLSeq).add(
+      doc.createNode({
+        "generated-by": update.generatedBy,
+        evals: update.evals,
+        confidence: update.confidence,
+      }),
+    );
+    return;
+  }
+  const node = existing as YAMLMap;
+  const prior = node.get("evals", true);
+  const priorIds =
+    prior instanceof YAMLSeq
+      ? prior.items.filter(isScalar).map((s) => String(s.value))
+      : [];
+  const merged = [...new Set([...priorIds, ...update.evals])];
+  node.set("evals", doc.createNode(merged));
+
+  const priorConfidence = node.get("confidence", true);
+  const confidence: Record<string, number> = {};
+  if (isMap(priorConfidence)) {
+    for (const item of priorConfidence.items) {
+      if (isScalar(item.key) && isScalar(item.value)) {
+        confidence[String(item.key.value)] = Number(item.value.value);
+      }
+    }
+  }
+  Object.assign(confidence, update.confidence);
+  node.set("confidence", doc.createNode(confidence));
+}
+
 function assertNoCollision(seq: YAMLSeq, name: string, path: string): void {
   for (const item of seq.items) {
     const existing = isMap(item)
-      ? item.get("name") ?? item.get("use")
+      ? item.get("id") ?? item.get("use")
       : isScalar(item)
         ? item.value
         : undefined;
@@ -192,6 +277,7 @@ export function appendPageEvals(
   content: string,
   path: string,
   entries: NewEvalEntry[],
+  provenance?: ProvenanceUpdate,
 ): string {
   const format = leadingFrontmatterFormat(content);
   if (format === "toml" || format === "json") {
@@ -209,6 +295,7 @@ export function appendPageEvals(
   if (format === undefined) {
     // No frontmatter: synthesize a block above the untouched body.
     const doc = new Document({ evals: entries.map(entryObject) });
+    if (provenance) mergeProvenance(doc, path, provenance);
     let block = doc.toString();
     if (eol === "\r\n") block = block.replace(/(?<!\r)\n/g, "\r\n");
     return `${bom}---${eol}${block}---${eol}${stripped}`;
@@ -224,27 +311,24 @@ export function appendPageEvals(
 
   let seq = evalSeq(doc);
   if (!seq) {
-    seq = doc.createNode([]) as YAMLSeq;
     const node = doc.get("evals", true);
-    if (node === undefined) {
-      doc.set("evals", seq);
-    } else if (isMap(node)) {
-      if (node.get("evals", true) !== undefined) {
-        throw new DocevalsError(
-          `${path}: the evals list in frontmatter is not a sequence`,
-        );
-      }
-      node.set("evals", seq);
-    } else {
+    if (node !== undefined) {
+      // A single-assertion string, or something else entirely. Appending would
+      // have to rewrite the existing declaration, which is the caller's call to
+      // make, not a silent side effect of adding one eval.
       throw new DocevalsError(
-        `${path}: the evals key in frontmatter is neither a list nor an object`,
+        `${path}: the evals key in frontmatter is not a list — expand the ` +
+          `string shorthand into a list before appending`,
       );
     }
+    seq = doc.createNode([]);
+    doc.set("evals", seq);
   }
   for (const entry of entries) {
-    assertNoCollision(seq, entry.name, path);
+    assertNoCollision(seq, entry.id, path);
     seq.add(doc.createNode(entryObject(entry)));
   }
+  if (provenance) mergeProvenance(doc, path, provenance);
   let newBlock = doc.toString();
   if (blockEol === "\r\n") newBlock = newBlock.replace(/(?<!\r)\n/g, "\r\n");
   return open + newBlock + suffix;

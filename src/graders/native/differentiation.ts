@@ -13,7 +13,7 @@ import { extractProse } from "./reading-level.js";
 
 interface DifferentiationOptions {
   scope?: string;
-  maxSimilarity?: number;
+  "max-similarity"?: number;
 }
 
 export function wordFrequencies(text: string): Map<string, number> {
@@ -49,7 +49,7 @@ function gradeGroup(targets: GraderTarget[]): Finding[] {
   const findings: Finding[] = [];
   const first = targets[0]!;
   const opts = first.eval.options as DifferentiationOptions;
-  const maxSimilarity = opts.maxSimilarity ?? 0.85;
+  const maxSimilarity = opts["max-similarity"] ?? 0.85;
   const inScope = opts.scope ? picomatch(opts.scope) : () => true;
 
   const scoped = targets.filter((t) => inScope(t.plan.page.file));

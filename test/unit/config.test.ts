@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { mkdtempSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { parseConfig, loadConfig } from "../../src/core/config.js";
 import { DocevalsError } from "../../src/types.js";
@@ -141,11 +141,11 @@ describe("parseConfig", () => {
       moose(
         "version: 1",
         "fill:",
-        "  confidenceThreshold: 0.9",
-        "  maxEvalsPerPage: 1",
+        "  confidence-threshold: 0.9",
+        "  max-evals-per-page: 1",
         "  temperature: 0.5",
-        "  cacheDir: .cache/fill",
-        "  maxCostUsd: 2",
+        "  cache-dir: .cache/fill",
+        "  max-cost-usd: 2",
       ),
       PATH,
     );
@@ -166,7 +166,7 @@ describe("parseConfig", () => {
 
   it("rejects an out-of-range fill confidenceThreshold", () => {
     expect(() =>
-      parseConfig(moose("version: 1", "fill:", "  confidenceThreshold: 1.5"), PATH),
+      parseConfig(moose("version: 1", "fill:", "  confidence-threshold: 1.5"), PATH),
     ).toThrow(/Invalid config/);
   });
 
@@ -211,5 +211,180 @@ describe("loadConfig", () => {
       moose("version: 1", "defaults:", "  concurrency: 5"),
     );
     expect(loadConfig(undefined, root).defaults.concurrency).toBe(5);
+  });
+});
+
+/**
+ * Config discovery walks up (docmeta proposal 0004).
+ *
+ * A repo keeps one `moose.config.yaml` at its root, and people run the CLI
+ * from wherever they are — `docs/`, a package directory, a worktree subdir.
+ * Looking only in `cwd` meant every one of those runs resolved to pure
+ * defaults: no named evals, no suites, and a green exit reporting nothing. The
+ * config was right there one directory up.
+ */
+describe("loadConfig discovery", () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "moose-docevals-discovery-"));
+    mkdirSync(join(root, ".git"), { recursive: true });
+    mkdirSync(join(root, "docs", "deep"), { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  const writeConfig = (dir: string, body: string): void => { writeFileSync(join(dir, "moose.config.yaml"), body); };
+
+  const SIMPLE = [
+    "docevals:",
+    "  version: 1",
+    "  evals:",
+    "    from-root:",
+    "      assertion: Something.",
+    "  suites:",
+    "    s: { evals: [from-root] }",
+  ].join("\n");
+
+  it("finds a config in an ancestor directory", () => {
+    writeConfig(root, SIMPLE);
+    const config = loadConfig(undefined, join(root, "docs", "deep"));
+    expect(Object.keys(config.evals)).toEqual(["from-root"]);
+    expect(config.configPath).toBe(resolve(root, "moose.config.yaml"));
+  });
+
+  it("prefers the nearest config to a farther one", () => {
+    writeConfig(root, SIMPLE);
+    writeConfig(
+      join(root, "docs"),
+      ["docevals:", "  version: 1", "  evals:", "    from-docs:", "      assertion: Nearer."].join("\n"),
+    );
+    const config = loadConfig(undefined, join(root, "docs", "deep"));
+    expect(Object.keys(config.evals)).toEqual(["from-docs"]);
+  });
+
+  it("stops at the repository root rather than escaping the project", () => {
+    // Without a boundary the walk reaches the home directory and beyond, and
+    // picks up a config belonging to an unrelated project.
+    const outside = mkdtempSync(join(tmpdir(), "moose-docevals-outside-"));
+    try {
+      const inner = join(outside, "repo");
+      mkdirSync(join(inner, ".git"), { recursive: true });
+      mkdirSync(join(inner, "docs"), { recursive: true });
+      writeConfig(outside, SIMPLE); // above the repo root — must not be found
+      const config = loadConfig(undefined, join(inner, "docs"));
+      expect(config.evals).toEqual({});
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  it("names an unmigrated config found during the walk", () => {
+    // Silently walking past it would resolve to defaults and pass, which is
+    // exactly what the cwd-level guard exists to prevent.
+    writeFileSync(join(root, "docevals.config.yaml"), "version: 1\n");
+    expect(() => loadConfig(undefined, join(root, "docs", "deep"))).toThrow(
+      /docevals\.config\.yaml/,
+    );
+  });
+
+  it("still resolves to defaults when no config exists anywhere", () => {
+    const config = loadConfig(undefined, join(root, "docs", "deep"));
+    expect(config.version).toBe(1);
+    expect(config.evals).toEqual({});
+  });
+});
+
+/**
+ * Both pricing keys are optional in the schema, so a half-filled `pricing:` is
+ * legal config. Completing the missing side with `0` would price those tokens
+ * as free — under-reporting `cost.totalUsd` and, worse, letting `max-cost-usd`
+ * ride past a ceiling it is supposed to abort on.
+ */
+describe("parseConfig pricing", () => {
+  const withPricing = (...pricing: string[]) =>
+    parseConfig(
+      moose("version: 1", "provider:", "  anthropic:", "    pricing:", ...pricing),
+      PATH,
+    );
+
+  it("carries a fully specified override", () => {
+    const c = withPricing("      input-per-mtok: 3", "      output-per-mtok: 15");
+    expect(c.provider.anthropic.pricing).toEqual({
+      inputPerMTok: 3,
+      outputPerMTok: 15,
+    });
+  });
+
+  it("refuses a half-specified override instead of pricing the rest at zero", () => {
+    expect(() => withPricing("      output-per-mtok: 15")).toThrow(
+      /input-per-mtok/,
+    );
+  });
+
+  it("leaves pricing unset when the section is absent", () => {
+    const c = parseConfig(moose("version: 1"), PATH);
+    expect(c.provider.anthropic.pricing).toBeUndefined();
+  });
+});
+
+/**
+ * The camelCase migration guard must not fire on keys it does not own.
+ * `options` is an open object — a grader's runtime contract — so a key named
+ * `generated` there is legal config, not a leftover `generated.assertionHash`
+ * wrapper. Rejecting it produces an error whose advice cannot be followed.
+ */
+describe("parseConfig camelCase guard", () => {
+  it("names a stale eval-definition wrapper", () => {
+    expect(() =>
+      parseConfig(
+        moose(
+          "version: 1",
+          "evals:",
+          "  e:",
+          "    assertion: x",
+          "    grader: command",
+          '    command: ["a"]',
+          "    generated:",
+          "      assertionHash: abc",
+        ),
+        PATH,
+      ),
+    ).toThrow(/generated-assertion-hash/);
+  });
+
+  it("leaves a grader option named `generated` alone", () => {
+    const c = parseConfig(
+      moose(
+        "version: 1",
+        "evals:",
+        "  e:",
+        "    assertion: x",
+        "    grader: tool:whatever",
+        "    options:",
+        "      generated: true",
+      ),
+      PATH,
+    );
+    expect(c.evals.e?.options).toEqual({ generated: true });
+  });
+
+  it("still catches camelCase inside grader options", () => {
+    expect(() =>
+      parseConfig(
+        moose(
+          "version: 1",
+          "evals:",
+          "  e:",
+          "    assertion: x",
+          "    grader: tool:freshness",
+          "    options:",
+          "      maxAgeDays: 30",
+        ),
+        PATH,
+      ),
+    ).toThrow(/max-age-days/);
   });
 });

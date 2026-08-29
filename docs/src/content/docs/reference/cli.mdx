@@ -14,7 +14,7 @@ Commands that operate on pages take **positional globs**. With none given, the c
 | Flag | Commands | Meaning |
 |---|---|---|
 | `-c, --config <path>` | all except `init` | Path to `moose.config.yaml`. Without it, moose-docevals looks for that filename in the working directory; with no file at all, built-in defaults apply and there are no named evals or suites. |
-| `-f, --format <format>` | `list`, `run`, `fill` | Output format. `run` accepts `human`, `json`, `markdown`, `github`; `list` and `fill` accept `human` and `json`. Anything else — including `run`'s `markdown` passed to `list` — is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
+| `-f, --format <format>` | `list`, `run`, `fill` | Output format. `run` accepts `human`, `json`, `markdown`, `github`, `sarif`, `junit`; `list` and `fill` accept `human` and `json`. Anything else — including `run`'s `markdown` passed to `list` — is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
 | `--provider <name>` | `run`, `generate`, `fill`, `promote`, `calibrate` | `anthropic`, `openai`, or `claude-cli`. Overrides `provider.default`. |
 | `--model <model>` | same as above | Overrides the model for the selected provider. |
 
@@ -23,19 +23,19 @@ value, so a config file and the CLI reach the same code paths.
 
 ## `moose-docevals run [globs...]`
 
-Runs every resolved eval: deterministic graders first (cheapest first), then the LLM judge, then
+Runs every resolved eval: deterministic graders first (cheapest first), then the AI judge, then
 human-review resolution.
 
 | Flag | Effect |
 |---|---|
-| `--deterministic-only` | Run only `command` and `tool:*` graders. LLM evals report as `skipped`. No provider needed — this is the offline path. |
-| `--llm-only` | Run only LLM-judged evals; skip deterministic graders. |
+| `--deterministic-only` | Run only `command` and `tool:*` graders. AI-graded evals report as `skipped`. No provider needed — this is the offline path. |
+| `--ai-only` | Run only AI-judged evals; skip deterministic graders. |
 | `--no-frontmatter-commands` | Skip `command` evals declared in **page frontmatter**. See [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/) — this does **not** gate `tool:doc-detective`. |
 | `--no-generate` | Do not generate scripts for command evals that lack a `command`. |
 | `--no-cache` | Bypass the judge response cache. |
 | `--fail-on-review` | Exit 1 when any eval lands in the human-review zone. |
-| `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensembleRuns` (default 3). |
-| `--max-cost <usd>` | Abort judging once spend passes this ceiling. Overrides `judge.maxCostUsd`. |
+| `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensemble-runs` (default 3). |
+| `--max-cost <usd>` | Abort judging once spend passes this ceiling. Overrides `judge.max-cost-usd`. |
 
 ## `moose-docevals list [globs...]`
 
@@ -46,7 +46,7 @@ a referenced eval, and a suite could each contribute the same name.
 ```console
 $ moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx
 test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
-  - no-future-promises [llm, regression, config]
+  - no-future-promises [ai, regression, config]
   - fresh-enough [tool:freshness, regression, config]
   - readable [tool:reading-level, regression, config]
   - frontmatter-valid [tool:docmeta, regression, config]
@@ -71,7 +71,7 @@ Proposes evals for each page from its content, gated on a self-reported confiden
 | Flag | Effect |
 |---|---|
 | `--dry-run` | Report proposals without writing frontmatter. Run this first — it reports the cost of the whole pass before you spend it. |
-| `--confidence <n>` | Minimum confidence to write, 0–1. Overrides `fill.confidenceThreshold` (default `0.7`). Values above 1 are a usage error. |
+| `--confidence <n>` | Minimum confidence to write, 0–1. Overrides `fill.confidence-threshold` (default `0.7`). Values above 1 are a usage error. |
 | `--max-cost <usd>` | Stop proposing past this spend. |
 | `--no-cache` | Bypass the proposal cache. |
 
@@ -80,7 +80,7 @@ costs nothing.
 
 ## `moose-docevals promote [globs...]`
 
-Reviews llm-graded evals and reports which are expressible as deterministic checks. **Report-only by
+Reviews ai-graded evals and reports which are expressible as deterministic checks. **Report-only by
 default**; `--write` applies the conversions. See
 [Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/).
 

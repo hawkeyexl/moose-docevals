@@ -1,13 +1,13 @@
 /**
  * Native reading-level check: Flesch-Kincaid grade level of the page prose
- * must not exceed `maxGrade`. Vendored (~60 lines) rather than a dependency;
+ * must not exceed `max-grade`. Vendored (~60 lines) rather than a dependency;
  * English-only — documented limitation.
  */
 import type { Finding } from "../../types.js";
 import type { Grader } from "./../types.js";
 
 interface ReadingLevelOptions {
-  maxGrade?: number;
+  "max-grade"?: number;
 }
 
 /** Strip markdown/MDX syntax down to approximate prose. */
@@ -64,7 +64,8 @@ export const readingLevelGrader: Grader = {
   async grade(ctx) {
     const findings: Finding[] = [];
     for (const { plan, eval: ev } of ctx.targets) {
-      const maxGrade = (ev.options as ReadingLevelOptions).maxGrade ?? 10;
+      const maxGrade =
+        (ev.options as ReadingLevelOptions)["max-grade"] ?? 10;
       const grade = fleschKincaidGrade(extractProse(plan.page.body));
       if (grade == null) continue; // Too little prose to score meaningfully.
       if (grade > maxGrade) {

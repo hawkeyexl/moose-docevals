@@ -9,7 +9,7 @@
  */
 import type { ResolvedEval } from "../core/resolve.js";
 
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 
 export const JUDGE_SYSTEM_PROMPT = [
   "You are a meticulous technical documentation judge. You evaluate whether a",
@@ -70,8 +70,15 @@ export function buildUserContent(ev: ResolvedEval, body: string): string {
   }
   if (ev.examples?.pass || ev.examples?.fail) {
     parts.push("", "# Anchors");
-    if (ev.examples.pass) parts.push(`A passing page: ${ev.examples.pass}`);
-    if (ev.examples.fail) parts.push(`A failing page: ${ev.examples.fail}`);
+    // Anchors widened to lists with the docmeta vocabulary. Interpolating
+    // the array would join it with commas and present several distinct
+    // examples to the judge as one run-on sentence.
+    for (const anchor of ev.examples.pass ?? []) {
+      parts.push(`A passing page: ${anchor}`);
+    }
+    for (const anchor of ev.examples.fail ?? []) {
+      parts.push(`A failing page: ${anchor}`);
+    }
   }
   parts.push("", "# Page content", "", cleanBody(body));
   return parts.join("\n");

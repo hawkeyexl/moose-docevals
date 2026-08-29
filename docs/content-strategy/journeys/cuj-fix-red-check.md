@@ -38,7 +38,7 @@ five failures that look alike in a CI log and have unrelated remedies:
 | What he sees | What it actually is | What he does |
 |---|---|---|
 | A finding with a file and line | A deterministic tool or command eval | Fix the line |
-| A rationale, no line | An LLM verdict | Read the assertion and its `examples.fail`, then edit |
+| A rationale, no line | An AI verdict | Read the assertion and its `examples.fail`, then edit |
 | "needs review" | A split ensemble, awaiting a person | Escalate — he cannot resolve it |
 | A stale-hash message | The assertion changed; the generated script did not | Escalate or regenerate |
 | Exit 2 | Operational — missing key, bad config | Not his fault; tell the platform team |

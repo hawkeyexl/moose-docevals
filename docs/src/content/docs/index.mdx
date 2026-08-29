@@ -4,7 +4,7 @@ description: Deterministic and LLM-as-judge evals for documentation pages, drive
 ---
 
 Every quality check on a documentation page is an **eval**: a named, testable assertion with a
-**grader** that decides pass or fail. Graders run in preference order — code first, an LLM judge
+**grader** that decides pass or fail. Graders run in preference order — code first, an AI judge
 second, a human last.
 
 ## The 60-second version
@@ -16,8 +16,8 @@ Declare an assertion in a page's frontmatter:
 title: Installation
 last-reviewed: 2026-06-01
 evals:
-  - no-future-promises
-  - name: install-command-present
+  - use: no-future-promises
+  - id: install-command-present
     assertion: The page contains a bash code block with `npm i -g doc-detective`.
     grader: command
 ---
@@ -60,8 +60,8 @@ Doc Detective keep doing their jobs — their findings arrive as named evals wit
 report with one exit code. Three native checks fill gaps nothing else covers: freshness, reading
 level, and cross-page differentiation.
 
-**The LLM is the last resort, not the pitch.** If a criterion can be expressed as code, it should be.
-`moose-docevals promote` finds llm evals that could be deterministic, and `moose-docevals generate` writes the
+**The judge is the last resort, not the pitch.** If a criterion can be expressed as code, it should be.
+`moose-docevals promote` finds ai evals that could be deterministic, and `moose-docevals generate` writes the
 scripts — as reviewable files beside your docs, never inline in frontmatter.
 
 **The judge has safeguards, and you can audit them.** Temperature 0, pinned models, a 3-run ensemble,

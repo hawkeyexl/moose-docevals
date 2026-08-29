@@ -9,7 +9,7 @@ needs.
 | Provider | Credential | Content goes to |
 |---|---|---|
 | `anthropic` | `ANTHROPIC_API_KEY` | Anthropic's API |
-| `openai` | `OPENAI_API_KEY` | Whatever `baseUrl` points at — including your own server |
+| `openai` | `OPENAI_API_KEY` | Whatever `base-url` points at — including your own server |
 | `claude-cli` | None — uses local CLI auth | Anthropic, via the local `claude` CLI |
 
 ## `anthropic` (default)
@@ -20,7 +20,7 @@ docevals:
     default: anthropic
     anthropic:
       model: claude-sonnet-4-5
-      apiKeyEnv: ANTHROPIC_API_KEY
+      api-key-env: ANTHROPIC_API_KEY
 ```
 
 Structured output via forced tool use, so verdicts arrive as validated JSON rather than prose to
@@ -28,7 +28,7 @@ parse.
 
 ## `openai` — and anything that speaks its API
 
-The `baseUrl` is the interesting field. It points at any OpenAI-compatible server: Ollama, vLLM,
+The `base-url` is the interesting field. It points at any OpenAI-compatible server: Ollama, vLLM,
 Azure, Groq, LM Studio, or an internal gateway.
 
 ```yaml
@@ -36,20 +36,20 @@ docevals:
   provider:
     default: openai
     openai:
-      baseUrl: http://localhost:11434/v1   # Ollama
+      base-url: http://localhost:11434/v1   # Ollama
       model: llama3.1:8b
-      apiKeyEnv: OPENAI_API_KEY
+      api-key-env: OPENAI_API_KEY
 ```
 
 ```yaml
-    baseUrl: https://llm-gateway.internal.example.com/v1
+    base-url: https://llm-gateway.internal.example.com/v1
 ```
 
 Uses strict `json_schema` structured output where the endpoint supports it, falling back to
 `json_object` automatically where it does not — so smaller local models still work.
 
 **This is the answer to a security review.** If page content cannot leave your infrastructure, point
-`baseUrl` at a model that runs inside it. Nothing else about moose-docevals changes.
+`base-url` at a model that runs inside it. Nothing else about moose-docevals changes.
 
 ## `claude-cli` — no API key
 
@@ -93,11 +93,11 @@ cost reporting stays meaningful:
 docevals:
   provider:
     openai:
-      baseUrl: https://llm-gateway.internal.example.com/v1
+      base-url: https://llm-gateway.internal.example.com/v1
       model: internal-model-v2
       pricing:
-        inputPerMTok: 0.5
-        outputPerMTok: 1.5
+        input-per-mtok: 0.5
+        output-per-mtok: 1.5
 ```
 
 Set both to `0` for a self-hosted model with no marginal cost — that keeps `--max-cost` from

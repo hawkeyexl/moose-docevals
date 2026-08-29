@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "moose:config:0.1",
   "title": "moose config",
-  "description": "Shared configuration for the moose family of documentation tools. Each tool reads its own top-level namespace; unknown keys belong to sibling tools and are ignored here.",
+  "description": "Shared configuration for the moose family of documentation tools. Each tool reads its own top-level namespace; unknown keys belong to sibling tools and are ignored here. Every key is kebab-case — the same spelling the frontmatter vocabulary uses, so a field means one thing wherever it is written.",
   "type": "object",
   "properties": {
     "docevals": { "$ref": "#/$defs/docevalsConfig" }
@@ -25,7 +25,7 @@
           "type": "object",
           "properties": {
             "suite": { "type": ["string", "null"] },
-            "failFast": { "type": "boolean" },
+            "fail-fast": { "type": "boolean" },
             "concurrency": { "type": "integer", "minimum": 1 }
           },
           "additionalProperties": false
@@ -38,7 +38,7 @@
               "type": "object",
               "properties": {
                 "model": { "type": "string" },
-                "apiKeyEnv": { "type": "string" },
+                "api-key-env": { "type": "string" },
                 "pricing": { "$ref": "#/$defs/pricing" }
               },
               "additionalProperties": false
@@ -46,9 +46,9 @@
             "openai": {
               "type": "object",
               "properties": {
-                "baseUrl": { "type": "string" },
+                "base-url": { "type": "string" },
                 "model": { "type": "string" },
-                "apiKeyEnv": { "type": "string" },
+                "api-key-env": { "type": "string" },
                 "pricing": { "$ref": "#/$defs/pricing" }
               },
               "additionalProperties": false
@@ -67,19 +67,19 @@
         "judge": {
           "type": "object",
           "properties": {
-            "ensembleRuns": { "type": "integer", "minimum": 1 },
+            "ensemble-runs": { "type": "integer", "minimum": 1 },
             "temperature": { "type": "number", "minimum": 0 },
             "zones": {
               "type": "object",
               "properties": {
-                "autoPass": { "type": "number", "minimum": 0, "maximum": 1 },
-                "autoFail": { "type": "number", "minimum": 0, "maximum": 1 }
+                "auto-pass": { "type": "number", "minimum": 0, "maximum": 1 },
+                "auto-fail": { "type": "number", "minimum": 0, "maximum": 1 }
               },
               "additionalProperties": false
             },
-            "falsePositiveAlert": { "type": "number", "minimum": 0, "maximum": 1 },
-            "cacheDir": { "type": "string" },
-            "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
+            "false-positive-alert": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cache-dir": { "type": "string" },
+            "max-cost-usd": { "type": ["number", "null"], "minimum": 0 }
           },
           "additionalProperties": false
         },
@@ -87,27 +87,28 @@
           "type": "object",
           "properties": {
             "dir": { "type": "string" },
-            "configDir": { "type": "string" },
-            "allowFrontmatterCommands": { "type": "boolean" },
-            "timeoutMs": { "type": "integer", "minimum": 1 }
+            "config-dir": { "type": "string" },
+            "allow-frontmatter-commands": { "type": "boolean" },
+            "timeout-ms": { "type": "integer", "minimum": 1 }
           },
           "additionalProperties": false
         },
         "fill": {
           "type": "object",
           "properties": {
-            "confidenceThreshold": { "type": "number", "minimum": 0, "maximum": 1 },
-            "maxEvalsPerPage": { "type": "integer", "minimum": 1 },
+            "confidence-threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+            "max-evals-per-page": { "type": "integer", "minimum": 1 },
             "temperature": { "type": "number", "minimum": 0 },
-            "cacheDir": { "type": "string" },
-            "maxCostUsd": { "type": ["number", "null"], "minimum": 0 }
+            "cache-dir": { "type": "string" },
+            "max-cost-usd": { "type": ["number", "null"], "minimum": 0 }
           },
           "additionalProperties": false
         },
         "evals": {
           "type": "object",
           "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
-          "additionalProperties": { "$ref": "#/$defs/evalDef" }
+          "additionalProperties": { "$ref": "#/$defs/evalDef" },
+          "description": "The central library of named evals. The map key is the eval's id — the same id a page's `use:` reference names."
         },
         "suites": {
           "type": "object",
@@ -121,10 +122,12 @@
     "pricing": {
       "type": "object",
       "properties": {
-        "inputPerMTok": { "type": "number", "minimum": 0 },
-        "outputPerMTok": { "type": "number", "minimum": 0 }
+        "input-per-mtok": { "type": "number", "minimum": 0 },
+        "output-per-mtok": { "type": "number", "minimum": 0 }
       },
-      "additionalProperties": false
+      "required": ["input-per-mtok", "output-per-mtok"],
+      "additionalProperties": false,
+      "description": "Price override for this provider. Both sides are required: completing a half-filled override with a zero would price those tokens as free, under-reporting cost and letting max-cost-usd ride past a ceiling it exists to enforce."
     },
     "evalDef": {
       "type": "object",
@@ -133,43 +136,104 @@
         "type": { "enum": ["capability", "regression"] },
         "grader": {
           "type": "string",
-          "pattern": "^(llm|command|human|tool:[a-z0-9][a-z0-9-]*)$"
+          "pattern": "^(ai|command|human|tool:[a-z0-9][a-z0-9-]*)$"
         },
-        "evidence": { "type": "string" },
+        "provider": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 },
         "examples": {
           "type": "object",
           "properties": {
-            "pass": { "type": "string" },
-            "fail": { "type": "string" }
+            "pass": { "$ref": "#/$defs/anchorList" },
+            "fail": { "$ref": "#/$defs/anchorList" }
           },
           "additionalProperties": false
         },
         "command": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": { "type": "string", "minLength": 1 },
           "minItems": 1
         },
-        "successExitCodes": { "type": "array", "items": { "type": "integer" } },
-        "timeoutMs": { "type": "integer", "minimum": 1 },
-        "generated": {
-          "type": "object",
-          "required": ["assertionHash"],
-          "properties": { "assertionHash": { "type": "string" } },
-          "additionalProperties": false
+        "success-exit-codes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer" }
         },
+        "timeout-ms": { "type": "integer", "minimum": 1 },
+        "generated-assertion-hash": { "type": "string" },
         "options": { "type": "object" },
         "severity": { "enum": ["error", "warning", "info"] },
-        "severityMap": {
+        "severity-map": {
           "type": "object",
           "additionalProperties": { "enum": ["error", "warning", "info"] }
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "dependentRequired": {
+        "generated-assertion-hash": ["command"]
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "grader": { "const": "ai" } },
+            "required": ["grader"]
+          },
+          "then": { "required": ["assertion"] }
+        },
+        {
+          "if": { "not": { "required": ["grader"] } },
+          "then": { "required": ["assertion"] }
+        },
+        {
+          "if": {
+            "properties": { "grader": { "const": "command" } },
+            "required": ["grader"]
+          },
+          "then": {
+            "anyOf": [{ "required": ["assertion"] }, { "required": ["command"] }]
+          }
+        },
+        {
+          "if": {
+            "properties": { "grader": { "const": "human" } },
+            "required": ["grader"]
+          },
+          "then": { "required": ["assertion"] }
+        },
+        {
+          "if": { "required": ["command"] },
+          "then": {
+            "properties": { "grader": { "const": "command" } },
+            "required": ["grader"]
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              { "required": ["success-exit-codes"] },
+              { "required": ["timeout-ms"] }
+            ]
+          },
+          "then": {
+            "properties": { "grader": { "const": "command" } },
+            "required": ["grader"]
+          }
+        }
+      ]
+    },
+    "anchorList": {
+      "if": { "type": "array" },
+      "then": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": { "type": "string", "minLength": 1 }
+      },
+      "else": { "type": "string", "minLength": 1 }
     },
     "suiteDef": {
       "type": "object",
       "properties": {
-        "targetPassRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "target-pass-rate": { "type": "number", "minimum": 0, "maximum": 1 },
         "evals": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": false

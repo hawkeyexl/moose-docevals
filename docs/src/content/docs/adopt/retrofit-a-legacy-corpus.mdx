@@ -38,8 +38,7 @@ Per page:
 ```yaml
 ---
 title: Deprecated integration guide
-evals:
-  skip: true
+eval-skip: true
 ---
 ```
 
@@ -63,7 +62,7 @@ docevals:
     readable:
       assertion: Page prose reads below grade 12.
       grader: tool:reading-level
-      options: { maxGrade: 12 }
+      options: { max-grade: 12 }
       severity: warning        # reports everywhere, blocks nowhere
 ```
 
@@ -78,7 +77,7 @@ Severity is for deterministic graders. The judged analog is the suite target:
 docevals:
   suites:
     how-to-adopting:
-      targetPassRate: 0.6      # where the corpus is today
+      target-pass-rate: 0.6      # where the corpus is today
       evals: [explains-why-before-how, no-future-promises]
 ```
 
@@ -104,7 +103,7 @@ the whole corpus. Every step is small, green, and mergeable.
 
 ## 7. Make the survivors cheap
 
-A retrofitted corpus is disproportionately llm-graded, because `fill` proposes llm evals by
+A retrofitted corpus is disproportionately ai-graded, because `fill` proposes ai evals by
 construction. Before the recurring cost becomes the story, push them down the hierarchy —
 [Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/).
 

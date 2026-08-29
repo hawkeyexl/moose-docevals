@@ -17,41 +17,41 @@ docevals:
       - "**/node_modules/**"
 
   defaults:
-    # Suite applied to pages without an evals frontmatter key.
+    # Suite applied to pages without an eval-suite frontmatter key.
     suite: null
-    failFast: false
+    fail-fast: false
     concurrency: 4
 
   provider:
     default: anthropic
     anthropic:
       model: claude-sonnet-4-5 # pin your judge model; never "latest"
-      apiKeyEnv: ANTHROPIC_API_KEY
+      api-key-env: ANTHROPIC_API_KEY
     # openai:
-    #   baseUrl: http://localhost:11434/v1   # any OpenAI-compatible server
+    #   base-url: http://localhost:11434/v1   # any OpenAI-compatible server
     #   model: llama3.1:8b
     # claude-cli:
     #   model: claude-sonnet-4-5             # uses local CLI auth, no API key
 
   judge:
-    ensembleRuns: 3 # 3 isolated runs per eval; agreement is signal
+    ensemble-runs: 3 # 3 isolated runs per eval; agreement is signal
     temperature: 0
     zones:
-      autoPass: 0.8 # unanimous pass + mean confidence >= 0.8
-      autoFail: 0.8
-    falsePositiveAlert: 0.15
-    cacheDir: .moose-docevals/cache
+      auto-pass: 0.8 # unanimous pass + mean confidence >= 0.8
+      auto-fail: 0.8
+    false-positive-alert: 0.15
+    cache-dir: .moose-docevals/cache
 
   scripts:
     dir: "{docDir}/moose-docevals" # generated check scripts live beside the docs
-    configDir: moose-docevals-scripts
-    allowFrontmatterCommands: true
+    config-dir: moose-docevals-scripts
+    allow-frontmatter-commands: true
 
   evals:
     no-future-promises:
       type: regression
       assertion: The page makes no claims about unreleased or future functionality.
-      grader: llm
+      grader: ai
       evidence: All prose sections
       examples:
         pass: Describes only shipped behavior.
@@ -61,12 +61,12 @@ docevals:
       grader: tool:freshness
       options:
         field: last-reviewed
-        maxAgeDays: 365
+        max-age-days: 365
       severity: warning
 
   suites:
     default:
-      targetPassRate: 1.0 # regression suites target ~100%
+      target-pass-rate: 1.0 # regression suites target ~100%
       evals: [no-future-promises, fresh-enough]
 `;
 

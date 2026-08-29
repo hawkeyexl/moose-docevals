@@ -16,12 +16,12 @@ They are gated differently, and conflating them is the trap.
 
 ```yaml
 evals:
-  - name: check
+  - id: check
     grader: command
     command: [node, scripts/whatever.mjs, "{file}"]
 ```
 
-Gated by `scripts.allowFrontmatterCommands` (config) and `--no-frontmatter-commands` (CLI). This is
+Gated by `scripts.allow-frontmatter-commands` (config) and `--no-frontmatter-commands` (CLI). This is
 the one everybody finds.
 
 ### 2. Steps embedded in page bodies
@@ -93,7 +93,7 @@ tempted toward the unsafe workaround above.
 
 - [ ] The job that can execute content code is gated to same-repo pull requests.
 - [ ] Forks run a separate `--deterministic-only` job with no secrets.
-- [ ] `scripts.allowFrontmatterCommands: false` unless you need it — defence in depth, not the
+- [ ] `scripts.allow-frontmatter-commands: false` unless you need it — defence in depth, not the
       defence.
 - [ ] Third-party actions pinned to a full commit SHA, not a tag.
 - [ ] `permissions:` set to least privilege (`contents: read` for a check job).
