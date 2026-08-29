@@ -229,8 +229,13 @@ export function buildBaseline(
   // `!known` guard because a function is truthy, and then die in `new Set(known)`.
   const entries = Object.create(null) as Record<string, string[]>;
   for (const r of results) {
+    // Keyed by `r.file`, matching `applyBaseline`'s lookup. `groupFindings`
+    // currently guarantees `f.file === r.file`, so keying by the finding was
+    // not a live bug — but the asymmetry is a trap: a grader that resolved a
+    // path differently would build entries the lookup could never match, and
+    // every baselined finding would reappear as new with nothing to explain it.
+    const key = canonicalFilePath(r.file, ctx);
     for (const f of r.findings ?? []) {
-      const key = canonicalFilePath(f.file, ctx);
       const list = entries[key] ?? [];
       const print = fingerprint(f);
       // Two identical findings in one file are one fingerprint; storing the

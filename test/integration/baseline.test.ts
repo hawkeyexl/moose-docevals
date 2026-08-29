@@ -177,6 +177,11 @@ describe("--write-baseline is a recording action, not a gate", () => {
     const recording = await run(root, { writeBaseline: true });
     expect(recording.baseline?.written?.total).toBe(1);
     expect(recording.exitCode).toBe(0);
+    // scaffold() sets no `baseline:`, so this run wrote a file an ordinary run
+    // will not read — the trap the warning exists for.
+    expect(
+      recording.problems.some((p) => p.message.includes("will not read this file")),
+    ).toBe(true);
   });
 
   it("does not forgive anything it did not record", async () => {
