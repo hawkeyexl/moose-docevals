@@ -17,12 +17,7 @@ import {
   SUMMARY_FORMATS,
   type SummaryFormat,
 } from "../reporters/format.js";
-import { costOfUsage, pricingFor } from "@hawkeyexl/inference";
-import {
-  makeProvider,
-  providerSpecFor,
-  resolveProviderIdentity,
-} from "../judge/provider.js";
+import { makeProvider, resolveProviderIdentity } from "../judge/provider.js";
 import type { InferenceProvider } from "@hawkeyexl/inference";
 import { FillCache, fillCacheKey } from "../fill/cache.js";
 import {
@@ -39,8 +34,8 @@ export interface FillOptions {
   dryRun?: boolean;
   /** Minimum confidence to write; overrides config `fill.confidenceThreshold`. */
   confidence?: number;
-  /** Stop proposing past this cost; overrides config `fill.maxCostUsd`. */
-  maxCost?: number;
+  /** Stop after this many inference calls; overrides config `fill.maxTurns`. */
+  maxTurns?: number;
   noCache?: boolean;
   provider?: string;
   model?: string;
@@ -85,7 +80,8 @@ export interface FillPageResult {
 export interface FillReport {
   results: FillPageResult[];
   threshold: number;
-  costUsd: number;
+  /** Inference calls actually made. One per proposed page; a cache hit is none. */
+  turns: number;
   exitCode: 0 | 1;
 }
 
@@ -117,7 +113,7 @@ export async function runFill(
   const plans = resolvePages(pages, config);
 
   const threshold = options.confidence ?? config.fill.confidenceThreshold;
-  const maxCostUsd = options.maxCost ?? config.fill.maxCostUsd;
+  const maxTurns = options.maxTurns ?? config.fill.maxTurns;
   const temperature = config.fill.temperature;
   const maxEvals = config.fill.maxEvalsPerPage;
   const cache = new FillCache(
@@ -139,22 +135,7 @@ export async function runFill(
       provider: options.provider,
       model: options.model,
     }));
-  // The configured override belongs to the *configured* provider. An injected
-  // instance (the test seam, or programmatic use) may be an entirely different
-  // provider and model, so applying the override to it would invent a price
-  // for something it was never written for — a mock run would report non-zero
-  // cost. Fall back to the built-in table in that case.
-  const pricing = pricingFor(
-    identity.model,
-    options.providerInstance
-      ? undefined
-      : providerSpecFor(config, {
-          provider: options.provider,
-          model: options.model,
-        }).pricing,
-  );
-
-  let costUsd = 0;
+  let turns = 0;
   const results: FillPageResult[] = [];
 
   for (const plan of plans) {
@@ -164,7 +145,7 @@ export async function runFill(
   return {
     results,
     threshold,
-    costUsd,
+    turns,
     exitCode: results.some((r) => r.status === "error") ? 1 : 0,
   };
 
@@ -210,9 +191,12 @@ export async function runFill(
     let raw = cache.get(key);
     const cached = raw !== undefined;
     if (!raw) {
-      if (maxCostUsd !== null && costUsd >= maxCostUsd) {
+      // Claimed before the call, not tallied after it (ADR 01019). A cache
+      // hit never reaches here, so replaying a cached corpus spends no turns.
+      if (maxTurns !== null && turns >= maxTurns) {
         return { ...base, status: "skipped-budget" };
       }
+      turns += 1;
       try {
         const response = await getProvider().completeJSON({
           system: FILL_SYSTEM_PROMPT,
@@ -220,7 +204,6 @@ export async function runFill(
           schema: PROPOSAL_SCHEMA,
           temperature,
         });
-        costUsd += costOfUsage(response.usage, pricing);
         if (!isValidProposal(response.json)) {
           return {
             ...base,
@@ -339,7 +322,7 @@ export function renderFill(
         lines.push(`${pc.dim(label)} ${r.file}  (evals.skip)`);
         break;
       case "skipped-budget":
-        lines.push(`${pc.yellow(label)} ${r.file}  (cost budget exhausted)`);
+        lines.push(`${pc.yellow(label)} ${r.file}  (turn budget exhausted)`);
         break;
       case "error":
         lines.push(`${pc.red(label)} ${r.file}: ${r.error ?? "unknown error"}`);
@@ -363,7 +346,7 @@ export function renderFill(
   }
   lines.push("");
   lines.push(
-    `Threshold: ${report.threshold} · LLM cost: $${report.costUsd.toFixed(4)}`,
+    `Threshold: ${report.threshold} · inference calls: ${report.turns}`,
   );
   return lines.join("\n");
 }

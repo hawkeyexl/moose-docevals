@@ -241,23 +241,6 @@ describe("makeJudge", () => {
     expect(results[0]?.via).toBeUndefined();
   });
 
-  it("stops judging when the cost budget is exhausted", async () => {
-    const costConfig = parseDocevalsConfig(
-      "version: 1\nprovider:\n  anthropic:\n    model: claude-sonnet-4-5\n",
-      "/fake/moose.config.yaml",
-    );
-    // MockProvider reports usage; model "mock-model" has no pricing → cost 0.
-    // Use a zero budget so the second target is skipped regardless.
-    const provider = new MockProvider([mockVerdict("pass", 0.95)]);
-    const judge = makeJudge({ provider, root: tempRoot() });
-    const results = await judge(
-      [makeTarget("Body A.", "eval-a"), makeTarget("Body B.", "eval-b")],
-      costConfig,
-      { maxCostUsd: 0 },
-    );
-    expect(results.filter((r) => r.outcome === "skipped")).toHaveLength(2);
-  });
-
   it("honors the runs override", async () => {
     const provider = new MockProvider([mockVerdict("pass", 0.95)]);
     const judge = makeJudge({ provider, root: tempRoot() });

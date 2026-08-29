@@ -26,6 +26,7 @@ describe("parseConfig", () => {
     expect(c.judge.zones).toEqual({ autoPass: 0.8, autoFail: 0.8 });
     expect(c.judge.falsePositiveAlert).toBe(0.15);
     expect(c.judge.cacheDir).toBe(".moose-docevals/cache");
+    expect(c.judge.maxTurns).toBeNull();
     expect(c.scripts.allowFrontmatterCommands).toBe(true);
     expect(c.scripts.dir).toBe("{docDir}/moose-docevals");
     expect(c.scripts.configDir).toBe("moose-docevals-scripts");
@@ -132,7 +133,7 @@ describe("parseConfig", () => {
       maxEvalsPerPage: 3,
       temperature: 0,
       cacheDir: ".moose-docevals/cache/fill",
-      maxCostUsd: null,
+      maxTurns: null,
     });
   });
 
@@ -145,7 +146,7 @@ describe("parseConfig", () => {
         "  max-evals-per-page: 1",
         "  temperature: 0.5",
         "  cache-dir: .cache/fill",
-        "  max-cost-usd: 2",
+        "  max-turns: 2",
       ),
       PATH,
     );
@@ -154,7 +155,7 @@ describe("parseConfig", () => {
       maxEvalsPerPage: 1,
       temperature: 0.5,
       cacheDir: ".cache/fill",
-      maxCostUsd: 2,
+      maxTurns: 2,
     });
   });
 
@@ -168,6 +169,27 @@ describe("parseConfig", () => {
     expect(() =>
       parseConfig(moose("version: 1", "fill:", "  confidence-threshold: 1.5"), PATH),
     ).toThrow(/Invalid config/);
+  });
+
+  // Naming the key generalizes past the ADR 01019 migration. Ajv reports an
+  // `additionalProperties` violation against the *parent*, so every typo under
+  // `docevals:` used to arrive as "must NOT have additional properties"
+  // pointing at a section with a dozen keys in it — true, and useless.
+  it("names the offending key, not just the section holding it", () => {
+    expect(() =>
+      parseConfig(moose("version: 1", "judge:", "  nonsense: 1"), PATH),
+    ).toThrow(/\/docevals\/judge: unknown key "nonsense"/);
+  });
+
+  // "Stop after this many inference calls" has no meaningful zero: a budget of
+  // 0 skips every target and reports nothing, which is not what anyone means by
+  // it. The floor lives in the schema, so both sections inherit it (ADR 01019).
+  it("rejects a max-turns below the floor of 1", () => {
+    for (const section of ["judge", "fill"] as const) {
+      expect(() =>
+        parseConfig(moose("version: 1", `${section}:`, "  max-turns: 0"), PATH),
+      ).toThrow(/Invalid config/);
+    }
   });
 
   it("rejects invalid eval names", () => {
@@ -298,36 +320,24 @@ describe("loadConfig discovery", () => {
 });
 
 /**
- * Both pricing keys are optional in the schema, so a half-filled `pricing:` is
- * legal config. Completing the missing side with `0` would price those tokens
- * as free — under-reporting `cost.totalUsd` and, worse, letting `max-cost-usd`
- * ride past a ceiling it is supposed to abort on.
+ * `max-cost-usd` is gone, replaced by `max-turns` (ADR 01019). The whole value
+ * of a breaking removal is that it breaks loudly: a config still carrying the
+ * old ceiling must be told so, not quietly run unbounded. Quiet is the worse
+ * failure here — the key exists to *stop* spending, so ignoring it spends.
  */
-describe("parseConfig pricing", () => {
-  const withPricing = (...pricing: string[]) =>
-    parseConfig(
-      moose("version: 1", "provider:", "  anthropic:", "    pricing:", ...pricing),
-      PATH,
-    );
-
-  it("carries a fully specified override", () => {
-    const c = withPricing("      input-per-mtok: 3", "      output-per-mtok: 15");
-    expect(c.provider.anthropic.pricing).toEqual({
-      inputPerMTok: 3,
-      outputPerMTok: 15,
+describe("parseConfig rejects the removed cost ceiling", () => {
+  for (const section of ["judge", "fill"] as const) {
+    it(`rejects ${section}.max-cost-usd instead of ignoring it`, () => {
+      const parse = () =>
+        parseConfig(moose("version: 1", `${section}:`, "  max-cost-usd: 2"), PATH);
+      // DocevalsError is the exit-2 path: a stale config aborts the run.
+      expect(parse).toThrow(DocevalsError);
+      // And names the retired key, so the message carries the migration.
+      expect(parse).toThrow(
+        new RegExp(`/docevals/${section}: unknown key "max-cost-usd"`),
+      );
     });
-  });
-
-  it("refuses a half-specified override instead of pricing the rest at zero", () => {
-    expect(() => withPricing("      output-per-mtok: 15")).toThrow(
-      /input-per-mtok/,
-    );
-  });
-
-  it("leaves pricing unset when the section is absent", () => {
-    const c = parseConfig(moose("version: 1"), PATH);
-    expect(c.provider.anthropic.pricing).toBeUndefined();
-  });
+  }
 });
 
 /**

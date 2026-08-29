@@ -19,7 +19,7 @@ const EMPTY_REPORT: EngineReport = {
   pages: 0,
   evalResults: [],
   suites: [],
-  cost: { totalUsd: 0, totalTokens: 0, cachedEvals: 0, judgedEvals: 0 },
+  usage: { totalTokens: 0, cachedEvals: 0, judgedEvals: 0 },
   generated: [],
   exitCode: 0,
   problems: [],
@@ -121,7 +121,7 @@ describe("summary renderers reject an unknown format", () => {
   const EMPTY_FILL: FillReport = {
     results: [],
     threshold: 0.8,
-    costUsd: 0,
+    turns: 0,
     exitCode: 0,
   };
 

@@ -20,7 +20,7 @@ npx moose-docevals run --format json > moose-docevals.json
   "pages": 1,
   "evalResults": [ { "evalName": "fresh-enough", "outcome": "fail", "findings": [ … ] } ],
   "suites": [ { "suite": "reference", "passRate": 0.666…, "targetPassRate": 1, "meetsTarget": false } ],
-  "cost": { "totalUsd": 0, "totalTokens": 0, "cachedEvals": 0, "judgedEvals": 0 },
+  "usage": { "totalTokens": 0, "cachedEvals": 0, "judgedEvals": 0 },
   "generated": [],
   "exitCode": 1
 }
@@ -49,7 +49,7 @@ npx moose-docevals run --format json \
 Cache effectiveness — the number that tells you whether your CI cache is working:
 
 ```bash
-npx moose-docevals run --format json | jq '.cost | {cachedEvals, judgedEvals, totalUsd}'
+npx moose-docevals run --format json | jq '.usage | {cachedEvals, judgedEvals, totalTokens}'
 ```
 
 Evals awaiting a person:

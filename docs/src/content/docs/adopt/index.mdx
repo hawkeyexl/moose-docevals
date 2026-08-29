@@ -1,6 +1,6 @@
 ---
 title: Bootstrap a corpus with fill
-description: Propose evals for every page from its content, gated on confidence and capped on cost.
+description: Propose evals for every page from its content, gated on confidence and bounded by a turn budget.
 ---
 
 Ten minutes to write a good eval, times two hundred pages, is not a project anyone starts. `moose-docevals
@@ -17,13 +17,15 @@ npx moose-docevals fill --dry-run docs/
 
 ```console
 proposed docs/tests/overview.mdx  +3 evals (all-test-statuses-defined 0.90, test-hierarchy-explained 0.85, skip-conditions-enumerated 0.75) — dry run, not written
+proposed docs/tests/writing.mdx  +2 evals (steps-are-numbered 0.88, examples-are-runnable 0.71) — dry run, not written
 
-Threshold: 0.7 · LLM cost: $0.0212
+Threshold: 0.7 · inference calls: 2
 ```
 
-Two reasons, and the second is the one people miss: you see the proposals before they touch the repo,
-**and you learn the cost of the whole pass before you have spent it**. On a corpus-sized run that
-number is the difference between a defensible decision and a surprise.
+Two reasons, and the second is the one people miss: you see every proposal before it touches the
+repo, **and the dry run is the pass**. One page costs one inference call, and its raw proposals are
+cached — so dropping `--dry-run` afterwards replays them and makes no further calls. Looking first is
+free.
 
 ## Re-gating is free
 
@@ -38,14 +40,17 @@ Knowing this changes how you work. Without it, the threshold feels like a one-sh
 decision, so people agonise, pick wrong, and pay twice. Sweep it instead — 0.6, 0.7, 0.85 — and look
 at what each admits.
 
-## Cap the spend
+## Bound the work
 
 ```bash
-npx moose-docevals fill --max-cost 5 docs/
+npx moose-docevals fill --max-turns 40 docs/
 ```
 
-`--max-cost` (and `fill.max-cost-usd`) is a **hard ceiling that aborts**, not a warning. Set it even
-when you are confident; the run you regret is the one you did not bound.
+`--max-turns` (and `fill.max-turns`) counts uncached inference calls — exactly one per page filled. Pages
+already in the cache do not count against it, and a page the budget cannot cover is reported as
+`skipped` with `(turn budget exhausted)` rather than silently dropped. Set it even when you are
+confident; the run you regret is the one you did not bound. See
+[Caching and turn budgets](/moose-docevals/ci/cost-and-caching/).
 
 ## Write the proposals
 

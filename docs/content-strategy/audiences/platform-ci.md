@@ -8,7 +8,7 @@ firmographics: [scaleup, enterprise, multi-repo, github-actions, gitlab-ci, jenk
 relationship_stages: [prospect, customer]
 personas: [persona-pipeline-owner]
 features_emphasized:
-  [exit-codes, format-github, format-json, max-cost, response-cache, no-frontmatter-commands,
+  [exit-codes, format-github, format-json, max-turns, response-cache, no-frontmatter-commands,
    deterministic-only, provider-secrets]
 evidence_basis: [docmeta-content-strategy, moose-docevals-surface]
 ---
@@ -33,8 +33,8 @@ money and landed on their desk.
 
 ## What they're trying to do
 
-Add a gate that behaves identically everywhere, fails for exactly one reason, cannot exceed a spend
-ceiling, and cannot execute untrusted code on a runner.
+Add a gate that behaves identically everywhere, fails for exactly one reason, cannot exceed the work
+budget it was given, and cannot execute untrusted code on a runner.
 
 ## Defining pains
 
@@ -43,8 +43,10 @@ reason it is a first-class audience rather than a note on the lead persona's pag
 
 - **An LLM sits in the critical path.** A model call can be slow, can be rate-limited, can return a
   different answer than yesterday, and costs money per invocation. Every one of those is a novel
-  failure mode for a CI step. This segment needs the ensemble, the cache, `--max-cost`, and
-  `--deterministic-only` presented as *operational controls*, not as quality features.
+  failure mode for a CI step. This segment needs the ensemble, the cache, `--max-turns`, and
+  `--deterministic-only` presented as *operational controls*, not as quality features. `--max-turns`
+  carries a second-order hazard of its own: exhausting it *skips* the remaining evals rather than
+  failing the job, so a budget set too tight produces a green run with silently reduced coverage.
 - **Content files drive arbitrary code execution.** Two distinct paths, and conflating them is a real
   hazard: `scripts.allow-frontmatter-commands` / `--no-frontmatter-commands` gates commands declared in
   page frontmatter, and the `tool:doc-detective` grader executes steps embedded in page bodies. The

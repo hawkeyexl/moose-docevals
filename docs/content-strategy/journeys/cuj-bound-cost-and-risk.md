@@ -7,14 +7,14 @@ trigger: "The gate is live, and it now runs on pull requests from people outside
 entry_point: docs/src/content/docs/ci/untrusted-pull-requests.mdx
 success_criteria: >
   A fork pull request cannot execute its author's code on a runner and cannot reach a provider
-  credential, and no run can exceed a spend ceiling set in config.
+  credential, and no run can make more inference calls than a turn budget set in config.
 steps:
   - { stage: "Know what a content file can cause to execute", doc: docs/src/content/docs/ci/untrusted-pull-requests.mdx, exists: true }
   - { stage: "Gate frontmatter-declared commands", doc: docs/src/content/docs/ci/untrusted-pull-requests.mdx, exists: true }
   - { stage: "Understand what that flag does not cover", doc: docs/src/content/docs/ci/untrusted-pull-requests.mdx, exists: true }
   - { stage: "Run the fork path without a credential", doc: docs/src/content/docs/ci/untrusted-pull-requests.mdx, exists: true }
-  - { stage: "Set a hard spend ceiling", doc: docs/src/content/docs/ci/cost-and-caching.mdx, exists: true }
-  - { stage: "Make repeat runs nearly free", doc: docs/src/content/docs/ci/cost-and-caching.mdx, exists: true }
+  - { stage: "Set a turn budget the run cannot exceed", doc: docs/src/content/docs/ci/cost-and-caching.mdx, exists: true }
+  - { stage: "Make repeat runs spend nothing", doc: docs/src/content/docs/ci/cost-and-caching.mdx, exists: true }
   - { stage: "Look up the flags and config keys", doc: docs/src/content/docs/reference/configuration.mdx, exists: true }
 ---
 
@@ -48,11 +48,26 @@ no doc-detective grader. Any page that presents the flag as sufficient is worse 
 it converts an unknown risk into a false sense of safety. This repo's own `verify-docs` job is built
 exactly this way and is the worked example.
 
-The cost half is less dangerous and more likely to end an adoption. Model spend is per-invocation, so
-the failure is not one large bill but an unpredictable one — and unpredictable is what gets a check
-removed. Two facts do the work: `judge.max-cost-usd` and `fill.max-cost-usd` are **hard ceilings that
-abort**, not warnings; and caching is content-addressed, so an unchanged page and an unchanged
-assertion never re-judge. Together they make the steady-state cost of a docs PR approximately zero,
-which is the number Devin needs and the one that is least obvious from the outside.
+The cost half is less dangerous and more likely to end an adoption. Model calls are metered per
+invocation, so the failure is not one large bill but an unpredictable one — and unpredictable is what
+gets a check removed. Two facts do the work: `judge.max-turns` and `fill.max-turns` bound how many
+*uncached* inference calls a run may make; and caching is content-addressed, so an unchanged page and
+an unchanged assertion never re-judge. A cache hit is not a turn, so a fully cached run completes
+under any budget — which is what makes the steady-state work of a docs PR approximately zero, the
+number Devin needs and the one least obvious from the outside.
+
+**The unit is calls, not money, and pages must not quietly convert between them.** One judged eval
+spends `judge.ensemble-runs` turns (three by default); one page filled by `fill` spends one. That is
+countable from the corpus *before* the run, which is why the cap can be claimed up front rather than
+tallied afterwards, and so holds exactly under concurrency. The tool reports no dollar figure at all —
+the price table behind the ceiling this replaced was never this repo's, and it reported nothing for
+`claude-cli` or a self-hosted endpoint (ADR 01019). A page that hands Devin a cost estimate is
+inventing it; what it owes him is the call count and his provider's own rate card.
+
+**Exhausting the budget does not fail the run.** Targets past the cap are marked *skipped*, and
+skipped evals are excluded from the suite pass rate — so a run that hits its ceiling exits `0` with
+less coverage than the reader believes they bought. Any page presenting `--max-turns` as a safety net
+owes the reader that sentence, because a silently degraded green run is a worse operational failure
+than a red one.
 
 **Status.** All 7 steps are served by written pages (3 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.

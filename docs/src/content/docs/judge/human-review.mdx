@@ -57,6 +57,28 @@ to it since.
 Commit `reviews.yaml`. It is team state, not a cache — see
 [Files and state](/moose-docevals/reference/files-and-state/).
 
+## Your verdicts build the golden set
+
+Clearing the queue is not just unblocking a build. Every verdict you record is a page, an eval, and a
+human's pass/fail — the exact shape of a calibration golden case, in a file the tool already owns.
+
+```bash
+npx moose-docevals calibrate --seed
+```
+
+That reads `reviews.yaml` and writes candidates to `.moose-docevals/golden/from-reviews.yaml`. It
+judges nothing and needs no provider, and it carries each review's `contentHash` across, so a seeded
+case expires with its page the same way the review did.
+
+Candidates land `reviewed: false` and stay there until a human sets the bit. That is on purpose:
+filing a verdict to clear a queue and endorsing that verdict as ground truth are different acts, and
+the tool will not do the second one for you. Read them, then
+[calibrate](/moose-docevals/judge/calibrate/).
+
+The practical consequence for this page: **`--reviewer` and `--note` are worth more than they look.**
+The note becomes the case's `rationale`, which is what the next person reads when deciding whether
+the case belongs in the set at all.
+
 ## Should review block the build?
 
 `--fail-on-review` makes evals in the review zone exit 1.
@@ -88,8 +110,10 @@ Answering it faster forever is the wrong response. The repair is in
 [Write good assertions](/moose-docevals/evals/write-good-assertions/) — usually adding `evidence` to scope
 what the judge looks at, or an `examples.fail` that writes down the boundary being disputed.
 
-If you are unsure whether a rewrite helped, add the case to your golden set and
-[calibrate](/moose-docevals/judge/calibrate/). That converts "it feels better" into a measurement.
+If you are unsure whether a rewrite helped, record your verdict, pull it into the golden set with
+`calibrate --seed`, confirm it, and [calibrate](/moose-docevals/judge/calibrate/). That converts "it
+feels better" into a measurement — and repeat offenders are exactly the cases worth having in the
+set, because they are where the assertion is ambiguous.
 
 ## Tuning how much lands here
 

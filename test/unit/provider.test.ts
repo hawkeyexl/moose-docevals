@@ -55,22 +55,6 @@ describe("providerSpecFor", () => {
     );
   });
 
-  it("carries a configured pricing override onto the spec", () => {
-    const config = parseDocevalsConfig(
-      "version: 1\nprovider:\n  anthropic:\n    pricing:\n      input-per-mtok: 1\n      output-per-mtok: 2\n",
-      PATH,
-    );
-    expect(providerSpecFor(config).pricing).toEqual({
-      inputPerMTok: 1,
-      outputPerMTok: 2,
-    });
-  });
-
-  it("omits pricing entirely when none is configured", () => {
-    const config = parseDocevalsConfig("version: 1\n", PATH);
-    expect("pricing" in providerSpecFor(config)).toBe(false);
-  });
-
   it("lets a CLI --model override the configured model", () => {
     const config = parseDocevalsConfig("version: 1\n", PATH);
     expect(providerSpecFor(config, { model: "gpt-4o" }).model).toBe("gpt-4o");

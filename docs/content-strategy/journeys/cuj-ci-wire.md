@@ -45,10 +45,12 @@ job log gets ignored until someone asks. This is the step that most directly ser
 [Theo](../personas/theo-contributor.md), who never reads this journey — which is worth stating,
 because Devin will not otherwise weigh a formatting flag as an adoption decision.
 
-**Cache persistence is a correctness concern, not an optimization.** The cost model assumes unchanged
+**Cache persistence is a correctness concern, not an optimization.** The economics assume unchanged
 pages never re-judge. A CI job that starts with a cold cache every time re-judges the whole corpus on
-every push, and the resulting bill is the reason the check gets removed. Where the cache lives and
-what belongs in the cache key are therefore first-class reference material.
+every push, and the resulting bill is the reason the check gets removed. A cold cache also spends
+turns a warm one does not, so it is the difference between a run that fits inside `judge.max-turns`
+and one that quietly skips every page past the cap. Where the cache lives and what belongs in the
+cache key are therefore first-class reference material.
 
 The credential step is where the fork problem first appears. It is *raised* here and *resolved* in
 [`cuj-bound-cost-and-risk`](cuj-bound-cost-and-risk.md); this journey must hand off rather than

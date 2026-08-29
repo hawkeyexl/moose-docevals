@@ -43,11 +43,22 @@ docevals:
     # what lets the verify-docs CI job replay LLM verdicts with no API key.
     # Regenerate with `npm run docs:refresh-cache` after any PROMPT_VERSION bump.
     cache-dir: docs/.moose-docevals-cache
-    max-cost-usd: 2.0
+    # A safety net, not a throttle. A green verify-docs run replays committed
+    # cache fixtures and makes no inference calls, so this never trips there.
+    # It bounds the *regeneration* path: `npm run docs:refresh-cache` judges
+    # every page cold.
+    #
+    # Sized well above a full cold run on purpose. Budget exhaustion is a
+    # warning and skipped evals leave the suite passing, so a cap set *below*
+    # what a refresh needs would exit 0 having written a partial cache — which
+    # then gets committed and replayed as though it were complete. The whole
+    # docs-page-full set is ~34 pages x 2 ai evals x 3 runs = ~204 turns.
+    max-turns: 600
 
   fill:
     cache-dir: docs/.moose-docevals-cache/fill
-    max-cost-usd: 2.0
+    # One call per page; ~34 pages. Generous for the same reason as above.
+    max-turns: 200
 
   scripts:
     dir: "{docDir}/moose-docevals"

@@ -7,6 +7,7 @@ import pc from "picocolors";
 import { loadConfig } from "../core/config.js";
 import { discoverPages } from "../core/discover.js";
 import { resolvePages, type ResolvedPagePlan } from "../core/resolve.js";
+import { applySelection } from "../core/engine.js";
 import {
   parseFormat,
   SUMMARY_FORMATS,
@@ -16,6 +17,10 @@ import {
 export interface ListOptions {
   config?: string;
   format?: SummaryFormat;
+  /** Show only these evals by name (ADR 01018). */
+  evalNames?: string[];
+  /** Show only evals in this suite. */
+  suite?: string;
   cwd?: string;
 }
 
@@ -30,6 +35,10 @@ export function runList(globs: string[], options: ListOptions = {}): ListRun {
   const config = loadConfig(options.config, cwd);
   const pages = discoverPages(config, globs, cwd);
   const plans = resolvePages(pages, config);
+  // `false`: list executes nothing, so an eval that resolves but is skipped is
+  // a legitimate answer here — and this is the command `run`'s empty-match
+  // error tells the user to reach for.
+  applySelection(plans, config, options, false);
   const hasErrors = plans.some((p) =>
     p.problems.some((pr) => pr.level === "error"),
   );

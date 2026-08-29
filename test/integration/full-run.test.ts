@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 const ROOT = resolve(import.meta.dirname, "../..");
 
 describe("full run with mock judge", () => {
-  it("judges ai evals, keeps deterministic outcomes, and reports cost", async () => {
+  it("judges ai evals, keeps deterministic outcomes, and reports usage", async () => {
     // Cache dir isolated per test run.
     const cacheRoot = mkdtempSync(join(tmpdir(), "moose-docevals-e2e-"));
     const configText = readFileSync(join(ROOT, "moose.config.yaml"), "utf8");
@@ -53,9 +53,16 @@ describe("full run with mock judge", () => {
       byKey.get("test/fixtures/pages/docs/actions/goTo.mdx fresh-enough")?.outcome,
     ).toBe("fail");
 
-    // Cost accounting present (mock usage tokens counted).
-    expect(report.cost.judgedEvals).toBeGreaterThan(5);
-    expect(report.cost.totalTokens).toBeGreaterThan(0);
+    // Token accounting present (mock usage tokens counted).
+    expect(report.usage.judgedEvals).toBeGreaterThan(5);
+    expect(report.usage.totalTokens).toBeGreaterThan(0);
+
+    // The block is `usage`, not `cost`, and carries no dollar figure (ADR
+    // 01019). `--format json` serializes the whole report, so this pair of
+    // names is a public output contract that TypeScript alone cannot pin:
+    // a stray runtime key would type-check and still break every parser.
+    expect(report).not.toHaveProperty("cost");
+    expect(report.usage).not.toHaveProperty("totalUsd");
 
     // Suite summaries include judged results.
     const tutorial = report.suites.find((s) => s.suite === "tutorial");

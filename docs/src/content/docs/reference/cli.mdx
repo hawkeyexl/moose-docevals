@@ -30,12 +30,78 @@ human-review resolution.
 |---|---|
 | `--deterministic-only` | Run only `command` and `tool:*` graders. AI-graded evals report as `skipped`. No provider needed — this is the offline path. |
 | `--ai-only` | Run only AI-judged evals; skip deterministic graders. |
+| `--eval <name>` | Run only this eval. Repeat the flag for more than one (`--eval a --eval b`) — names are **not** space-separated, because a variadic flag would swallow the following glob. **Suite targets are not evaluated while a filter is active** — see below. A name that matches nothing is a usage error: **exit 2**. |
+| `--suite <name>` | Run only the evals the named suite lists. Same suspension of suite targets; a suite the config does not define is **exit 2**, with the defined names in the message. |
 | `--no-frontmatter-commands` | Skip `command` evals declared in **page frontmatter**. See [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/) — this does **not** gate `tool:doc-detective`. |
 | `--no-generate` | Do not generate scripts for command evals that lack a `command`. |
 | `--no-cache` | Bypass the judge response cache. |
 | `--fail-on-review` | Exit 1 when any eval lands in the human-review zone. |
 | `--runs <n>` | Ensemble runs per eval. Overrides `judge.ensemble-runs` (default 3). |
-| `--max-cost <usd>` | Abort judging once spend passes this ceiling. Overrides `judge.max-cost-usd`. |
+| `--max-turns <n>` | Stop judging after this many uncached **ensemble runs**. One ai eval spends `judge.ensemble-runs` turns; a cached ensemble spends none. A run may make a second provider call when the first response fails schema validation, so this is a floor on API calls rather than an exact count. Overrides `judge.max-turns` (default: unbounded). |
+| `--baseline [path]` | Fail only on findings a recorded baseline does not already hold. With no path, the configured `baseline:`, then `.moose-docevals-baseline.json`. |
+| `--no-baseline` | Ignore the configured `baseline:` for this run, so the full backlog reports again. |
+| `--write-baseline [path]` | Record this run's findings as the baseline. **With no path, the configured one** — see below. |
+
+### The findings baseline
+
+A baseline records today's findings so a run fails only on new ones. It covers **findings**, which
+means `command` and `tool:*` graders — not judged verdicts, not an eval that errored, not a suite
+target. Full behavior in [Retrofit a legacy
+corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file itself in
+[Files and state](/moose-docevals/reference/files-and-state/#findings-baseline).
+
+**A bare `--write-baseline` records into the configured path, not the default.** Get that backwards
+and a repo pointing `baseline:` somewhere custom records into a file nothing reads — every run still
+fails, an unreferenced file grows in the diff, and the ratchet does nothing while looking like it
+works. Recording with no `baseline:` set at all is reported as a warning naming the config file.
+
+A recording run applies the baseline it just wrote, so it exits `0` on findings: recording a finding
+is declaring it accepted, and a `--write-baseline` you have to wrap in `|| true` loses the exit code
+that matters on the next run. A suite below target or an errored eval still exits `1`.
+
+Every re-record reports the diff against the previous file:
+
+```console
+Baseline .moose-docevals-baseline.json: recorded 1 finding(s) (+0, -1).
+  1 previously recorded finding(s) are no longer in the baseline. If this run covered less of the
+  corpus than the last one, they have just been forgiven.
+```
+
+`removed` is the number to watch — it is the only thing in a CI log that makes an over-forgiving
+re-record visible. A baseline whose JSON, `version`, or fingerprints are malformed is **exit 2**,
+with the offending entry named.
+
+### Selecting evals suspends suite enforcement
+
+`--eval` and `--suite` narrow the run after resolution and before grading. Resolution still happens
+in full, so a bad `eval-*` key or an unknown grader on a page you filtered out still reports.
+
+A suite target is a claim about a body of checks. A run narrowed to one passing eval out of a suite
+of twelve would compute `1/1 = 100%`, clear a target of `1.0`, and exit `0` having checked almost
+nothing — so **while either flag is active, suite targets are reported but not enforced**. Each
+summary carries the numbers it measured and withholds the verdict:
+
+```console
+$ moose-docevals run --deterministic-only --no-generate --eval readable
+...
+Suites
+  how-to: 2/2 passed — 100% vs target 100% partial — filtered run, target not evaluated
+  reference: 4/4 passed — 100% vs target 100% partial — filtered run, target not evaluated
+```
+
+What still holds:
+
+- A `fail` or an `error` among the evals that ran exits **1**.
+- An `error`-level resolution problem exits **1**.
+- A filter matching no evals exits **2**. A green run over zero evals is never the answer.
+- `--suite` filters, it does not redefine. It selects the evals the named suite lists, wherever
+  those evals resolve; each result still reports under the suite its own page resolved to, and
+  `target-pass-rate` is untouched.
+
+This is why `--eval` is a local debugging flag and not a CI invocation — see
+[Exit codes and annotations](/moose-docevals/ci/exit-codes-and-annotations/#a-filtered-run-is-not-a-gate)
+and the `partial` field in
+[Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#suites).
 
 ## `moose-docevals list [globs...]`
 
@@ -56,6 +122,15 @@ test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
 
 Each line is `name [grader, type, source]`, where source is `config` or `page`.
 
+| Flag | Effect |
+|---|---|
+| `--eval <name>` | Show only this eval. Repeatable, like the `run` flag. |
+| `--suite <name>` | Show only the evals the named suite lists. |
+
+These are the same two filters `run` takes, and they fail the same way: a name that matches nothing
+is **exit 2**. Reach for them to answer "what would `--eval X` actually have run" without spending a
+grading pass.
+
 ## `moose-docevals generate [globs...]`
 
 Writes a check script for every `command` eval that has a plain-language assertion but no `command`,
@@ -70,13 +145,13 @@ Proposes evals for each page from its content, gated on a self-reported confiden
 
 | Flag | Effect |
 |---|---|
-| `--dry-run` | Report proposals without writing frontmatter. Run this first — it reports the cost of the whole pass before you spend it. |
+| `--dry-run` | Report proposals without writing frontmatter. Run this first — you see every proposal, and how many inference calls the pass made, before anything touches the repo. |
 | `--confidence <n>` | Minimum confidence to write, 0–1. Overrides `fill.confidence-threshold` (default `0.7`). Values above 1 are a usage error. |
-| `--max-cost <usd>` | Stop proposing past this spend. |
+| `--max-turns <n>` | Stop after this many uncached inference calls — exactly one per page filled. Overrides `fill.max-turns` (default: unbounded). |
 | `--no-cache` | Bypass the proposal cache. |
 
 Raw proposals are cached **before** the confidence gate, so re-running at a different `--confidence`
-costs nothing.
+spends no turns.
 
 ## `moose-docevals promote [globs...]`
 
@@ -91,10 +166,14 @@ Measures judge agreement against a human-verified golden set.
 | Flag | Effect |
 |---|---|
 | `--golden <dir>` | Golden set directory. Default `.moose-docevals/golden`. |
+| `--seed` | Write golden candidates from recorded reviews into `<golden>/from-reviews.yaml`, then exit. Judges nothing and constructs no provider, so it runs with no API key. Idempotent on `(file, eval)`: re-running updates rather than duplicates, and never un-reviews a confirmed case. Every new case lands `reviewed: false`. |
 | `--runs <n>` | Ensemble runs per case. |
+| `--max-turns <n>` | Stop judging after this many uncached **ensemble runs** — the same unit as `run`, since calibration goes through the same judge. One case spends `judge.ensemble-runs` turns. Run-wide, not per case: every case is judged in one batched call. A cached case spends none. |
 | `--no-cache` | Bypass the judge response cache. |
 
-Exits 1 when agreement is below the threshold. See [Calibrate](/moose-docevals/judge/calibrate/).
+Exits 1 when agreement is below the threshold. Unreviewed and stale cases are judged and **counted**
+toward that rate, flagged `[unreviewed]` / `[stale]` per case with a summary line naming the counts.
+See [Calibrate](/moose-docevals/judge/calibrate/).
 
 ## `moose-docevals init`
 
@@ -127,6 +206,12 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
 
 {/* step {"description":"The CLI lists all eight commands.","runShell":{"command":"npx moose-docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*init[\\s\\S]*review/"}} */}
 
+{/* step {"description":"calibrate exposes --seed and --max-turns.","runShell":{"command":"npx moose-docevals calibrate --help","exitCodes":[0],"stdio":"/--seed[\\s\\S]*--max-turns/"}} */}
+
+{/* step {"description":"run exposes the three baseline flags.","runShell":{"command":"npx moose-docevals run --help","exitCodes":[0],"stdio":"/--baseline[\\s\\S]*--no-baseline[\\s\\S]*--write-baseline/"}} */}
+
+{/* step {"description":"--seed with nothing recorded names the command that records one, and exits 0 without a provider.","runShell":{"command":"npx moose-docevals calibrate --seed","exitCodes":[0],"stdio":"No recorded reviews to seed from"}} */}
+
 {/* step {"description":"`list` prints the resolved plan with grader, type, and source, and runs nothing.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":", regression, config]"}} */}
 
 {/* step {"description":"Exit 0 when every eval passes.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
@@ -144,3 +229,11 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
 {/* step {"description":"list rejects a format that is valid only for run, rather than falling back to human.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/find.mdx --format markdown","exitCodes":[2]}} */}
 
 {/* step {"description":"fill rejects an unknown --format before doing any work.","runShell":{"command":"npx moose-docevals fill --dry-run --format xml","exitCodes":[2]}} */}
+
+{/* step {"description":"A filtered run reports its suites as partial instead of passing their targets.","runShell":{"command":"npx moose-docevals run --deterministic-only --no-generate --eval readable","exitCodes":[0],"stdio":"filtered run, target not evaluated"}} */}
+
+{/* step {"description":"An --eval name that matches nothing is a usage error, not a green run over zero evals.","runShell":{"command":"npx moose-docevals run --deterministic-only --eval no-such-eval","exitCodes":[2],"stdio":"matched no evals"}} */}
+
+{/* step {"description":"An undefined --suite is a usage error, and the message names the suites that are defined.","runShell":{"command":"npx moose-docevals run --deterministic-only --suite no-such-suite","exitCodes":[2],"stdio":"is not a defined suite"}} */}
+
+{/* step {"description":"list takes the same filters and rejects an unmatched name the same way.","runShell":{"command":"npx moose-docevals list --eval no-such-eval","exitCodes":[2]}} */}

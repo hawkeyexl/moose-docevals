@@ -9,7 +9,7 @@ prerequisites: [git, markdown, running-a-cli]
 goals:
   - Get real coverage of a corpus he cannot personally re-read, in an afternoon
   - Stop shipping pages that contradict the product
-  - Know what a run will cost before spending it
+  - Know how many model calls a run will make before starting it
 pains:
   - Hand-writing an assertion per page does not fit the hours he has
   - Pages go stale silently; the product moved and nobody noticed
@@ -40,10 +40,10 @@ does not strictly need into [`get-started/how-moose-docevals-works.mdx`](../info
 His second constraint is that **hand-authoring assertions is arithmetically impossible** for him: ten
 minutes per eval times two hundred pages is not a project he will start. [`fill`](../journeys/cuj-bootstrap-corpus.md)
 is therefore not a convenience feature for Nate — it is the entire product. Everything around it
-matters proportionally: `--dry-run` so he can look before he leaps, `--max-cost` so a mistake is
-bounded, and the fact that raw proposals are cached before gating, so re-running at a different
-`--confidence` is free. He needs to learn that last fact early, because otherwise he will treat every
-re-run as another charge and tune the threshold exactly once.
+matters proportionally: `--dry-run` so he can look before he leaps, `--max-turns` so a mistake is
+bounded to a countable number of model calls, and the fact that raw proposals are cached before
+gating, so re-running at a different `--confidence` is free. He needs to learn that last fact early,
+because otherwise he will treat every re-run as another charge and tune the threshold exactly once.
 
 He also needs the tool to be genuinely useful **without a provider at all**. `--deterministic-only` is
 how he evaluates on a Sunday with no key set, and if that path is presented as a degraded mode rather
