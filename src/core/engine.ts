@@ -338,12 +338,32 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       continue;
     }
     const start = Date.now();
-    const findings = await grader.grade({
-      targets,
-      config,
-      root: cwd,
-      exec,
-    });
+    // A grader is effectively third-party code: tool adapters shell out, and
+    // `runValidate` raises on a schema path it cannot read — which
+    // `options.schemas` being hand-written makes the likeliest route in.
+    // Letting that rejection escape drops every remaining eval on every
+    // remaining page with no result and no exit-code signal that anything was
+    // skipped. Error its own targets and carry on, the way a failed script
+    // generation already does above.
+    let findings: Finding[];
+    try {
+      findings = await grader.grade({ targets, config, root: cwd, exec });
+    } catch (e) {
+      const reason = e instanceof Error ? e.message : String(e);
+      for (const target of targets) {
+        results.push({
+          evalName: target.eval.name,
+          suite: target.eval.suite,
+          type: target.eval.type,
+          grader: target.eval.grader,
+          file: target.plan.page.file,
+          outcome: "error",
+          skipReason: `grader ${kind} failed: ${reason}`,
+          durationMs: Date.now() - start,
+        });
+      }
+      continue;
+    }
     const durationMs = Date.now() - start;
     allFindings.push(...findings);
     const grouped = groupFindings(findings);

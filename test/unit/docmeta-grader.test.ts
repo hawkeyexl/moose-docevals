@@ -19,6 +19,7 @@ import { docmetaGrader } from "../../src/graders/tools/docmeta.js";
 import { resolvePage } from "../../src/core/resolve.js";
 import { stripFrontmatterBlock } from "../../src/core/discover.js";
 import { parseDocevalsConfig } from "../helpers/config.js";
+import { resolve } from "node:path";
 import type { PageFile } from "../../src/core/discover.js";
 import type { GraderTarget } from "../../src/graders/types.js";
 
@@ -83,4 +84,89 @@ describe("tool:docmeta without options.schemas", () => {
     });
     for (const f of findings) expect(f.message).not.toMatch(/okf|seven-action/);
   });
+});
+
+/**
+ * A grader that throws must not take the whole run with it.
+ *
+ * `runValidate` raises `DocmetaError` on a schema path it cannot read — and
+ * since `options.schemas` is now required and hand-written, a typo there is
+ * the likeliest way to reach it. Without a boundary that rejection propagates
+ * out of `runEvals`: every remaining eval on every remaining page is dropped
+ * with no result, no diagnostic, and no exit code saying anything was skipped.
+ *
+ * The engine already handles a failed *generation* this way — `outcome:
+ * "error"` per target — so grading matches rather than inventing a third
+ * behavior.
+ */
+describe("a grader that throws mid-run", () => {
+  const CONFIG_TEXT = [
+    "version: 1",
+    'files: { include: ["test/fixtures/pages/docs/actions/find.mdx"] }',
+    "evals:",
+    "  bad-schema-path:",
+    "    assertion: Frontmatter validates.",
+    "    grader: tool:docmeta",
+    "    options:",
+    '      schemas: ["no/such/schema.json"]',
+    "  fresh-enough:",
+    "    assertion: Reviewed recently.",
+    "    grader: tool:freshness",
+    "    options: { field: last-reviewed, max-age-days: 100000 }",
+    "suites:",
+    "  reference: { evals: [bad-schema-path, fresh-enough] }",
+  ].join("\n");
+
+  it("does not reject the run", async () => {
+    const { runEvals } = await import("../../src/core/engine.js");
+    const config = parseDocevalsConfig(
+      CONFIG_TEXT,
+      resolve(process.cwd(), "moose.config.yaml"),
+    );
+    const report = await runEvals({
+      cwd: process.cwd(),
+      config,
+      deterministicOnly: true,
+      generate: false,
+    });
+    expect(report.evalResults.length).toBeGreaterThan(0);
+  }, 60000);
+
+  it("errors only the failing grader's targets, and names why", async () => {
+    const { runEvals } = await import("../../src/core/engine.js");
+    const config = parseDocevalsConfig(
+      CONFIG_TEXT,
+      resolve(process.cwd(), "moose.config.yaml"),
+    );
+    const report = await runEvals({
+      cwd: process.cwd(),
+      config,
+      deterministicOnly: true,
+      generate: false,
+    });
+    const broken = report.evalResults.find(
+      (r) => r.evalName === "bad-schema-path",
+    );
+    expect(broken?.outcome).toBe("error");
+    expect(broken?.skipReason).toMatch(/no\/such\/schema\.json|tool:docmeta/);
+
+    // The unrelated eval on the same page still ran.
+    const other = report.evalResults.find((r) => r.evalName === "fresh-enough");
+    expect(other?.outcome).toBe("pass");
+  }, 60000);
+
+  it("surfaces as exit 1, not a green run", async () => {
+    const { runEvals } = await import("../../src/core/engine.js");
+    const config = parseDocevalsConfig(
+      CONFIG_TEXT,
+      resolve(process.cwd(), "moose.config.yaml"),
+    );
+    const report = await runEvals({
+      cwd: process.cwd(),
+      config,
+      deterministicOnly: true,
+      generate: false,
+    });
+    expect(report.exitCode).toBe(1);
+  }, 60000);
 });

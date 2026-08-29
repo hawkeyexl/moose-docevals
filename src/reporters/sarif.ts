@@ -99,6 +99,35 @@ export function renderSarif(report: EngineReport): string {
       });
     }
 
+    // An errored eval has neither findings nor consensus. Leaving it out
+    // shows it on the dashboard as never having run, which reads as "all
+    // clear" at the moment something actually went wrong.
+    if (evalResult.outcome === "error") {
+      const id = evalResult.evalName;
+      if (!rules.has(id)) {
+        rules.set(id, {
+          id,
+          name: evalResult.evalName,
+          shortDescription: {
+            text: `moose-docevals eval "${evalResult.evalName}" (${evalResult.grader})`,
+          },
+          defaultConfiguration: { level: "error" },
+        });
+      }
+      results.push({
+        ruleId: id,
+        level: "error",
+        message: { text: evalResult.skipReason ?? "eval errored" },
+        locations: [
+          {
+            physicalLocation: {
+              artifactLocation: { uri: uriFor(evalResult.file) },
+            },
+          },
+        ],
+      });
+    }
+
     // A judged eval produces no `Finding`; without this its failure is absent
     // from the dashboard entirely, which reads as "the AI evals all passed".
     if (evalResult.outcome === "fail" && evalResult.consensus) {

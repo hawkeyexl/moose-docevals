@@ -230,3 +230,46 @@ describe("junit reporter: hostile characters", () => {
     expect(xml).toMatch(/d\ne/);
   });
 });
+
+/**
+ * An `error` outcome — an unknown grader, a failed script generation, a
+ * command eval with no command — produces neither findings nor consensus. If
+ * the reporters only look at those two, an errored eval vanishes: the
+ * dashboard shows it as never having run, which reads as "all clear" at
+ * exactly the moment something went wrong.
+ */
+describe("reporters: errored evals", () => {
+  const ERRORED: EngineReport = {
+    ...REPORT,
+    evalResults: [
+      {
+        evalName: "broken",
+        suite: "reference",
+        type: "regression",
+        grader: "tool:nonesuch",
+        file: "docs/a.md",
+        outcome: "error",
+        skipReason: "unknown grader kind",
+        durationMs: 0,
+      },
+    ],
+  };
+
+  it("SARIF carries the errored eval as a result", () => {
+    const log = JSON.parse(render(ERRORED, "sarif")) as SarifLog;
+    const result = log.runs[0]?.results[0];
+    expect(result?.ruleId).toBe("broken");
+    expect(result?.level).toBe("error");
+    expect(result?.message.text).toMatch(/unknown grader kind/);
+  });
+
+  it("SARIF declares the rule for it", () => {
+    const log = JSON.parse(render(ERRORED, "sarif")) as SarifLog;
+    expect(log.runs[0]?.tool.driver.rules.map((r) => r.id)).toContain("broken");
+  });
+
+  it("JUnit puts the reason in the error body, not a bare restatement", () => {
+    const xml = render(ERRORED, "junit");
+    expect(xml).toMatch(/<error[\s\S]*?unknown grader kind[\s\S]*?<\/error>/);
+  });
+});
