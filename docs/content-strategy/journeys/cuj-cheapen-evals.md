@@ -7,7 +7,7 @@ trigger: "Every eval is an ai eval, and the bill and the run time both grow with
 entry_point: docs/src/content/docs/adopt/promote-to-deterministic.mdx
 success_criteria: >
   Evals that could always have been code are now command evals with committed, reviewable scripts,
-  and the next run costs measurably less with no loss of coverage.
+  and the next run makes measurably fewer inference calls with no loss of coverage.
 steps:
   - { stage: "Find which ai evals could be code", doc: docs/src/content/docs/adopt/promote-to-deterministic.mdx, exists: true }
   - { stage: "Convert them", doc: docs/src/content/docs/adopt/promote-to-deterministic.mdx, exists: true }
@@ -28,9 +28,14 @@ ai evals and should not have stayed that way.
 Run time and cost now scale with the corpus, and both are trending the wrong way.
 
 **Narrative.** The grader hierarchy is a claim about *preference*, and preferences decay without a
-mechanism. Left alone every eval stays wherever it was born, and since llm is the default grader and
+mechanism. Left alone every eval stays wherever it was born, and since `ai` is the default grader and
 `fill` proposes ai-graded evals by construction, "left alone" means expensive. `promote` and
 `generate` are that mechanism, and this journey is the discipline of applying them.
+
+The saving is observable but not priced. A run reports how many evals it judged, how many of those
+were cache hits, and the token total — never a dollar figure (ADR 01019). A page here that claims a
+percentage saved must derive it from those counts, or from the drop in inference calls, and leave the
+conversion to money to the reader's provider.
 
 The rule is the manuscript's: **if you can express the eval criterion as code, do it.** `promote` asks
 the model to apply exactly that test to the existing ai evals and reports which ones pass it.

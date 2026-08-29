@@ -83,6 +83,37 @@ suite was left at the default 1.0 — is the most common way to conclude the too
 
 Skipped evals are excluded from the denominator: `passed / (total - skipped)`.
 
+## Run one suite
+
+`--suite <name>` narrows `run` and `list` to the evals a suite is composed of:
+
+```bash
+npx moose-docevals list --suite reference
+npx moose-docevals run --suite reference --deterministic-only
+```
+
+It selects the evals that **report under** that suite — the same suite you see in `list` output and
+in the summary, which a page gets from its own `eval-suite` or from `defaults.suite`. So `--suite
+reference` runs everything on the reference pages and nothing on a `how-to` page, even where the two
+suites are composed of overlapping evals.
+
+Two things it does *not* do. It does not redefine anything: `target-pass-rate` is untouched, and a
+page still reports under its own suite. And it does not measure a target — the run saw only part of
+the corpus, so the summary comes back `partial`, printing its numbers and withholding the verdict:
+
+```console
+Suites
+  reference: 14/15 passed — 93% vs target 100% partial — filtered run, target not evaluated (6 skipped)
+```
+
+That run still exits `1` — one of the fifteen genuinely failed. Suspending the *target* does not
+suspend the findings: what a filtered run stops claiming is that the suite as a whole is in good
+standing, not that nothing it looked at was wrong.
+
+Naming a suite the config does not define is exit 2, with the defined names in the message. Full
+behavior, including the per-eval `--eval` filter, in
+[Selecting evals suspends suite enforcement](/moose-docevals/reference/cli/#selecting-evals-suspends-suite-enforcement).
+
 ## Referential integrity is checked at load
 
 Two mistakes fail immediately with exit 2 rather than surfacing later as a confusing per-page
@@ -132,3 +163,7 @@ behaves unlike its neighbours.
 {/* step {"description":"`list` reports the suite a page resolved to and the source of each eval.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"/suite: reference/"}} */}
 
 {/* step {"description":"A suite below its target pass rate fails the run.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"below target"}} */}
+
+{/* step {"description":"--suite narrows `list` to the evals that suite is composed of.","runShell":{"command":"npx moose-docevals list --suite reference","exitCodes":[0],"stdio":"evals resolved"}} */}
+
+{/* step {"description":"A --suite run reports the suite as partial rather than measuring its target, and a real failure inside the filter still exits 1.","runShell":{"command":"npx moose-docevals run --deterministic-only --no-generate --suite reference","exitCodes":[1],"stdio":"filtered run, target not evaluated"}} */}

@@ -7,7 +7,7 @@ docs_owner: A single individual — often an engineer or DevRel wearing the docs
 firmographics: [startup, scaleup, oss-project, docs-in-product-repo, 20-300-pages, no-docs-budget]
 relationship_stages: [prospect, customer]
 personas: [persona-solo-owner]
-features_emphasized: [fill, confidence-threshold, dry-run, max-cost, init, deterministic-only]
+features_emphasized: [fill, confidence-threshold, dry-run, max-turns, init, deterministic-only]
 evidence_basis: [doc-detective-user-base, moose-docevals-surface, docmeta-content-strategy]
 ---
 
@@ -44,7 +44,7 @@ pages that contradict the product.
   nobody noticed for six months.
 - **Cost anxiety is personal, not institutional.** There is no budget line — it is their own card, or
   a spend cap they had to argue for once. An unbounded run is not a risk to manage, it is a reason not
-  to start. `--dry-run`, `--max-cost`, and the fact that re-running against cache is free are
+  to start. `--dry-run`, `--max-turns`, and the fact that re-running against cache is free are
   load-bearing.
 - **No appetite for configuration.** Every key in `moose.config.yaml` they must understand before
   the first useful run is a chance to give up. `init` plus sensible defaults has to carry them.
@@ -56,7 +56,9 @@ pages that contradict the product.
 - Zero infrastructure. `npx` and an env var, or the `claude-cli` provider and no key at all.
 - Must degrade gracefully without a provider: `--deterministic-only` has to be genuinely useful on its
   own, so the tool has a free tier of behavior for someone evaluating it on a Sunday.
-- Cost must be knowable *before* it is spent, not reported after.
+- How much a run will do must be knowable *before* it does it, not reported after. `--max-turns`
+  bounds it in inference calls; the tool prints no dollar figure, so converting that to money is the
+  reader's own arithmetic against their provider's rates.
 
 ## Qualified reader (for docs targeting)
 

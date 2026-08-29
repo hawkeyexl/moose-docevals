@@ -509,4 +509,25 @@ describe("parseMarkdownlintOutput", () => {
     });
     expect(items[1]).toMatchObject({ file: "docs/b.md", line: 9, col: undefined });
   });
+
+  // markdownlint-cli2 0.23 prints a severity token between the position and
+  // the rule id. The regex predates it and matched nothing, so every finding
+  // was dropped and every markdownlint eval passed on a page full of issues
+  // — invisible until the tool was actually installed (ADR 01023).
+  it("parses the severity token cli2 0.23 prints", () => {
+    const out = [
+      "docs/a.md:6:81 error MD013/line-length Line length [Expected: 80; Actual: 98]",
+      "docs/a.md:12:1 error MD060/table-column-style Table column style [Table pipe ...]",
+    ].join(String.fromCharCode(10));
+    const items = parseMarkdownlintOutput(out);
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({
+      file: "docs/a.md",
+      line: 6,
+      col: 81,
+      ruleId: "MD013/line-length",
+    });
+    expect(items[0]?.message).toBe("Line length [Expected: 80; Actual: 98]");
+    expect(items[1]?.ruleId).toBe("MD060/table-column-style");
+  });
 });

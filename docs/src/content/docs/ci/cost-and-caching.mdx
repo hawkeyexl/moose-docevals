@@ -1,31 +1,78 @@
 ---
-title: Cost and caching
-description: Hard spend ceilings, what invalidates a cached verdict, and why cache persistence is a correctness concern.
+title: Caching and turn budgets
+description: What invalidates a cached verdict, why cache persistence is a correctness concern, and how to bound the inference calls a run makes.
 ---
 
-Model spend is per-invocation, so the risk is not one large bill — it is an *unpredictable* one. And
-unpredictable is what gets a check removed.
+Model calls are per-invocation, so the risk is not one large bill — it is an *unpredictable* amount
+of work. And unpredictable is what gets a check removed.
 
-Two mechanisms make the steady-state cost of a docs pull request approximately zero.
+Two mechanisms keep the steady state of a docs pull request near zero. The cache does almost all of
+it. The turn budget is the backstop for when the cache does not apply.
 
-## Hard ceilings that abort
+## Bound the work with turns
 
 ```yaml
 docevals:
   judge:
-    max-cost-usd: 2.0
+    max-turns: 60
   fill:
-    max-cost-usd: 5.0
+    max-turns: 40
 ```
 
 ```bash
-npx moose-docevals run --max-cost 2
-npx moose-docevals fill --max-cost 5
+npx moose-docevals run --max-turns 60
+npx moose-docevals fill --max-turns 40
 ```
 
-These **abort the run**; they are not warnings. `null` (the default) means no ceiling.
+A **turn** is one unit of uncached inference work. Under `fill` that is exactly one call per page; under `judge` it is one *ensemble run*, and a run may make a second call when the first response fails schema validation — so the judge budget is a floor on API calls, not an exact ceiling. Either way the budget counts work, not pages:
 
-Set one even when you are confident. The run you regret is the one you did not bound — a config
+- One ai-graded eval spends `judge.ensemble-runs` turns — three by default, because the ensemble is
+  three independent calls.
+- One page filled by `fill` spends one turn.
+- **A cache hit spends nothing.** A fully-cached run completes under `--max-turns 1`.
+
+Unset — the default — means unbounded.
+
+`judge.max-turns` bounds the judge stage and `fill.max-turns` bounds `fill`. Script generation calls
+the model too and is not counted against either; `run --no-generate` is what keeps it out of a run.
+
+### The budget is claimed, not tallied
+
+A target's whole ensemble is claimed *before* anything is dispatched. So an eval that does not fit in
+what is left is skipped outright rather than judged on a partial ensemble — two runs out of three is
+not a cheaper verdict, it is a different one. Those evals report as `skipped` with the reason:
+
+```text
+judge turn budget exhausted (60)
+```
+
+`fill` does the same per page, and marks it `(turn budget exhausted)`.
+
+Claiming before dispatch is what makes the cap exact rather than approximate. Judging runs
+`defaults.concurrency` targets at once — four by default — and the number of calls an eval will make
+is knowable before the provider is touched, because it *is* the ensemble size. There is no window
+between deciding to spend and spending, so concurrent workers cannot both clear an almost-exhausted
+budget and then both spend.
+
+### Why turns, and not dollars
+
+The tool used to take a dollar ceiling, `--max-cost`. It was removed, and so was every dollar figure
+it used to report. Two reasons, and the first is the one that decided it:
+
+- **A dollar ceiling could not be honored.** A call's cost is unknown until its response comes back,
+  so the ceiling was checked before dispatch and debited after. Under the worker pool, up to
+  `defaults.concurrency` evals — four at the default — cleared a ceiling that had already tripped,
+  and then spent. A cap that is approximate in the direction of spending *more* is not a cap.
+- **The dollars were not trustworthy anyway.** They came from a bundled price table that goes stale
+  on every provider price change, and `claude-cli` and self-hosted OpenAI-compatible endpoints report
+  no usage at all — so those runs were priced at a confident `$0.0000`, which reads as "free" rather
+  than "unmeasured".
+
+Nothing reports a dollar amount now, and there is no price table to configure. Turns and tokens are
+what the tool can count honestly. Convert them to money with your provider's own billing, which is
+authoritative in a way a bundled table never was.
+
+Set a budget even when you are confident. The run you regret is the one you did not bound — a config
 mistake that widens `files.include`, or a prompt change that invalidates every cached verdict at
 once.
 
@@ -44,7 +91,7 @@ prose and that page re-judges; edit an assertion and every page using it re-judg
 and everything re-judges.
 
 `fill` caches raw proposals **before** the confidence gate, keyed with `FILL_PROMPT_VERSION` — which
-is why re-running at a different `--confidence` costs nothing.
+is why re-running at a different `--confidence` spends no turns.
 
 | Path | Default | Commit? |
 |---|---|---|
@@ -53,7 +100,7 @@ is why re-running at a different `--confidence` costs nothing.
 
 ## Cache persistence is a correctness concern
 
-The cost model assumes repeat runs are nearly free. A CI job that starts cold every time re-judges
+Everything above assumes repeat runs are nearly free. A CI job that starts cold every time re-judges
 the entire corpus on every push, and the resulting bill is the reason someone deletes the step.
 
 ```yaml
@@ -68,18 +115,26 @@ The config hash belongs in the key: changing an assertion should invalidate verd
 that visible rather than relying on the content hash alone. `restore-keys` lets a new commit start
 from the previous run's cache instead of nothing.
 
-## Read the cost
+## Read the usage block
 
 ```json
-"cost": { "totalUsd": 0.0212, "totalTokens": 18442, "cachedEvals": 214, "judgedEvals": 3 }
+"usage": { "totalTokens": 18442, "cachedEvals": 214, "judgedEvals": 217 }
 ```
 
-`cachedEvals` versus `judgedEvals` is the number to watch. On a healthy repo, a docs pull request
-judges only the pages it touched. If `judgedEvals` is large on a small diff, something is
-invalidating the cache — usually a changed assertion, a model bump, or a cache that is not
-persisting.
+`judgedEvals` counts every ai-graded eval that produced a verdict; `cachedEvals` counts the subset
+that came entirely from cache. `--format human` prints the same three numbers on one line, and only
+when something was judged:
 
-## Reduce what you spend, not just what you cap
+```console
+Judged 217 evals (214 cached), 18,442 tokens
+```
+
+The **gap** between the two is the number to watch, because it is the work that actually reached a
+provider. On a healthy repo a docs pull request re-judges only the pages it touched, so the gap is
+small. If it is large on a small diff, something is invalidating the cache — usually a changed
+assertion, a model bump, or a cache that is not persisting.
+
+## Do less work, not just cap it
 
 **Push evals down the hierarchy.** The ratio of deterministic to judged evals decides whether the
 gate is affordable at ten times the corpus size. See
@@ -93,15 +148,15 @@ on:
     paths: ["docs/**", "moose.config.yaml"]
 ```
 
-**Run deterministic on every push, judged on pull requests.** `--deterministic-only` costs nothing
-and catches most regressions.
+**Run deterministic on every push, judged on pull requests.** `--deterministic-only` makes no
+inference calls at all and catches most regressions.
 
 **Lower `judge.ensemble-runs` deliberately, or not at all.** Three runs is the calibrated default;
-dropping to one saves two thirds of the cost and removes the consensus signal that makes the
-human-review zone meaningful. Measure with [calibrate](/moose-docevals/judge/calibrate/) before you decide
-that trade is worth it.
+dropping to one cuts each eval from three turns to one, and removes the consensus signal that makes
+the human-review zone meaningful. Measure with [calibrate](/moose-docevals/judge/calibrate/) before
+you decide that trade is worth it.
 
 ## `--no-cache`
 
 Bypasses the cache for a run. Useful when you have changed a prompt or are debugging a verdict, and
-expensive by definition — not something to leave in a CI recipe.
+expensive by definition — every eval becomes turns again. Not something to leave in a CI recipe.

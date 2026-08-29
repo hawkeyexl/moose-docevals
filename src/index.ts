@@ -74,11 +74,20 @@ export { FillCache, fillCacheKey } from "./fill/cache.js";
 export { runPromote } from "./commands/promote.js";
 export type { PromoteOptions, PromoteProposal } from "./commands/promote.js";
 export { makeGenerateScripts, scriptLocationFor } from "./graders/scriptgen.js";
-export { runCalibrate, renderCalibration, loadGoldenCases } from "./commands/calibrate.js";
+export {
+  runCalibrate,
+  renderCalibration,
+  loadGoldenCases,
+  seedGoldenCases,
+  GOLDEN_DIR,
+  SEEDED_GOLDEN_FILE,
+} from "./commands/calibrate.js";
 export type {
   CalibrateOptions,
   CalibrationReport,
+  CalibrationCaseResult,
   GoldenCase,
+  SeedResult,
 } from "./commands/calibrate.js";
 export { runInit } from "./commands/init.js";
 export { registerGrader, graderFor, listGraderKinds } from "./graders/registry.js";

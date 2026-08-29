@@ -52,6 +52,11 @@ severity. An eval fails only on an `error`-severity finding; `warning` and `info
 That is the mechanism behind entering a new check at `warning` and
 [ratcheting it up](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
+The one exception is a finding that says the grader never reached a verdict — its tool is not
+installed, timed out, or returned output it could not read. Those are marked `diagnostic` and fail
+the eval at any severity, because passing is a claim about the page and a broken tool makes no
+claim at all. Severity still controls how the finding is *displayed*.
+
 **The judge** runs the eval N times independently (default 3), each a separate request with no
 shared context so the runs cannot reinforce one another. Consensus aggregates them, then confidence
 decides the zone:

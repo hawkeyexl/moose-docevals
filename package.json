@@ -91,6 +91,7 @@
     "eslint": "^10.9.1",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
+    "markdownlint-cli2": "^0.23.2",
     "semantic-release": "^25.0.8",
     "tsup": "^8.3.5",
     "typescript": "^6.0.3",

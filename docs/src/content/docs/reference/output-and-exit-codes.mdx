@@ -20,6 +20,10 @@ earns the check a reputation for flakiness it does not deserve.
 
 `--fail-on-review` additionally makes exit 1 cover evals sitting in the human-review zone.
 
+A run narrowed by `--eval` or `--suite` **cannot** exit `1` on a suite target: its suite summaries
+are marked [`partial`](#suites) and are not enforced. Exit `1` then comes only from the evals that
+actually ran, or from an `error`-level resolution problem.
+
 ## Which formats each command accepts
 
 `-f/--format` is not one shared set. `run` has four reporters; `list` and `fill` render only two.
@@ -63,6 +67,11 @@ Suites
 ```
 
 The finding line is `severity:line [ruleId] message`. Colour is applied only on a TTY.
+
+A finding may also carry `"diagnostic": true`, which appears in `--format json` and `sarif`. It
+means the grader could not reach a verdict — its tool was missing, timed out, or returned output
+it could not read — and it fails the eval whatever its severity says. Consumers that gate on
+severity alone will miss these; read the eval's `outcome` instead.
 
 Note the suite line: the skipped eval is excluded from the denominator, so the rate is 2/3 rather
 than 2/4.
@@ -108,7 +117,7 @@ One object, for programmatic consumers.
       "meetsTarget": false
     }
   ],
-  "cost": { "totalUsd": 0, "totalTokens": 0, "cachedEvals": 0, "judgedEvals": 0 },
+  "usage": { "totalTokens": 0, "cachedEvals": 0, "judgedEvals": 0 },
   "generated": [],
   "exitCode": 1
 }
@@ -123,12 +132,72 @@ One object, for programmatic consumers.
 | `findings` | Present for command/tool evals that produced findings. |
 | `generated` | True when this run generated the eval's check script. |
 | `via` | `"human-review"` when a persisted review resolved the outcome. |
-| `skipReason`, `costUsd`, `durationMs` | |
+| `baselined` | Count of findings a [baseline](#baseline) suppressed on this eval. Present only when a baseline was in effect, so its absence means "no baseline", not "nothing was forgiven". |
+| `skipReason`, `durationMs` | |
 
 ### `suites[]`
 
 `passRate` is `passed / (total - skipped)`, and `1` when nothing ran. `meetsTarget` compares it to
 the suite's `target-pass-rate` from the config.
+
+`partial` is present, and `true`, only when `--eval` or `--suite` filtered the run. It says the run
+measured part of the suite, so the summary carries numbers but no verdict:
+
+```json
+{
+  "suite": "reference",
+  "total": 5,
+  "passed": 4,
+  "failed": 0,
+  "needsReview": 0,
+  "skipped": 1,
+  "errored": 0,
+  "passRate": 1,
+  "targetPassRate": 1,
+  "meetsTarget": false,
+  "partial": true
+}
+```
+
+- `meetsTarget` is `false` on every partial summary — including this one, where `passRate` clears
+  the target. It is not a claim that the suite failed.
+- A partial suite neither passes nor fails the run, so it contributes nothing to the exit code.
+
+**Read `partial` first.** A consumer that reads `meetsTarget` on its own will read a filtered run as
+a failing suite. An unfiltered run omits the key entirely, so `partial !== true` is the test for
+"this verdict is real". See
+[Selecting evals suspends suite enforcement](/moose-docevals/reference/cli/#selecting-evals-suspends-suite-enforcement).
+
+### `baseline`
+
+Present only when a [findings baseline](/moose-docevals/reference/files-and-state/#findings-baseline)
+was read or written. Absent means no baseline applied.
+
+```json
+{
+  "path": ".moose-docevals-baseline.json",
+  "recorded": 412,
+  "suppressed": 340,
+  "stale": 72
+}
+```
+
+| Field | Notes |
+|---|---|
+| `path` | The baseline as the user spelled it — relative to the config file. |
+| `recorded` | Fingerprints the baseline holds **for the files this run checked**, not for the whole file. |
+| `suppressed` | Findings this run produced that the baseline already held. |
+| `stale` | Recorded fingerprints for checked files that no longer occur — the burndown number. |
+| `written` | Present only on `--write-baseline`: `{ added, removed, total }` against the previous file. |
+
+`recorded` and `stale` are scoped to the files the run touched on purpose: counted over the whole
+file, a single-page run would announce that hundreds of entries no longer occur, and acting on that
+advice would destroy them.
+
+**`written.removed` is the field to alert on.** A re-record rewrites the file from what that run
+covered, so a narrowed scope silently forgives everything it did not see. See
+[A baselined finding does not affect the exit
+code](/moose-docevals/ci/exit-codes-and-annotations/#a-baselined-finding-does-not-affect-the-exit-code).
 
 :::note[JSON keys are camelCase]
 Every *file* key — config and frontmatter — is kebab-case. The JSON report is not a file you write;

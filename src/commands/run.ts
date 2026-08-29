@@ -24,7 +24,12 @@ export interface RunCommandOptions {
   provider?: string;
   model?: string;
   runs?: number;
-  maxCost?: number;
+  maxTurns?: number;
+  evalNames?: string[];
+  suite?: string;
+  baseline?: string | boolean;
+  writeBaseline?: string | boolean;
+  toolVersion?: string;
   cwd?: string;
 }
 
@@ -39,7 +44,7 @@ export async function runRun(
     model: options.model,
     runs: options.runs,
     noCache: options.cache === false,
-    maxCostUsd: options.maxCost ?? null,
+    maxTurns: options.maxTurns ?? null,
   };
 
   // Loaded once and passed through to the engine — a run must not validate
@@ -79,6 +84,11 @@ export async function runRun(
     frontmatterCommands: options.frontmatterCommands,
     generate: options.generate,
     failOnReview: options.failOnReview,
+    evalNames: options.evalNames,
+    suite: options.suite,
+    baseline: options.baseline,
+    writeBaseline: options.writeBaseline,
+    toolVersion: options.toolVersion,
     judgeOptions,
     ...engineOverrides,
   });

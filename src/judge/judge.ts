@@ -7,14 +7,12 @@
  * The ensemble mechanics — retry-once, errored runs counting against
  * consensus, cache replay — live in `@hawkeyexl/inference` (ADR 01002). What
  * stays here is moose-docevals' own orchestration: the bounded-concurrency pool
- * across targets, the cost budget, the self-judgment warning, and human-review
+ * across targets, the turn budget, the self-judgment warning, and human-review
  * resolution.
  */
 import {
   JsonCache,
   computeConsensus,
-  costOfRuns,
-  pricingFor,
   runEnsemble,
   zoneFor,
   type InferenceProvider,
@@ -27,8 +25,8 @@ import type { JudgeFn, JudgeOptions } from "../core/engine.js";
 import type { GraderTarget } from "../graders/types.js";
 import { findReview, loadReviews } from "../core/reviews.js";
 import { cacheKey } from "./cache.js";
+import { turnBudgetSkipReason } from "./budget.js";
 import { JUDGE_SYSTEM_PROMPT, buildUserContent } from "./prompt.js";
-import { providerSpecFor } from "./provider.js";
 import { resolve as resolvePath } from "node:path";
 
 /**
@@ -60,15 +58,9 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
       options.noCache !== true,
       "moose-docevals",
     );
-    // Pricing overrides ride on the provider spec, so the same mapping that
-    // builds the provider also answers what its model costs.
-    const pricing = pricingFor(
-      provider.modelName(),
-      providerSpecFor(config, options).pricing,
-    );
     const reviews = loadReviews(root);
-    const maxCostUsd = options.maxCostUsd ?? config.judge.maxCostUsd;
-    let spentUsd = 0;
+    const maxTurns = options.maxTurns ?? config.judge.maxTurns;
+    let turnsSpent = 0;
 
     const results: EvalResult[] = [];
     const concurrency = config.defaults.concurrency;
@@ -90,16 +82,39 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     const judgeTarget = async (target: GraderTarget): Promise<EvalResult> => {
       const { plan, eval: ev } = target;
       const start = Date.now();
-      if (maxCostUsd != null && spentUsd >= maxCostUsd) {
-        return {
-          evalName: ev.name,
-          type: ev.type,
-          grader: ev.grader,
-          file: plan.page.file,
-          outcome: "skipped",
-          skipReason: `judge cost budget exhausted ($${maxCostUsd})`,
-          durationMs: 0,
-        };
+      const key = cacheKey(
+        provider.provider(),
+        provider.modelName(),
+        runsPerEval,
+        temperature,
+        plan.page.body,
+        ev,
+      );
+
+      // A cached ensemble makes no inference call, so it never touches the
+      // budget — the docs corpus replays committed fixtures under any cap.
+      // For an uncached one the turns are claimed *before* dispatching, which
+      // is the whole point of counting turns rather than dollars: the claim is
+      // synchronous, so two workers cannot both clear an almost-exhausted
+      // budget and then both spend. See ADR 01019.
+      if (maxTurns != null && cache.get(key) === undefined) {
+        if (turnsSpent + runsPerEval > maxTurns) {
+          return {
+            evalName: ev.name,
+            type: ev.type,
+            grader: ev.grader,
+            file: plan.page.file,
+            outcome: "skipped",
+            skipReason: turnBudgetSkipReason(maxTurns),
+            durationMs: 0,
+          };
+        }
+        // One turn per ensemble run. A run can make a second provider call
+        // when the first response fails schema validation (the inference
+        // layer retries once), so this is a floor on calls, not an exact
+        // count — the cap is exact in *runs*, which is the unit the ensemble
+        // is configured in.
+        turnsSpent += runsPerEval;
       }
 
       const runs = await runEnsemble({
@@ -110,22 +125,13 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
         temperature,
         schema: verdictSchema,
         cache,
-        cacheKey: cacheKey(
-          provider.provider(),
-          provider.modelName(),
-          runsPerEval,
-          temperature,
-          plan.page.body,
-          ev,
-        ),
+        cacheKey: key,
         label: "moose-docevals",
       });
 
       const consensusBase = computeConsensus(runs);
       const zone = zoneFor(consensusBase, config.judge.zones);
       const consensus = { ...consensusBase, zone };
-      const costUsd = costOfRuns(runs, pricing);
-      spentUsd += costUsd;
 
       let outcome: EvalResult["outcome"] =
         zone === "auto-pass" ? "pass" : zone === "auto-fail" ? "fail" : "needs-review";
@@ -146,7 +152,6 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
         outcome,
         consensus,
         via,
-        costUsd,
         durationMs: Date.now() - start,
       };
     };

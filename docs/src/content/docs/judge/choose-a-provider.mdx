@@ -84,24 +84,15 @@ When you do change models deliberately: it invalidates every cached verdict (the
 cache key), and it invalidates your calibration. [Re-calibrate](/moose-docevals/judge/calibrate/) before
 trusting the new one.
 
-## Cost reporting for non-default models
+## There is no price table
 
-moose-docevals ships a price table for common models. For a self-hosted or unusual model, supply pricing so
-cost reporting stays meaningful:
+moose-docevals reports token counts and inference calls. It never reports a dollar figure, and there
+is no pricing to configure for an unusual or self-hosted model — a bundled price table could not stay
+current, and `claude-cli` and self-hosted endpoints report no usage to price in the first place.
 
-```yaml
-docevals:
-  provider:
-    openai:
-      base-url: https://llm-gateway.internal.example.com/v1
-      model: internal-model-v2
-      pricing:
-        input-per-mtok: 0.5
-        output-per-mtok: 1.5
-```
-
-Set both to `0` for a self-hosted model with no marginal cost — that keeps `--max-cost` from
-misfiring on a model that is free to run.
+Bound a run with `--max-turns` instead. It counts calls, so it behaves identically whoever runs the
+model, and a model that is free to run simply makes the budget irrelevant rather than misreported.
+See [Caching and turn budgets](/moose-docevals/ci/cost-and-caching/).
 
 ## Overriding per run
 
