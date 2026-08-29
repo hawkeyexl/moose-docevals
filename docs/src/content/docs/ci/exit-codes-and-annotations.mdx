@@ -48,6 +48,38 @@ Route them separately:
 Simplest correct version: let the step fail naturally, and make sure whoever triages CI knows `2`
 means "look at the config, not the page".
 
+## A baselined finding does not affect the exit code
+
+If the repo has a [findings baseline](/moose-docevals/reference/files-and-state/#findings-baseline),
+a run subtracts it before deciding anything. A recorded finding is suppressed, the eval's outcome is
+recomputed without it, and the suite pass rate rises accordingly — so a corpus with a full backlog on
+file exits `0`, and only a *new* finding turns the job red.
+
+Two lines in the log carry that, and they are `dim`, so they are easy to scroll past:
+
+```console
+Baseline .moose-docevals-baseline.json: 412 finding(s) suppressed of 412 recorded.
+```
+
+```console
+Baseline .moose-docevals-baseline.json: recorded 411 finding(s) (+0, -1).
+```
+
+**The second form is the one to watch, and `removed` is the number.** A re-record rewrites the whole
+file from what that run covered, so a narrowed glob, a mistyped `files.exclude`, or a job that ran
+from the wrong directory silently forgives everything it did not see. Nothing else in the log says
+so — the fingerprints are opaque hashes, and a diff that drops 200 of them reads as noise. A
+`removed` above zero prints a warning beneath the line; treat it as a review gate on the pull
+request, not a log entry.
+
+The corollary for a CI recipe: **`--write-baseline` does not belong in the gating job.** Record from
+a deliberate, human-run invocation over the full corpus and commit the result. A job that re-records
+on every run cannot fail.
+
+Two failures a baseline never suppresses, because neither produces a finding to record: an eval that
+**errored** (the check could not run), and a **suite below its target pass rate**. Both still exit `1`.
+A malformed baseline file is exit `2` — the pipeline owner's problem, with the offending entry named.
+
 ## `--fail-on-review`
 
 By default, evals in the human-review zone do not fail the build. With `--fail-on-review`, they exit

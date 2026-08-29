@@ -60,6 +60,18 @@ function parseIntArg(name: string) {
   };
 }
 
+/**
+ * Repeatable single-value option, e.g. `--eval a --eval b`.
+ *
+ * NOT commander's variadic `<name...>`: a variadic consumes every following
+ * non-option token, so `run --eval fresh-enough docs/guide.md` parsed the glob
+ * as a second eval name and left `globs` empty — silently widening the run to
+ * the whole configured corpus, which is the opposite of what selection is for.
+ */
+function collectArg(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
 function parseFloatArg(name: string) {
   return (value: string): number => {
     const n = Number.parseFloat(value);
@@ -97,7 +109,7 @@ program
     parseFormatArg("--format", SUMMARY_FORMATS),
     "human" as SummaryFormat,
   )
-  .option("--eval <name...>", "Show only these evals by name")
+  .option("--eval <name>", "Show only this eval (repeatable)", collectArg, [])
   .option("--suite <name>", "Show only evals in this suite")
   .action(
     (
@@ -144,11 +156,26 @@ program
   .option("--model <model>", "Judge model override")
   .option("--runs <n>", "Ensemble runs per eval", parseIntArg("--runs"))
   .option(
-    "--eval <name...>",
-    "Run only these evals by name; suite targets are not evaluated on a filtered run",
+    "--eval <name>",
+    "Run only this eval (repeatable); suite targets are not evaluated on a filtered run",
+    collectArg,
+    [],
   )
   .option("--suite <name>", "Run only evals in this suite")
-  .option("--max-turns <n>", "Stop after this many inference calls (a cached ensemble costs none)", parseIntArg("--max-turns"))
+  .option(
+    "--max-turns <n>",
+    "Stop after this many ensemble runs (a cached ensemble costs none)",
+    parseIntArg("--max-turns"),
+  )
+  .option(
+    "--baseline [path]",
+    "Fail only on findings a recorded baseline does not already hold",
+  )
+  .option("--no-baseline", "Ignore the configured baseline for this run")
+  .option(
+    "--write-baseline [path]",
+    "Record this run's findings as the baseline; without a path, the configured one",
+  )
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
       const report = await runRun(globs, {
@@ -168,6 +195,11 @@ program
         maxTurns: opts.maxTurns as number | undefined,
         evalNames: opts.eval as string[] | undefined,
         suite: opts.suite as string | undefined,
+        // commander collapses `--baseline` to true and `--no-baseline` to
+        // false on the same key; a string is an explicit path.
+        baseline: opts.baseline as string | boolean | undefined,
+        writeBaseline: opts.writeBaseline as string | boolean | undefined,
+        toolVersion: pkg.version,
       });
       console.log(render(report, opts.format as ReportFormat));
       process.exitCode = report.exitCode;
@@ -364,7 +396,11 @@ program
           noCache: opts.cache === false,
         });
         console.log(renderCalibration(report));
-        process.exitCode = report.meetsThreshold ? 0 : 1;
+        // Both conditions: the judge has to agree enough, AND the set has to
+        // have been measured. A stale golden file whose pages were renamed
+        // used to certify on whatever still resolved.
+        process.exitCode =
+          report.meetsThreshold && report.unjudged === 0 ? 0 : 1;
       } catch (e) {
         fail(e);
       }

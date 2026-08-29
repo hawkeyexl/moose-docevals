@@ -46,7 +46,7 @@ at what each admits.
 npx moose-docevals fill --max-turns 40 docs/
 ```
 
-`--max-turns` (and `fill.max-turns`) counts uncached inference calls — one per page filled. Pages
+`--max-turns` (and `fill.max-turns`) counts uncached inference calls — exactly one per page filled. Pages
 already in the cache do not count against it, and a page the budget cannot cover is reported as
 `skipped` with `(turn budget exhausted)` rather than silently dropped. Set it even when you are
 confident; the run you regret is the one you did not bound. See

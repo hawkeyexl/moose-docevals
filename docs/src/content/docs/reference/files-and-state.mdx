@@ -3,11 +3,12 @@ title: Files and state
 description: What moose-docevals writes, where, and which of it belongs in version control.
 ---
 
-moose-docevals writes to four places. Only one of them is source you review.
+moose-docevals writes to five places. Only one of them is source you review.
 
 | Path | Default | Commit it? |
 |---|---|---|
 | `{docDir}/moose-docevals/*.mjs` | generated check scripts | **Yes** — ordinary source |
+| `.moose-docevals-baseline.json` | recorded findings backlog | **Yes** — team state |
 | `.moose-docevals/cache/` | judge response cache | No |
 | `.moose-docevals/cache/fill/` | raw `fill` proposals | No |
 | `.moose-docevals/reviews.yaml` | human verdicts | **Yes** — team state |
@@ -42,6 +43,72 @@ Frontmatter records the reference and a hash of the assertion that produced it:
 
 Edit the assertion and the hash no longer matches, so the script is stale and regenerates rather
 than quietly checking the old thing.
+
+## Findings baseline
+
+Written only when `baseline:` is set or a `--baseline` / `--write-baseline` flag asks for it. Default
+path `.moose-docevals-baseline.json`, resolved **relative to the config file** so a run from a
+subdirectory reads the same one.
+
+```json
+{
+  "version": 1,
+  "generatedWith": "0.1.0",
+  "entries": {
+    "docs/actions/goTo.mdx": [
+      "2ff566d3f54a8167"
+    ]
+  }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `version` | File format. Only `1` is understood; anything else is exit 2 with the re-record command in the message. |
+| `generatedWith` | The moose-docevals version that wrote the file. Diagnosis only — nothing reads it back. |
+| `entries` | File path → sorted list of finding fingerprints. Clean files get no entry. |
+
+Keys and fingerprint lists are sorted on write, so a re-record produces a reviewable diff rather than
+a reshuffle. Entry keys are always forward-slashed and always relative to the config's directory,
+which is what lets one committed file mean the same thing on every machine.
+
+A fingerprint is 16 hex characters of `sha256(eval name, rule id)` — the file path is already the
+key, and the **line number and message text are deliberately excluded**. The consequence is that
+identity is per rule per file, not per occurrence; the trade-off is explained on [Retrofit a legacy
+corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#identity-is-per-rule-per-file-not-per-occurrence).
+
+### Commit it, and re-record deliberately
+
+It is team state. Committing it is what makes a change to the gate a reviewable change:
+
+```bash
+npx moose-docevals run --write-baseline
+git add .moose-docevals-baseline.json
+```
+
+Re-recording rewrites the whole file from the run's findings, so **it records only what that run
+covered**. Run it over the same scope your CI gate uses. The report names both halves of the diff,
+and `removed` is the one to read:
+
+```console
+Baseline .moose-docevals-baseline.json: recorded 1 finding(s) (+0, -1).
+  1 previously recorded finding(s) are no longer in the baseline. If this run covered less of the
+  corpus than the last one, they have just been forgiven.
+```
+
+The write is atomic — a truncated file would not merely lose work, it would stop every later run at
+exit 2 until someone re-recorded.
+
+### Don't hand-edit fingerprints
+
+Removing an entry by hand is fine: it re-arms that finding. Typing one is not. A value that is not
+16 lowercase hex characters can never match a real finding, so the symptom would be "that finding
+came back" with nothing to explain it. The parser rejects it instead, naming the entry:
+
+```console
+moose-docevals: Baseline ".moose-docevals-baseline.json": entries["docs/install.md"] contains
+"not-a-fingerprint", which is not a fingerprint (16 lowercase hex characters).
+```
 
 ## Judge cache
 
@@ -158,3 +225,7 @@ The caches are disposable; the reviews and golden set are not. A minimal `.gitig
 
 Ignoring `.moose-docevals/` wholesale also discards `reviews.yaml` and the golden set, which are the two
 pieces of state your team actually built by hand.
+
+`.moose-docevals-baseline.json` sits outside that directory precisely so a broad ignore rule cannot
+take it with them. An ignored baseline is worse than none: CI reads no file, every recorded finding
+returns, and the gate that looked green locally is red for everyone else.

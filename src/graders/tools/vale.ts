@@ -39,6 +39,7 @@ async function gradeGroup(
       file: plan.page.file,
       message: `Failed to run vale: ${result.spawnError ?? "spawn failed"} (is it installed?)`,
       severity: ev.severity,
+      diagnostic: true,
     }));
   }
 
@@ -52,6 +53,7 @@ async function gradeGroup(
       file: plan.page.file,
       message: `Vale produced no JSON output: ${result.stderr.trim().slice(-300)}`,
       severity: ev.severity,
+      diagnostic: true,
     }));
   }
 

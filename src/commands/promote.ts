@@ -161,7 +161,12 @@ export async function runPromote(
         const updates = {
           grader: "command",
           command: location.command,
-          generated: { assertionHash: sha256(ev.assertion) },
+          // The kebab key `applyUpdates` actually reads. This was the
+          // pre-1.0 `generated: { assertionHash }` wrapper, which the update
+          // type does not consume, so promoted evals were written with no
+          // hash and never went stale when their assertion changed
+          // (renamed by ADR 01009).
+          "generated-assertion-hash": sha256(ev.assertion),
         };
         if (
           ev.source === "page" &&

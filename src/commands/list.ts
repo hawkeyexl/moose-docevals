@@ -35,7 +35,10 @@ export function runList(globs: string[], options: ListOptions = {}): ListRun {
   const config = loadConfig(options.config, cwd);
   const pages = discoverPages(config, globs, cwd);
   const plans = resolvePages(pages, config);
-  applySelection(plans, config, options);
+  // `false`: list executes nothing, so an eval that resolves but is skipped is
+  // a legitimate answer here — and this is the command `run`'s empty-match
+  // error tells the user to reach for.
+  applySelection(plans, config, options, false);
   const hasErrors = plans.some((p) =>
     p.problems.some((pr) => pr.level === "error"),
   );

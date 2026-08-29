@@ -58,6 +58,13 @@ export interface CalibrationCaseResult extends GoldenCase {
   judged?: "pass" | "fail";
   agrees?: boolean;
   error?: string;
+  /**
+   * Set when the turn budget, not the judge, is why this case has no verdict.
+   * A flag rather than a substring of `error`: the message is user-facing and
+   * interpolates a golden case's own `eval` value, so matching on it both
+   * broke when the wording changed and miscounted a case named after it.
+   */
+  budgetSkipped?: boolean;
   /** The page no longer hashes to what this case was verified against. */
   stale?: boolean;
 }
@@ -76,6 +83,19 @@ export interface CalibrationReport {
   unreviewed: number;
   /** Judged cases whose page has changed since verification. */
   stale: number;
+  /** Cases the turn budget prevented from being judged at all. */
+  budgetSkipped: number;
+  /**
+   * Cases that never reached a verdict, for any reason: a missing page, an
+   * unresolvable eval, an errored judge, or the turn budget. The agreement
+   * rate is over the rest, so a non-zero value means it measured a sample.
+   *
+   * Kept separate from `meetsThreshold` rather than folded into it, following
+   * ADR 01018: the verdict stays a statement about agreement, and this stays a
+   * statement about coverage. Overloading one boolean made the report print
+   * "refine your assertions" at 100% agreement.
+   */
+  unjudged: number;
 }
 
 export interface CalibrateOptions {
@@ -215,7 +235,16 @@ export function seedGoldenCases(options: CalibrateOptions = {}): SeedResult {
       file: review.file,
       eval: review.evalName,
       expected: review.verdict,
-      ...(review.note === undefined ? {} : { rationale: review.note }),
+      // A review's note wins when it has one; otherwise keep whatever the
+      // human wrote into the file. Rebuilding the entry from the review alone
+      // erased the reasoning behind a case the same human had just marked
+      // `reviewed: true` -- and it is the field renderCalibration prints on
+      // every disagreement.
+      ...(review.note !== undefined
+        ? { rationale: review.note }
+        : prior?.rationale !== undefined
+          ? { rationale: prior.rationale }
+          : {}),
       reviewed: confirmedStillApplies,
       contentHash: review.contentHash,
       source: "review",
@@ -305,7 +334,16 @@ export async function runCalibrate(
       const slot = results[at]!;
       const consensus = judged[i]?.consensus;
       if (!consensus) {
-        results[at] = { ...slot, error: "judge returned no consensus" };
+        // Distinguish "the budget ran out" from "the judge failed": the
+        // first is a coverage problem that must not be allowed to certify
+        // anything, and it used to disappear into the same error bucket.
+        const reason = judged[i]?.skipReason;
+        const fromBudget = reason?.includes("turn budget") === true;
+        results[at] = {
+          ...slot,
+          ...(fromBudget ? { budgetSkipped: true } : {}),
+          error: fromBudget ? `not judged: ${reason}` : "judge returned no consensus",
+        };
         continue;
       }
       const verdict = consensus.verdict === "pass" ? "pass" : "fail";
@@ -329,8 +367,18 @@ export async function runCalibrate(
   const falsePositiveRate =
     expectedPass.length > 0 ? falsePositives / expectedPass.length : 0;
 
+  // A budget-truncated run measured a sample, and the agreement rate is over
+  // that sample — so it cannot be allowed to report a met threshold. This is
+  // the same silent-green shape `runEvals` guards against; `calibrate` is the
+  // command whose whole output is a trust claim, so here it fails the run
+  // rather than merely warning.
+  const budgetSkipped = results.filter((r) => r.budgetSkipped === true).length;
+  const unjudged = results.length - judgedCases.length;
+
   return {
     cases: results,
+    budgetSkipped,
+    unjudged,
     unreviewed: judgedCases.filter((r) => !r.reviewed).length,
     stale: judgedCases.filter((r) => r.stale === true).length,
     total: results.length,
@@ -362,16 +410,41 @@ export function renderCalibration(report: CalibrationReport): string {
     );
   }
   lines.push("");
+  // Denominator stated explicitly: the rate is over the cases that were
+  // actually judged, which is not `total` when pages are missing or the budget
+  // ran out. Printing "1/30 (100%)" left those two numbers contradicting.
+  const judged = report.cases.filter((c) => c.judged != null).length;
   lines.push(
-    `Agreement: ${report.agreements}/${report.total} (${(report.agreementRate * 100).toFixed(0)}%) — threshold ${(AGREEMENT_THRESHOLD * 100).toFixed(0)}%`,
+    `Agreement: ${report.agreements}/${judged} judged (${(report.agreementRate * 100).toFixed(0)}%) — threshold ${(AGREEMENT_THRESHOLD * 100).toFixed(0)}%` +
+      (judged === report.total ? "" : ` — ${report.total - judged} of ${report.total} case(s) not judged`),
   );
   lines.push(
     `False positives: ${report.falsePositives} (${(report.falsePositiveRate * 100).toFixed(0)}% of human-passes), false negatives: ${report.falseNegatives}`,
   );
-  if (!report.meetsThreshold) {
+  if (report.unjudged > 0) {
+    lines.push(
+      pc.red(
+        `
+${report.unjudged} of ${report.total} case(s) never reached a verdict, so the rate above ` +
+          `is over a sample. A calibration measured on part of the set does not certify the judge.`,
+      ),
+    );
+  }
+  // Only when something was actually measured. "Refine the eval criteria" is
+  // advice about a rate, and there is no rate over zero judged cases.
+  if (judged > 0 && !report.meetsThreshold) {
     lines.push(
       pc.red(
         "\nAgreement is below threshold. Refine the eval criteria first — make assertions more specific — before changing the grading mechanism.",
+      ),
+    );
+  }
+  if (report.budgetSkipped > 0) {
+    lines.push(
+      pc.red(
+        `
+${report.budgetSkipped} case(s) were never judged: the turn budget ran out. ` +
+          `A rate measured over the rest is not a calibration — raise --max-turns and re-run.`,
       ),
     );
   }
