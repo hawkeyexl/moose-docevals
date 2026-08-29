@@ -64,6 +64,11 @@ function scaffold(): string {
       "    reference:",
       "      target-pass-rate: 1.0",
       "      evals: [always-passes, always-fails]",
+      // A second suite no page resolves to, so `--eval x --suite solo` has an
+      // empty intersection while each filter alone matches something.
+      "    solo:",
+      "      target-pass-rate: 1.0",
+      "      evals: [always-fails]",
       "",
     ].join("\n"),
   );
@@ -213,5 +218,36 @@ describe("selection: list answers what run refuses", () => {
     expect(() => runList([], { cwd: scaffold(), evalNames: ["no-such-eval"] })).toThrow(
       /no-such-eval/,
     );
+  });
+});
+
+describe("selection: --eval and --suite combined", () => {
+  // `byName && bySuite` is simple, but it is the invariant the ADR is built
+  // around, so the intersection is worth pinning rather than inferring from
+  // the two filters tested in isolation.
+  it("intersects the two filters", async () => {
+    const report = await run(scaffold(), {
+      evalNames: ["always-passes"],
+      suite: "reference",
+    });
+    expect(report.evalResults.map((r) => r.evalName)).toEqual(["always-passes"]);
+  });
+
+  it("still suspends the suite target", async () => {
+    const report = await run(scaffold(), {
+      evalNames: ["always-passes"],
+      suite: "reference",
+    });
+    expect(report.suites[0]?.partial).toBe(true);
+    expect(report.suites[0]?.meetsTarget).toBe(false);
+    expect(report.exitCode).toBe(0);
+  });
+
+  // An empty intersection is still a usage error, not a green run over zero
+  // evals — the two filters can each match while their overlap does not.
+  it("is a usage error when the intersection is empty", async () => {
+    await expect(
+      run(scaffold(), { evalNames: ["always-passes"], suite: "solo" }),
+    ).rejects.toThrow(/matched no evals/);
   });
 });
