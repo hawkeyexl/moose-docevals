@@ -24,7 +24,7 @@ npx moose-docevals run --max-turns 60
 npx moose-docevals fill --max-turns 40
 ```
 
-A **turn** is one uncached inference call. The budget counts calls, not pages:
+A **turn** is one unit of uncached inference work. Under `fill` that is exactly one call per page; under `judge` it is one *ensemble run*, and a run may make a second call when the first response fails schema validation — so the judge budget is a floor on API calls, not an exact ceiling. Either way the budget counts work, not pages:
 
 - One ai-graded eval spends `judge.ensemble-runs` turns — three by default, because the ensemble is
   three independent calls.

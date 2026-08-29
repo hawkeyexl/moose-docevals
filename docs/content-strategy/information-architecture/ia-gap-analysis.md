@@ -25,7 +25,9 @@ This document therefore no longer enumerates a backlog. It keeps three jobs:
    deciding whether a page still earns its place.
 3. **§4** is the live check: every command, config key, and grader kind maps to a page. **Re-run it
    whenever the CLI grows.** A new capability with no page is a gap the moment it ships, and this
-   table is where that becomes visible.
+   table is where that becomes visible. Last re-run against ADRs 01016–01020, which added
+   `--seed`, `--eval`, `--suite`, `--baseline`, `--no-baseline`, `--write-baseline` and the
+   `baseline` config key, and removed the `max-cost-usd` keys and the `pricing` block.
 
 The outstanding work is listed in [§5](#5-still-outstanding).
 
@@ -147,8 +149,11 @@ Notable flags with a home beyond the CLI reference: `--deterministic-only` and `
 `--format` (`reference/output-and-exit-codes.mdx`); `--fail-on-review`
 (`ci/exit-codes-and-annotations.mdx`); `--runs` (`judge/index.mdx`); `--provider`/`--model`
 (`judge/choose-a-provider.mdx`); `--dry-run` and `--confidence` (`adopt/index.mdx`); `--write`
-(`adopt/promote-to-deterministic.mdx`); `--golden` (`judge/calibrate.mdx`); `--no-generate`
-(`evals/deterministic-checks.mdx`).
+(`adopt/promote-to-deterministic.mdx`); `--golden` and `--seed` (`judge/calibrate.mdx`); `--no-generate`
+(`evals/deterministic-checks.mdx`); `--eval` and `--suite` (`fix/index.mdx`,
+`evals/named-evals-and-suites.mdx`, `ci/exit-codes-and-annotations.mdx`); `--baseline`,
+`--no-baseline` and `--write-baseline` (`adopt/retrofit-a-legacy-corpus.mdx`,
+`reference/files-and-state.mdx`).
 
 ### Config keys
 
@@ -166,10 +171,15 @@ Keys are written fully qualified so this table is greppable against
 | `judge.false-positive-alert` | `judge/calibrate.mdx` |
 | `judge.cache-dir`, `fill.cache-dir` | `ci/cost-and-caching.mdx`, `reference/files-and-state.mdx` |
 | `judge.max-turns`, `fill.max-turns` | `ci/cost-and-caching.mdx` |
+| `baseline` | `adopt/retrofit-a-legacy-corpus.mdx`, `reference/configuration.mdx`, `reference/files-and-state.mdx` |
 | `scripts.dir`, `scripts.config-dir`, `scripts.timeout-ms` | `adopt/review-generated-scripts.mdx`, `reference/configuration.mdx` |
 | `scripts.allow-frontmatter-commands` | `ci/untrusted-pull-requests.mdx` |
 | `fill.confidence-threshold`, `fill.max-evals-per-page`, `fill.temperature` | `adopt/index.mdx` |
 | `evals` (named evals), `suites` (incl. `target-pass-rate`) | `evals/named-evals-and-suites.mdx` |
+
+Golden-case fields — `reviewed`, `content-hash`, `source`, `reviewed-by` — are covered by
+`judge/calibrate.mdx` and `reference/files-and-state.mdx` (ADR 01016). The baseline file's own
+shape is in `reference/files-and-state.mdx` (ADR 01017).
 
 Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`, `success-exit-codes`,
 `timeout-ms`, `generated`, `options`, `severity`, `severity-map` — are all covered by
@@ -206,6 +216,9 @@ The content set is complete; these are not.
 | **LLM evals on the docs corpus** | The `docs-page` suite is deterministic-only. `docs-page-full` adds `no-future-promises`, `serves-one-journey`, and `readable`, and needs committed cache fixtures generated with a provider (`npm run docs:refresh-cache`). | No — but the prose quality of these pages is currently ungated. |
 | **Slimming the README** | Now unblocked: §1 maps every section to a destination that exists. | No. |
 | ~~**`moose-docevals list --format` validation**~~ | **Done** (ADR 01007). An unknown `--format` is a usage error on every command that takes the flag; `ci.yml` asserts exit 2 and the allowed-set message through the built CLI on both runners. | — |
+| **A `baseline` glossary entry** | The term now recurs across six pages. `reference/glossary.mdx` is alphabetical and its description reads "The ten terms", so adding one is an edit rather than a consistency fix. | No. |
+| **A recording recipe in `ci/recipes.mdx`** | `ci/exit-codes-and-annotations.mdx` says `--write-baseline` does not belong in the gating job, but no page shows the separate recording invocation. | No. |
+| **`calibrate --max-turns` is run-wide only because its cases now batch** | Recorded in ADR 01016. If `calibrate` ever returns to judging case-by-case, the flag silently becomes per case again — the reason ADR 01019 withheld it in the first place. | No — a note for whoever touches that loop. |
 
 ### What will drift first
 

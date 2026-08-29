@@ -127,3 +127,40 @@ describe("docStructureLintGrader", () => {
     expect(findings[0]?.message).toMatch(/could not be read|shape|unexpected/i);
   });
 });
+
+describe("docStructureLintGrader: unreadable output cannot be downgraded", () => {
+  const warned = () =>
+    makeTarget('options: { template: "how-to" }').plan.evals[0]!.severity;
+
+  // A deterministic eval fails only on an error-severity finding, so emitting
+  // these at the eval's configured severity let a `severity: warning`
+  // structure check pass on output nobody could read — the silent pass
+  // ADR 01020 closes, still reachable through configuration.
+  it.each([
+    ["unparseable stdout with exit 0", { code: 0, stdout: "Structure OK!" }],
+    ["JSON of the wrong shape", { code: 0, stdout: '{"ok":true}' }],
+    ["a list of non-objects", { code: 0, stdout: '["ok"]' }],
+    ["a list containing null", { code: 0, stdout: "[null]" }],
+    ["a result whose errors is not a list", { code: 0, stdout: '[{"errors":"hi"}]' }],
+  ])("reports %s at error severity", async (_label, execResult) => {
+    const { exec } = fakeExec(execResult);
+    const findings = await grade(exec);
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.severity).toBe("error");
+    expect(findings[0]?.ruleId).toBe("doc-structure-lint/unreadable");
+  });
+
+  // `[null]` used to throw out of grade(), which the engine turns into an
+  // error on every target of the kind rather than a finding on the one page.
+  it("does not throw on a null element", async () => {
+    const { exec } = fakeExec({ code: 0, stdout: "[null]" });
+    await expect(grade(exec)).resolves.toHaveLength(1);
+  });
+
+  it("still reports a real structure error at the eval's severity", async () => {
+    const { exec } = fakeExec({ code: 1, stdout: captured("doc-structure-lint-fail.json") });
+    const findings = await grade(exec);
+    expect(findings[0]?.severity).toBe(warned());
+    expect(findings[0]?.ruleId).toBe("missing-section");
+  });
+});

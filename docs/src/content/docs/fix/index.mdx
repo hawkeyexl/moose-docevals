@@ -35,7 +35,8 @@ docs/actions/goTo.mdx
 
 Read it as `severity:line [rule] message`. A script found something specific at line 4.
 
-- Go to that line, make the change the message describes, push.
+- Go to that line and make the change the message describes, then
+  [re-run that one eval locally](#re-run-only-the-eval-that-failed) before you push.
 - `freshness/stale` means the page's review date is too old — update `last-reviewed` in the
   frontmatter, **after** checking the page is actually still accurate.
 - Rules starting `MD…` are markdownlint; rules with a dot like `Vale.Spelling` are Vale.
@@ -125,6 +126,28 @@ npx moose-docevals run docs/your-page.mdx --deterministic-only
 
 No API key needed, no cost. This covers everything except AI verdicts.
 
+### Re-run only the eval that failed
+
+Your CI output names the eval. Hand that name to `--eval` and nothing else runs:
+
+```bash
+npx moose-docevals run docs/your-page.mdx --deterministic-only --eval fresh-enough
+```
+
+Seconds instead of a whole pass, and the output is the one check you are trying to fix. Repeat after
+each edit until it goes green.
+
+Two things about that output:
+
+- **The `Suites` lines will say `partial — filtered run, target not evaluated`.** That is not a
+  failure. A filtered run only measured part of the suite, so it prints the numbers and withholds
+  the verdict. Read the eval lines above it — those are yours.
+- **A name that matches nothing is exit 2, not a clean run.** `matched no evals` means you mistyped
+  the name, or that eval does not apply to this page. Check with `list`, below.
+
+Because it never reports a suite as meeting its target, `--eval` is a debugging aid and not a
+replacement for the real check. Push and let CI run everything.
+
 To see what applies to a page without running anything:
 
 ```bash
@@ -146,3 +169,7 @@ Exit `0` means clean.
 {/* step {"description":"The local reproduction command runs with no API key and exits 0 on a clean page.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/find.mdx --deterministic-only --no-generate","exitCodes":[0]}} */}
 
 {/* step {"description":"`list` shows which evals apply to a page without running them.","runShell":{"command":"npx moose-docevals list test/fixtures/pages/docs/actions/goTo.mdx","exitCodes":[0],"stdio":"evals resolved"}} */}
+
+{/* step {"description":"--eval re-runs one named eval, still exits 1 when it genuinely fails, and marks the suite partial.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate --eval fresh-enough","exitCodes":[1],"stdio":"filtered run, target not evaluated"}} */}
+
+{/* step {"description":"A mistyped eval name is exit 2, not a clean run over nothing.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --eval fresh-enuogh","exitCodes":[2],"stdio":"matched no evals"}} */}

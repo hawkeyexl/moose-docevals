@@ -48,6 +48,15 @@ export interface Finding {
   ruleId?: string;
   message: string;
   severity: Severity;
+  /**
+   * This finding is about the *grader*, not the page: the tool could not be
+   * run, or its output could not be read. It fails the eval whatever severity
+   * the eval is configured at, because an eval configured `severity: warning`
+   * would otherwise pass while its check never executed (ADR 01022).
+   *
+   * A finding about the page carries the eval's severity as usual.
+   */
+  diagnostic?: boolean;
   line?: number;
   col?: number;
 }
@@ -73,6 +82,12 @@ export interface EvalResult {
   generated?: boolean;
   /** Set when a persisted human review resolved a needs-review outcome. */
   via?: "human-review";
+  /**
+   * Findings the baseline already recorded and this run therefore suppressed
+   * (ADR 01017). Present only on a run with a baseline in effect, so its
+   * absence means "no baseline", not "nothing was forgiven".
+   */
+  baselined?: number;
   skipReason?: string;
   durationMs: number;
 }
@@ -91,6 +106,12 @@ export interface SuiteSummary {
   /** From config: ~1.0 for regression suites, ~0.7 for capability suites. */
   targetPassRate: number;
   meetsTarget: boolean;
+  /**
+   * Set when a selection filter (`--eval` / `--suite`) was active, meaning the
+   * run measured part of this suite. `meetsTarget` is then always false and the
+   * suite cannot fail the run either: it has numbers, but no verdict.
+   */
+  partial?: boolean;
 }
 
 /** Full run output consumed by reporters. */

@@ -79,7 +79,14 @@ export function renderHuman(report: EngineReport): string {
   lines.push("");
   lines.push(pc.bold("Suites"));
   for (const s of report.suites) {
-    const status = s.meetsTarget ? pc.green("ok") : pc.red("below target");
+    // A filtered run measured part of the suite, so it has numbers but no
+    // verdict. Rendering that as "below target" would read as a failure the
+    // run never established (ADR 01018).
+    const status = s.partial
+      ? pc.yellow("partial — filtered run, target not evaluated")
+      : s.meetsTarget
+        ? pc.green("ok")
+        : pc.red("below target");
     const extras: string[] = [];
     if (s.needsReview > 0) extras.push(`${s.needsReview} to review`);
     if (s.skipped > 0) extras.push(`${s.skipped} skipped`);
@@ -88,6 +95,38 @@ export function renderHuman(report: EngineReport): string {
       `  ${s.suite}: ${s.passed}/${s.passed + s.failed + s.errored} passed — ` +
         `${(s.passRate * 100).toFixed(0)}% vs target ${(s.targetPassRate * 100).toFixed(0)}% ${status}${extra}`,
     );
+  }
+
+  // The baseline's line in the summary. `removed` is the load-bearing number
+  // on a re-record: an accidental --write-baseline over a narrowed glob
+  // forgives everything it did not see, and nothing else in a CI log says so.
+  const bl = report.baseline;
+  if (bl) {
+    lines.push("");
+    if (bl.written) {
+      lines.push(
+        pc.dim(
+          `Baseline ${bl.path}: recorded ${bl.written.total} finding(s) ` +
+            `(+${bl.written.added}, -${bl.written.removed}).`,
+        ),
+      );
+      if (bl.written.removed > 0) {
+        lines.push(
+          pc.yellow(
+            `  ${bl.written.removed} previously recorded finding(s) are no longer in the baseline. ` +
+              `If this run covered less of the corpus than the last one, they have just been forgiven.`,
+          ),
+        );
+      }
+    } else {
+      lines.push(
+        pc.dim(
+          `Baseline ${bl.path}: ${bl.suppressed} finding(s) suppressed of ${bl.recorded} recorded` +
+            (bl.stale > 0 ? `, ${bl.stale} no longer occur` : "") +
+            ".",
+        ),
+      );
+    }
   }
 
   if (report.usage.judgedEvals > 0) {

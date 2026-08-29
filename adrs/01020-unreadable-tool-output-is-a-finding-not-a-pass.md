@@ -1,5 +1,5 @@
 ---
-status: "accepted"
+status: "superseded by ADR-01022"
 date: 2026-08-29
 decision-makers: [hawkeyexl]
 ---

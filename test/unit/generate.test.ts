@@ -277,6 +277,50 @@ describe("runGenerate: a config eval shared by several pages", () => {
     return root;
   }
 
+  /**
+   * The other way a page reaches a config eval: `eval-suite` pulls in the
+   * suite's whole membership list, with no `evals:` key on the page at all.
+   * `use:` and `eval-suite` are separate branches of `resolvePage`, so covering
+   * one does not cover the other.
+   */
+  function sharedSuiteCorpus(): string {
+    const root = mkdtempSync(join(tmpdir(), "moose-docevals-generate-suite-"));
+    mkdirSync(join(root, "docs"), { recursive: true });
+    for (const name of ["install.md", "second.md"]) {
+      writeFileSync(
+        join(root, "docs", name),
+        ["---", "title: Page", "eval-suite: s", "---", BODY].join("\n"),
+      );
+    }
+    writeFileSync(
+      join(root, "moose.config.yaml"),
+      [
+        "docevals:",
+        "  version: 1",
+        "  files:",
+        '    include: ["docs/**/*.md"]',
+        "  evals:",
+        "    central-check:",
+        `      assertion: ${ASSERTION}`,
+        "      grader: command",
+        "  suites:",
+        "    s:",
+        "      evals: [central-check]",
+        "",
+      ].join("\n"),
+    );
+    return root;
+  }
+
+  it("counts a suite-reached config eval once as well", async () => {
+    const result = await runGenerate([], {
+      cwd: sharedSuiteCorpus(),
+      providerInstance: scriptgen(),
+    });
+    expect(result.targets).toBe(1);
+    expect(result.generatedPaths).toHaveLength(1);
+  });
+
   it("counts it once, so a successful run does not report a partial one", async () => {
     const root = sharedConfigCorpus();
     const result = await runGenerate([], {
