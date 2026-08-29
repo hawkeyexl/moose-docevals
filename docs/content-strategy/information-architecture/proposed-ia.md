@@ -113,7 +113,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 | Page | CUJ | Pri | Notes |
 |---|---|:--:|---|
 | `adopt/index.mdx` | `cuj-bootstrap-corpus` | ★ | `fill`. `--dry-run` before write, always. Say early that raw proposals are cached *before* gating, so re-gating is free. |
-| `adopt/retrofit-a-legacy-corpus.mdx` | `cuj-retrofit-corpus` | P1 | The inversion: lower severity, never weaken the assertion. Highest-consequence page in this section. |
+| `adopt/retrofit-a-legacy-corpus.mdx` | `cuj-retrofit-corpus` | P1 | The ratchet: record today's findings in a committed baseline, gate on new ones, never weaken the assertion. State the per-rule-per-file limit plainly. Severity inversion is the fallback, not the headline. Highest-consequence page in this section. |
 | `adopt/promote-to-deterministic.mdx` | `cuj-cheapen-evals` | P1 | `promote` is report-only by default; `--write` is a deliberate act. |
 | `adopt/review-generated-scripts.mdx` | `cuj-cheapen-evals` | P2 | Generated scripts are version-controlled source. Reviewing them is the point of writing them to files. |
 

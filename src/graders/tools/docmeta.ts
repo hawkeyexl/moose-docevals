@@ -34,6 +34,7 @@ async function gradeGroup(
         "tool:docmeta needs options.schemas (builtin ids, file paths, or URLs) — " +
         'e.g. schemas: ["node_modules/moose-docevals/schemas/frontmatter-1.0.0.json"]',
       severity: t.eval.severity,
+      diagnostic: true,
       line: 1,
     }));
   }

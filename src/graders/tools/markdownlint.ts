@@ -53,6 +53,7 @@ async function gradeGroup(
       file: plan.page.file,
       message: `Failed to run markdownlint-cli2: ${result.spawnError ?? "spawn failed"} (is it installed?)`,
       severity: ev.severity,
+      diagnostic: true,
     }));
   }
 

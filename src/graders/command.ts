@@ -29,6 +29,7 @@ async function gradeOne(
         message:
           "No command to run (script not yet generated — run `moose-docevals generate` or `moose-docevals run` with a provider configured)",
         severity: ev.severity,
+        diagnostic: true,
       },
     ];
   }
@@ -47,6 +48,7 @@ async function gradeOne(
         file: plan.page.file,
         message: `Failed to run command "${ev.command[0] ?? "(empty)"}": ${result.spawnError}`,
         severity: ev.severity,
+        diagnostic: true,
       },
     ];
   }
@@ -57,6 +59,7 @@ async function gradeOne(
         file: plan.page.file,
         message: `Command timed out after ${ev.timeoutMs ?? ctx.config.scripts.timeoutMs}ms`,
         severity: ev.severity,
+        diagnostic: true,
       },
     ];
   }

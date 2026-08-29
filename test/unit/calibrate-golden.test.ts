@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import {
   loadGoldenCases,
+  renderCalibration,
   runCalibrate,
   seedGoldenCases,
   SEEDED_GOLDEN_FILE,
@@ -325,5 +326,174 @@ describe("calibrate --seed: the confirmed bit across a re-review", () => {
     expect(c?.expected).toBe("fail");
     expect(c?.reviewed).toBe(false);
     expect(result.unreviewed).toBe(1);
+  });
+});
+
+describe("runCalibrate: a truncated run cannot certify the judge", () => {
+  /** A judge that skips every target the way the turn budget does. */
+  const budgetExhausted = async (targets: { plan: { page: { file: string } }; eval: { name: string } }[]) =>
+    targets.map(
+      (t) =>
+        ({
+          evalName: t.eval.name,
+          type: "regression",
+          grader: "ai",
+          file: t.plan.page.file,
+          outcome: "skipped",
+          skipReason: "judge turn budget exhausted (3)",
+          durationMs: 0,
+        }) as unknown as EvalResult,
+    );
+
+  // Budget-skipped cases carry no consensus, so they used to drop out of the
+  // denominator: one case judged and agreeing reported 100% and exit 0, a
+  // trust gate passing on a sample.
+  it("does not meet the threshold when cases went unjudged", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      [
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "",
+      ].join("\n"),
+    );
+
+    const report = await runCalibrate({ cwd: root, judge: budgetExhausted });
+    expect(report.budgetSkipped).toBe(1);
+    expect(report.meetsThreshold).toBe(false);
+    expect(renderCalibration(report)).toMatch(/never judged: the turn budget ran out/);
+  });
+
+  it("names the budget rather than blaming the judge", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      ["- file: docs/install.md", "  eval: no-future-promises", "  expected: pass", ""].join("\n"),
+    );
+    const report = await runCalibrate({ cwd: root, judge: budgetExhausted });
+    expect(report.cases[0]?.error).toMatch(/turn budget/);
+  });
+
+  it("still certifies a complete run", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      [
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "",
+      ].join("\n"),
+    );
+    const report = await runCalibrate({ cwd: root, judge: alwaysPass });
+    expect(report.budgetSkipped).toBe(0);
+    expect(report.meetsThreshold).toBe(true);
+  });
+});
+
+describe("calibrate --seed: a hand-written rationale survives", () => {
+  it("keeps a rationale the review does not supply", () => {
+    const root = scaffold();
+    const entry = {
+      file: "docs/install.md",
+      evalName: "no-future-promises",
+      contentHash: contentHash(PAGE_BODY),
+      verdict: "pass" as const,
+    };
+    recordReview(root, entry);
+    seedGoldenCases({ cwd: root });
+
+    const dir = join(root, ".moose-docevals", "golden");
+    const path = join(dir, SEEDED_GOLDEN_FILE);
+    writeFileSync(
+      path,
+      readFileSync(path, "utf8")
+        .replace("reviewed: false", "reviewed: true")
+        .concat("  rationale: The deprecation banner is present.\n"),
+    );
+
+    recordReview(root, entry);
+    seedGoldenCases({ cwd: root });
+    expect(loadGoldenCases(dir)[0]?.rationale).toBe("The deprecation banner is present.");
+  });
+
+  it("lets a newer review note replace it", () => {
+    const root = scaffold();
+    const entry = {
+      file: "docs/install.md",
+      evalName: "no-future-promises",
+      contentHash: contentHash(PAGE_BODY),
+      verdict: "pass" as const,
+    };
+    recordReview(root, { ...entry, note: "first" });
+    seedGoldenCases({ cwd: root });
+    recordReview(root, { ...entry, note: "second" });
+    seedGoldenCases({ cwd: root });
+    const dir = join(root, ".moose-docevals", "golden");
+    expect(loadGoldenCases(dir)[0]?.rationale).toBe("second");
+  });
+});
+
+describe("runCalibrate: coverage is separate from agreement", () => {
+  // ADR 01018's pattern: the verdict stays a statement about agreement, and
+  // coverage is reported beside it. Folding both into meetsThreshold made the
+  // renderer print "refine your assertions" at 100% agreement.
+  it("keeps the verdict truthful when the budget truncates", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      ["- file: docs/install.md", "  eval: no-future-promises", "  expected: pass", "  reviewed: true", ""].join("\n"),
+    );
+    const budgetOnly = async (targets: { plan: { page: { file: string } }; eval: { name: string } }[]) =>
+      targets.map(
+        (t) =>
+          ({
+            evalName: t.eval.name, type: "regression", grader: "ai",
+            file: t.plan.page.file, outcome: "skipped",
+            skipReason: "judge turn budget exhausted (3)", durationMs: 0,
+          }) as unknown as EvalResult,
+      );
+    const report = await runCalibrate({ cwd: root, judge: budgetOnly });
+    expect(report.budgetSkipped).toBe(1);
+    expect(report.unjudged).toBe(1);
+    // No case was measured, so there is no agreement to report either way.
+    expect(renderCalibration(report)).not.toMatch(/Refine the eval criteria/);
+  });
+
+  // A stale golden file used to certify on whatever still resolved: the
+  // budget was guarded, a renamed page was not.
+  it("counts a case whose page is gone as unjudged", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      [
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "- file: docs/renamed-away.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "",
+      ].join("\n"),
+    );
+    const report = await runCalibrate({ cwd: root, judge: alwaysPass });
+
+    expect(report.agreementRate).toBe(1);
+    expect(report.meetsThreshold).toBe(true);
+    // ...but one of two cases never reached a verdict, so the gate must not pass.
+    expect(report.unjudged).toBe(1);
+    expect(report.budgetSkipped).toBe(0);
+    expect(renderCalibration(report)).toMatch(/never reached a verdict/);
   });
 });

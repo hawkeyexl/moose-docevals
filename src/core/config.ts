@@ -118,6 +118,8 @@ export interface DocevalsConfig {
     };
     "claude-cli": { model: string; command: string };
   };
+  /** Findings baseline path, resolved against the config's directory (ADR 01017). */
+  baseline: string | null;
   judge: {
     ensembleRuns: number;
     temperature: number;
@@ -204,6 +206,7 @@ interface RawDocevalsConfig {
     openai?: RawProviderSection;
     "claude-cli"?: RawProviderSection;
   };
+  baseline?: string | null;
   judge?: {
     "ensemble-runs"?: number;
     temperature?: number;
@@ -398,6 +401,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
         command: r.provider?.["claude-cli"]?.command ?? "claude",
       },
     },
+    baseline: r.baseline ?? null,
     judge: {
       ensembleRuns: r.judge?.["ensemble-runs"] ?? 3,
       temperature: r.judge?.temperature ?? 0,
