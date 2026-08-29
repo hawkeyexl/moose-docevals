@@ -79,9 +79,9 @@ replaced it with a different, worse check that happens to be fast. `promote` rep
 
 ## Confirm the saving
 
-Run with `--format json` before and after and compare `cost.judgedEvals` and `cost.totalUsd`. The
-second run should also show more `cachedEvals` — see
-[Cost and caching](/moose-docevals/ci/cost-and-caching/).
+Run with `--format json` before and after and compare `usage.judgedEvals`. Fewer evals reaching the
+judge is the saving; the second run should also show more `cachedEvals` — see
+[Caching and turn budgets](/moose-docevals/ci/cost-and-caching/).
 
 ## Make it a habit
 

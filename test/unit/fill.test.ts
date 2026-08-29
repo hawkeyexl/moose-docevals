@@ -168,18 +168,26 @@ describe("runFill", () => {
     expect(provider.requests).toHaveLength(2);
   });
 
-  it("skips uncached pages once the cost budget is exhausted", async () => {
-    const root = workspace({ "page.md": PLAIN_PAGE });
+  it("skips uncached pages once the turn budget is exhausted", async () => {
+    const root = workspace({ "a.md": PLAIN_PAGE, "b.md": PLAIN_PAGE });
     const provider = new MockProvider([{ json: { evals: [proposal("strong-check", 0.9)] } }]);
+    // One turn buys exactly one page. The CLI floor is 1, so a budget of 0
+    // would exercise a value no user can type.
     const report = await runFill([], {
       cwd: root,
       providerInstance: provider,
       noCache: true,
-      maxCost: 0,
+      maxTurns: 1,
     });
-    expect(report.results[0]?.status).toBe("skipped-budget");
-    expect(provider.requests).toHaveLength(0);
+    expect(report.results.map((r) => r.status)).toEqual(["filled", "skipped-budget"]);
+    expect(provider.requests).toHaveLength(1);
+    expect(report.turns).toBe(1);
+    // A budget that ran out is not a failure: the user asked for less work,
+    // and got less work.
     expect(report.exitCode).toBe(0);
+    // The renderer’s own wording for the status, which moved units with it —
+    // a skipped page has to say *why* or it reads as an unexplained gap.
+    expect(renderFill(report, "human")).toContain("(turn budget exhausted)");
   });
 
   it("contains per-page provider failures without aborting the run", async () => {
@@ -267,7 +275,7 @@ describe("runFill", () => {
     expect(human).toContain("strong-check 0.90");
     expect(human).toContain("below 0.7: weak-check 0.60");
     expect(human).toContain("Threshold: 0.7");
-    expect(human).toMatch(/LLM cost: \$\d+\.\d{4}/);
+    expect(human).toMatch(/inference calls: \d+/);
 
     const json = JSON.parse(renderFill(report, "json")) as typeof report;
     expect(json.results[0]?.written[0]?.id).toBe("strong-check");

@@ -15,11 +15,6 @@ import { DocevalsError, type EvalType, type Severity } from "../types.js";
 
 export type ProviderName = "anthropic" | "openai" | "claude-cli";
 
-export interface Pricing {
-  inputPerMTok: number;
-  outputPerMTok: number;
-}
-
 /**
  * One eval definition, as the rest of the codebase sees it.
  *
@@ -63,22 +58,6 @@ export interface RawEvalDef {
   options?: Record<string, unknown>;
   severity?: Severity;
   "severity-map"?: Record<string, Severity>;
-}
-
-/**
- * File-side pricing keys in, camelCase `Pricing` out.
- *
- * Both sides are required by the schema, so there is nothing to default here.
- * That is the point: filling a missing side with `0` would price those tokens
- * as free — `cost.totalUsd` under-reports, and `max-cost-usd` never trips on
- * the side that was left out.
- */
-function normalizePricing(raw: RawPricing | undefined): Pricing | undefined {
-  if (raw === undefined) return undefined;
-  return {
-    inputPerMTok: raw["input-per-mtok"],
-    outputPerMTok: raw["output-per-mtok"],
-  };
 }
 
 /** One anchor example, or several, as a list. */
@@ -131,22 +110,23 @@ export interface DocevalsConfig {
   defaults: { suite: string | null; failFast: boolean; concurrency: number };
   provider: {
     default: ProviderName;
-    anthropic: { model: string; apiKeyEnv: string; pricing?: Pricing };
+    anthropic: { model: string; apiKeyEnv: string };
     openai: {
       baseUrl: string;
       model: string;
       apiKeyEnv: string;
-      pricing?: Pricing;
     };
     "claude-cli": { model: string; command: string };
   };
+  /** Findings baseline path, resolved against the config's directory (ADR 01017). */
+  baseline: string | null;
   judge: {
     ensembleRuns: number;
     temperature: number;
     zones: { autoPass: number; autoFail: number };
     falsePositiveAlert: number;
     cacheDir: string;
-    maxCostUsd: number | null;
+    maxTurns: number | null;
   };
   scripts: {
     dir: string;
@@ -159,7 +139,7 @@ export interface DocevalsConfig {
     maxEvalsPerPage: number;
     temperature: number;
     cacheDir: string;
-    maxCostUsd: number | null;
+    maxTurns: number | null;
   };
   evals: Record<string, EvalDef>;
   suites: Record<string, SuiteDef>;
@@ -205,17 +185,11 @@ const validateConfig = ajv.compile(configSchema);
  * would be the worst place for one, since every default in the tool flows
  * through this function.
  */
-interface RawPricing {
-  "input-per-mtok": number;
-  "output-per-mtok": number;
-}
-
 interface RawProviderSection {
   model?: string;
   command?: string;
   "base-url"?: string;
   "api-key-env"?: string;
-  pricing?: RawPricing;
 }
 
 interface RawDocevalsConfig {
@@ -232,13 +206,14 @@ interface RawDocevalsConfig {
     openai?: RawProviderSection;
     "claude-cli"?: RawProviderSection;
   };
+  baseline?: string | null;
   judge?: {
     "ensemble-runs"?: number;
     temperature?: number;
     zones?: { "auto-pass"?: number; "auto-fail"?: number };
     "false-positive-alert"?: number;
     "cache-dir"?: string;
-    "max-cost-usd"?: number | null;
+    "max-turns"?: number | null;
   };
   scripts?: {
     dir?: string;
@@ -251,7 +226,7 @@ interface RawDocevalsConfig {
     "max-evals-per-page"?: number;
     temperature?: number;
     "cache-dir"?: string;
-    "max-cost-usd"?: number | null;
+    "max-turns"?: number | null;
   };
   evals?: Record<string, RawEvalDef>;
   suites?: Record<string, RawSuiteDef>;
@@ -363,7 +338,23 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
 
   if (!validateConfig(raw)) {
     const details = (validateConfig.errors ?? [])
-      .map((e) => `  ${e.instancePath || "/"}: ${e.message ?? "is invalid"}`)
+      .map((e) => {
+        // Ajv reports an unknown key against the *parent* object, so the bare
+        // message ("must NOT have additional properties") leaves the reader to
+        // diff their file against the schema to find which key it meant. Name
+        // it, for the same reason findPreKebabKeys above names a camelCase
+        // spelling: the common case is a removed key in an unmigrated config
+        // -- `judge.max-cost-usd` after ADR 01019, say -- and a migration
+        // error that makes you guess is one people work around.
+        const extra =
+          e.keyword === "additionalProperties"
+            ? (e.params as { additionalProperty?: string }).additionalProperty
+            : undefined;
+        if (extra !== undefined) {
+          return `  ${e.instancePath || "/"}: unknown key "${extra}"`;
+        }
+        return `  ${e.instancePath || "/"}: ${e.message ?? "is invalid"}`;
+      })
       .join("\n");
     throw new DocevalsError(`Invalid config in ${configPath}:\n${details}`);
   }
@@ -399,19 +390,18 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       anthropic: {
         model: r.provider?.anthropic?.model ?? "claude-sonnet-4-5",
         apiKeyEnv: r.provider?.anthropic?.["api-key-env"] ?? "ANTHROPIC_API_KEY",
-        pricing: normalizePricing(r.provider?.anthropic?.pricing),
       },
       openai: {
         baseUrl: r.provider?.openai?.["base-url"] ?? "https://api.openai.com/v1",
         model: r.provider?.openai?.model ?? "gpt-4o-mini",
         apiKeyEnv: r.provider?.openai?.["api-key-env"] ?? "OPENAI_API_KEY",
-        pricing: normalizePricing(r.provider?.openai?.pricing),
       },
       "claude-cli": {
         model: r.provider?.["claude-cli"]?.model ?? "claude-sonnet-4-5",
         command: r.provider?.["claude-cli"]?.command ?? "claude",
       },
     },
+    baseline: r.baseline ?? null,
     judge: {
       ensembleRuns: r.judge?.["ensemble-runs"] ?? 3,
       temperature: r.judge?.temperature ?? 0,
@@ -421,7 +411,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       },
       falsePositiveAlert: r.judge?.["false-positive-alert"] ?? 0.15,
       cacheDir: r.judge?.["cache-dir"] ?? ".moose-docevals/cache",
-      maxCostUsd: r.judge?.["max-cost-usd"] ?? null,
+      maxTurns: r.judge?.["max-turns"] ?? null,
     },
     scripts: {
       dir: r.scripts?.dir ?? "{docDir}/moose-docevals",
@@ -434,7 +424,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       maxEvalsPerPage: r.fill?.["max-evals-per-page"] ?? 3,
       temperature: r.fill?.temperature ?? 0,
       cacheDir: r.fill?.["cache-dir"] ?? ".moose-docevals/cache/fill",
-      maxCostUsd: r.fill?.["max-cost-usd"] ?? null,
+      maxTurns: r.fill?.["max-turns"] ?? null,
     },
     evals: Object.fromEntries(
       Object.entries(r.evals ?? {}).map(([name, def]) => [

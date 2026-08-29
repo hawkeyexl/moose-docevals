@@ -18,8 +18,39 @@ export function renderMarkdown(report: EngineReport): string {
     lines.push(
       `| ${s.suite} | ${s.passed} | ${s.failed + s.errored} | ${s.needsReview} | ` +
         `${(s.passRate * 100).toFixed(0)}% | ${(s.targetPassRate * 100).toFixed(0)}% | ` +
-        `${s.meetsTarget ? "✅" : "❌"} |`,
+        // A filtered run measured part of the suite: no verdict, so
+        // neither mark. Rendering ❌ made every filtered run look failed
+        // (ADR 01018).
+        `${s.partial ? "➖ partial" : s.meetsTarget ? "✅" : "❌"} |`,
     );
+  }
+
+  // The baseline line belongs in the CI formats above all: `removed` is the
+  // only signal that an over-narrow re-record just forgave findings, and
+  // `renderGithub` delegates its summary here, so omitting it meant the
+  // warning existed only in the format CI does not read.
+  const bl = report.baseline;
+  if (bl) {
+    lines.push("");
+    if (bl.written) {
+      lines.push(
+        `_Baseline \`${bl.path}\`: recorded ${bl.written.total} finding(s) ` +
+          `(+${bl.written.added}, -${bl.written.removed})._`,
+      );
+      if (bl.written.removed > 0) {
+        lines.push(
+          "",
+          `> **${bl.written.removed} previously recorded finding(s) are no longer in the baseline.** ` +
+            "If this run covered less of the corpus than the last one, they have just been forgiven.",
+        );
+      }
+    } else {
+      lines.push(
+        `_Baseline \`${bl.path}\`: ${bl.suppressed} finding(s) suppressed of ${bl.recorded} recorded` +
+          (bl.stale > 0 ? `, ${bl.stale} no longer occur` : "") +
+          "._",
+      );
+    }
   }
 
   const notable = report.evalResults.filter(
@@ -55,13 +86,11 @@ export function renderMarkdown(report: EngineReport): string {
     for (const g of report.generated) lines.push(`- \`${g}\``);
   }
 
-  if (report.cost.judgedEvals > 0) {
+  if (report.usage.judgedEvals > 0) {
     lines.push(
       "",
-      `_Judged ${report.cost.judgedEvals} evals (${report.cost.cachedEvals} cached), ` +
-        `${report.cost.totalTokens.toLocaleString()} tokens` +
-        (report.cost.totalUsd > 0 ? `, ~$${report.cost.totalUsd.toFixed(4)}` : "") +
-        `._`,
+      `_Judged ${report.usage.judgedEvals} evals (${report.usage.cachedEvals} cached), ` +
+        `${report.usage.totalTokens.toLocaleString()} tokens._`,
     );
   }
   return lines.join("\n");

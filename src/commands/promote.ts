@@ -60,6 +60,8 @@ export interface PromoteOptions {
   provider?: string;
   model?: string;
   cwd?: string;
+  /** Injectable provider for tests and programmatic use. */
+  providerInstance?: InferenceProvider;
 }
 
 export interface PromoteProposal {
@@ -114,10 +116,16 @@ export async function runPromote(
   const config = loadConfig(options.config, cwd);
   const pages = discoverPages(config, globs, cwd);
   const plans = resolvePages(pages, config);
-  const provider = makeProvider(config, {
-    provider: options.provider,
-    model: options.model,
-  });
+
+  // Built on first use, not up front. A corpus with no ai-graded evals has
+  // nothing to assess, and demanding an API key to be told so is the same
+  // needless gate `fill` already avoids by resolving identity lazily.
+  let provider: InferenceProvider | undefined = options.providerInstance;
+  const getProvider = (): InferenceProvider =>
+    (provider ??= makeProvider(config, {
+      provider: options.provider,
+      model: options.model,
+    }));
 
   const proposals: PromoteProposal[] = [];
   const seenConfigEvals = new Set<string>();
@@ -132,7 +140,7 @@ export async function runPromote(
       }
 
       const target: GraderTarget = { plan, eval: ev };
-      const assessment = await assess(provider, target);
+      const assessment = await assess(getProvider(), target);
       const proposal: PromoteProposal = {
         file: plan.page.file,
         evalName: ev.name,
@@ -153,7 +161,12 @@ export async function runPromote(
         const updates = {
           grader: "command",
           command: location.command,
-          generated: { assertionHash: sha256(ev.assertion) },
+          // The kebab key `applyUpdates` actually reads. This was the
+          // pre-1.0 `generated: { assertionHash }` wrapper, which the update
+          // type does not consume, so promoted evals were written with no
+          // hash and never went stale when their assertion changed
+          // (renamed by ADR 01009).
+          "generated-assertion-hash": sha256(ev.assertion),
         };
         if (
           ev.source === "page" &&

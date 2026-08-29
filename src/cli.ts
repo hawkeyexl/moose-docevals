@@ -11,7 +11,11 @@ import { runGenerate } from "./commands/generate.js";
 import { runFill, renderFill } from "./commands/fill.js";
 import { runPromote } from "./commands/promote.js";
 import { listReviews, renderReviews, runReview } from "./commands/review.js";
-import { runCalibrate, renderCalibration } from "./commands/calibrate.js";
+import {
+  runCalibrate,
+  renderCalibration,
+  seedGoldenCases,
+} from "./commands/calibrate.js";
 import { runInit } from "./commands/init.js";
 import {
   render,
@@ -56,6 +60,18 @@ function parseIntArg(name: string) {
   };
 }
 
+/**
+ * Repeatable single-value option, e.g. `--eval a --eval b`.
+ *
+ * NOT commander's variadic `<name...>`: a variadic consumes every following
+ * non-option token, so `run --eval fresh-enough docs/guide.md` parsed the glob
+ * as a second eval name and left `globs` empty — silently widening the run to
+ * the whole configured corpus, which is the opposite of what selection is for.
+ */
+function collectArg(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
+
 function parseFloatArg(name: string) {
   return (value: string): number => {
     const n = Number.parseFloat(value);
@@ -93,11 +109,24 @@ program
     parseFormatArg("--format", SUMMARY_FORMATS),
     "human" as SummaryFormat,
   )
-  .action((globs: string[], opts: { config?: string; format: SummaryFormat }) => {
+  .option("--eval <name>", "Show only this eval (repeatable)", collectArg, [])
+  .option("--suite <name>", "Show only evals in this suite")
+  .action(
+    (
+      globs: string[],
+      opts: {
+        config?: string;
+        format: SummaryFormat;
+        eval?: string[];
+        suite?: string;
+      },
+    ) => {
     try {
       const run = runList(globs, {
         config: opts.config,
         format: opts.format,
+        evalNames: opts.eval,
+        suite: opts.suite,
       });
       console.log(renderList(run, opts.format));
       process.exitCode = run.exitCode;
@@ -126,7 +155,27 @@ program
   .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Judge model override")
   .option("--runs <n>", "Ensemble runs per eval", parseIntArg("--runs"))
-  .option("--max-cost <usd>", "Abort judging past this cost", parseFloatArg("--max-cost"))
+  .option(
+    "--eval <name>",
+    "Run only this eval (repeatable); suite targets are not evaluated on a filtered run",
+    collectArg,
+    [],
+  )
+  .option("--suite <name>", "Run only evals in this suite")
+  .option(
+    "--max-turns <n>",
+    "Stop after this many ensemble runs (a cached ensemble costs none)",
+    parseIntArg("--max-turns"),
+  )
+  .option(
+    "--baseline [path]",
+    "Fail only on findings a recorded baseline does not already hold",
+  )
+  .option("--no-baseline", "Ignore the configured baseline for this run")
+  .option(
+    "--write-baseline [path]",
+    "Record this run's findings as the baseline; without a path, the configured one",
+  )
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
       const report = await runRun(globs, {
@@ -143,7 +192,14 @@ program
         provider: opts.provider as string | undefined,
         model: opts.model as string | undefined,
         runs: opts.runs as number | undefined,
-        maxCost: opts.maxCost as number | undefined,
+        maxTurns: opts.maxTurns as number | undefined,
+        evalNames: opts.eval as string[] | undefined,
+        suite: opts.suite as string | undefined,
+        // commander collapses `--baseline` to true and `--no-baseline` to
+        // false on the same key; a string is an explicit path.
+        baseline: opts.baseline as string | boolean | undefined,
+        writeBaseline: opts.writeBaseline as string | boolean | undefined,
+        toolVersion: pkg.version,
       });
       console.log(render(report, opts.format as ReportFormat));
       process.exitCode = report.exitCode;
@@ -204,7 +260,11 @@ program
     "Minimum confidence to write (0-1, default: config fill.confidenceThreshold)",
     parseFloatArg("--confidence"),
   )
-  .option("--max-cost <usd>", "Stop proposing past this cost", parseFloatArg("--max-cost"))
+  .option(
+    "--max-turns <n>",
+    "Stop after this many inference calls (a cached page costs none)",
+    parseIntArg("--max-turns"),
+  )
   .option("--no-cache", "Bypass the fill proposal cache")
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
@@ -218,7 +278,7 @@ program
         config: opts.config as string | undefined,
         dryRun: opts.dryRun as boolean | undefined,
         confidence,
-        maxCost: opts.maxCost as number | undefined,
+        maxTurns: opts.maxTurns as number | undefined,
         noCache: opts.cache === false ? true : undefined,
         provider: opts.provider as string | undefined,
         model: opts.model as string | undefined,
@@ -280,30 +340,77 @@ program
   )
   .option("-c, --config <path>", "Path to moose.config.yaml")
   .option("--golden <dir>", "Golden set directory", ".moose-docevals/golden")
+  .option(
+    "--seed",
+    "Write golden candidates from recorded reviews and exit; judges nothing, needs no provider",
+  )
   .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
   .option("--model <model>", "Model override")
   .option("--runs <n>", "Ensemble runs per case", parseIntArg("--runs"))
+  .option(
+    "--max-turns <n>",
+    "Stop after this many ensemble runs (a cached ensemble costs none)",
+    parseIntArg("--max-turns"),
+  )
   .option("--no-cache", "Bypass the judge response cache")
   .action(
     async (opts: {
       config?: string;
       golden?: string;
+      seed?: boolean;
       provider?: string;
       model?: string;
       runs?: number;
+      maxTurns?: number;
       cache?: boolean;
     }) => {
       try {
+        if (opts.seed) {
+          // No `config`: reviews.yaml and the golden directory both resolve
+          // against the working directory, not the config's, so passing it
+          // would imply an influence it does not have.
+          const seeded = seedGoldenCases({ golden: opts.golden });
+          if (seeded.total === 0) {
+            console.log(
+              "No recorded reviews to seed from — run `moose-docevals review <file> <eval> <pass|fail>` first.",
+            );
+            return;
+          }
+          // The lead number is what moved, not the file's size: `total`
+          // counts cases already confirmed and left alone, so leading with it
+          // read as "wrote 8 candidates" on a re-seed that wrote none.
+          const changed = seeded.added + seeded.updated;
+          console.log(
+            changed === 0
+              ? `No new reviews to seed — ${seeded.total} golden case(s) already in ${seeded.path}.`
+              : `Wrote ${changed} golden candidate(s) to ${seeded.path} ` +
+                `(${seeded.added} new, ${seeded.updated} updated; ${seeded.total} total).`,
+          );
+          if (seeded.unreviewed > 0) {
+            console.log(
+              pc.yellow(
+                `${seeded.unreviewed} case(s) are \`reviewed: false\`. Read them and set ` +
+                  "`reviewed: true` — a golden set assembled without a human is not one.",
+              ),
+            );
+          }
+          return;
+        }
         const report = await runCalibrate({
           config: opts.config,
           golden: opts.golden,
           provider: opts.provider,
           model: opts.model,
           runs: opts.runs,
+          maxTurns: opts.maxTurns,
           noCache: opts.cache === false,
         });
         console.log(renderCalibration(report));
-        process.exitCode = report.meetsThreshold ? 0 : 1;
+        // Both conditions: the judge has to agree enough, AND the set has to
+        // have been measured. A stale golden file whose pages were renamed
+        // used to certify on whatever still resolved.
+        process.exitCode =
+          report.meetsThreshold && report.unjudged === 0 ? 0 : 1;
       } catch (e) {
         fail(e);
       }

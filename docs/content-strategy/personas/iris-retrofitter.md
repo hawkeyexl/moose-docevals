@@ -11,13 +11,13 @@ goals:
   - Get thousands of unmeasured pages onto a ratchet, in mergeable increments
   - Keep every step green so the initiative is never blocked on a wall of red
   - Demonstrate a win on one section before the budget is questioned
-  - Estimate the cost of the initial pass before spending it
+  - Size the initial pass in model calls before spending it
 pains:
   - The first honest run fails nearly everything, and that result is useless
   - The instinct it produces — weaken the assertions — destroys the standard permanently
   - Machine-proposed evals need triage, which is a new job nobody planned for
   - She often did not write the corpus and cannot vouch for what is still true
-content_types: [staged-rollout-runbook, triage-guidance, cost-estimation-recipe]
+content_types: [staged-rollout-runbook, triage-guidance, pass-sizing-recipe]
 journeys: [cuj-retrofit-corpus, cuj-bootstrap-corpus, cuj-cheapen-evals]
 ---
 
@@ -53,9 +53,12 @@ implying the corpus is now covered sets her up to be wrong in a status meeting. 
 is how the review stays reviewable — nobody can approve a 3,000-page pull request.
 
 Her third is **front-loaded cost**. The initial pass is by far the largest spend her team will ever
-see and it arrives before any value has been demonstrated. `--dry-run` first, `--max-cost` always, and
-the knowledge that raw proposals are cached before gating — so re-gating at a different `--confidence`
-is free — are what keep the number defensible.
+see and it arrives before any value has been demonstrated. What makes the number defensible is that it
+is now arithmetic rather than a projection: `fill` spends one inference call per uncached page, so the
+page count of a batch *is* its size, `--max-turns` caps it before the first call, and raw proposals
+are cached before gating — so re-gating at a different `--confidence`, and the write pass after a
+`--dry-run`, both cost nothing. She converts calls to money against her provider's rates; the tool
+will not do it for her, and a page that pretends otherwise gives her a figure she cannot defend.
 
 Success for Iris is the end of a quarter with one section fully gated at error severity, the rest
 reporting at warning, a burn-down that is visibly going the right way, and a standard nobody weakened

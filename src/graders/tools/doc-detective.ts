@@ -193,6 +193,7 @@ export const docDetectiveGrader: Grader = {
           file: plan.page.file,
           message: `Failed to run doc-detective: ${result.spawnError} (is it installed?)`,
           severity: ev.severity,
+          diagnostic: true,
         });
         continue;
       }

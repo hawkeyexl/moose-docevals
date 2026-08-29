@@ -6,13 +6,13 @@ personas: [persona-solo-owner, persona-retrofitter]
 trigger: "Two hundred pages, ten minutes to write a good eval, and no appetite for the arithmetic"
 entry_point: docs/src/content/docs/adopt/index.mdx
 success_criteria: >
-  Every page in a directory carries evals nobody hand-wrote, the reader knows what the run cost
-  before it ran, and they have reviewed what landed rather than assuming it is right.
+  Every page in a directory carries evals nobody hand-wrote, the reader knew how much the pass would
+  do before it ran, and they have reviewed what landed rather than assuming it is right.
 steps:
-  - { stage: "See what fill would propose, and what it would cost", doc: docs/src/content/docs/adopt/index.mdx, exists: true }
+  - { stage: "See what fill would propose, and what it spends doing so", doc: docs/src/content/docs/adopt/index.mdx, exists: true }
   - { stage: "Understand the confidence gate", doc: docs/src/content/docs/adopt/index.mdx, exists: true }
   - { stage: "Re-gate at a different threshold for free", doc: docs/src/content/docs/ci/cost-and-caching.mdx, exists: true }
-  - { stage: "Cap the spend before writing anything", doc: docs/src/content/docs/reference/cli.mdx, exists: true }
+  - { stage: "Cap the inference calls before writing anything", doc: docs/src/content/docs/reference/cli.mdx, exists: true }
   - { stage: "Write the proposals into frontmatter", doc: docs/src/content/docs/adopt/index.mdx, exists: true }
   - { stage: "Review what landed", doc: docs/src/content/docs/evals/write-good-assertions.mdx, exists: true }
   - { stage: "Make the good ones cheap", doc: docs/src/content/docs/adopt/promote-to-deterministic.mdx, exists: true }
@@ -21,7 +21,7 @@ steps:
 # CUJ: Propose evals for a whole corpus with fill
 
 **Scope:** using `fill` to bootstrap coverage without hand-authoring. It covers proposing, gating,
-costing, and reviewing. Doing this against a corpus that must not go red on day one is the harder
+bounding, and reviewing. Doing this against a corpus that must not go red on day one is the harder
 variant, [`cuj-retrofit-corpus`](cuj-retrofit-corpus.md); making the results deterministic afterwards
 is [`cuj-cheapen-evals`](cuj-cheapen-evals.md).
 
@@ -34,9 +34,12 @@ has a tool whose value he accepts and whose entry cost he cannot pay, and he doe
 
 The sequence is deliberately `--dry-run` before write, and the docs must not reorder it for
 convenience. Two reasons, and only one is obvious: the reader gets to see the proposals before they
-touch the repo, and — the non-obvious one — they get the **cost of the whole pass reported before they
-have spent it on a corpus scale**. For a reader paying out of pocket, that ordering is the difference
-between trying it and not.
+touch the repo, and — the non-obvious one — **the dry run is where the inference calls are actually
+spent, so the write pass that follows it is a cache hit and spends none**. Looking first is therefore
+free in the only unit the tool counts. The size of the whole pass is also knowable before any of it
+runs, because `fill` spends exactly one inference call per uncached page; `--max-turns` is how the
+reader caps that number before the first call rather than discovering it after. For a reader paying
+out of pocket, that ordering and that arithmetic are the difference between trying it and not.
 
 The single most under-communicated fact in this journey is that **raw proposals are cached before the
 confidence gate is applied.** Re-running at a different `--confidence` therefore costs nothing. A
