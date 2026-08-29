@@ -372,9 +372,15 @@ program
             );
             return;
           }
+          // The lead number is what moved, not the file's size: `total`
+          // counts cases already confirmed and left alone, so leading with it
+          // read as "wrote 8 candidates" on a re-seed that wrote none.
+          const changed = seeded.added + seeded.updated;
           console.log(
-            `Wrote ${seeded.total} golden candidate(s) to ${seeded.path} ` +
-              `(${seeded.added} new, ${seeded.updated} updated).`,
+            changed === 0
+              ? `No new reviews to seed — ${seeded.total} golden case(s) already in ${seeded.path}.`
+              : `Wrote ${changed} golden candidate(s) to ${seeded.path} ` +
+                `(${seeded.added} new, ${seeded.updated} updated; ${seeded.total} total).`,
           );
           if (seeded.unreviewed > 0) {
             console.log(

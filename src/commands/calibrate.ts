@@ -77,6 +77,15 @@ export interface CalibrationReport {
   falsePositives: number;
   falsePositiveRate: number;
   falseNegatives: number;
+  /**
+   * True when `agreementRate >= AGREEMENT_THRESHOLD` — a statement about
+   * the cases that were *judged*, and nothing else.
+   *
+   * Read `unjudged === 0` alongside it. A budget-truncated or partly
+   * unresolvable run can meet the rate on the sample it measured while
+   * `unjudged > 0` says it measured less than the set. The CLI gates on both;
+   * a consumer reading this field alone gets a pass on a partial run.
+   */
   meetsThreshold: boolean;
   fpAlert: boolean;
   /** Judged cases no human has confirmed. Counted, but reported. */
@@ -231,7 +240,7 @@ export function seedGoldenCases(options: CalibrateOptions = {}): SeedResult {
     // human's signature.
     const confirmedStillApplies =
       prior?.reviewed === true && prior.expected === review.verdict;
-    byKey.set(key, {
+    const next: GoldenCase = {
       file: review.file,
       eval: review.evalName,
       expected: review.verdict,
@@ -251,9 +260,19 @@ export function seedGoldenCases(options: CalibrateOptions = {}): SeedResult {
       ...(confirmedStillApplies && prior.reviewedBy !== undefined
         ? { reviewedBy: prior.reviewedBy }
         : {}),
-    });
-    if (prior) updated += 1;
-    else added += 1;
+    };
+    byKey.set(key, next);
+    // A re-seed rewrites every case, but only a *changed* one is an update.
+    // Counting every key that already existed made `updated` report movement
+    // on a run that moved nothing — and the two counts are separate
+    // (ADR 01016) precisely so the difference between runs is visible.
+    if (!prior) added += 1;
+    else if (
+      JSON.stringify(serializeGoldenCase(prior)) !==
+      JSON.stringify(serializeGoldenCase(next))
+    ) {
+      updated += 1;
+    }
   }
 
   const cases = [...byKey.values()];
@@ -368,10 +387,12 @@ export async function runCalibrate(
     expectedPass.length > 0 ? falsePositives / expectedPass.length : 0;
 
   // A budget-truncated run measured a sample, and the agreement rate is over
-  // that sample — so it cannot be allowed to report a met threshold. This is
-  // the same silent-green shape `runEvals` guards against; `calibrate` is the
-  // command whose whole output is a trust claim, so here it fails the run
-  // rather than merely warning.
+  // that sample — so the run must not certify. The guard is in
+  // `src/cli.ts` (`meetsThreshold && unjudged === 0`), not in `meetsThreshold`
+  // itself: ADR 01018 keeps the verdict a statement about agreement and this a
+  // statement about coverage. This is the same silent-green shape `runEvals`
+  // guards against; `calibrate` is the command whose whole output is a trust
+  // claim, so there it fails the run rather than merely warning.
   const budgetSkipped = results.filter((r) => r.budgetSkipped === true).length;
   const unjudged = results.length - judgedCases.length;
 

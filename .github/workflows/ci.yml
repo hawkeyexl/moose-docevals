@@ -284,6 +284,15 @@ jobs:
           if ! grep -q "reviewed: false" "$seeded"; then echo "::error::a seeded golden case must land unreviewed"; cat "$seeded"; exit 1; fi
           if ! grep -q "source: review" "$seeded"; then echo "::error::a seeded case must record where it came from"; cat "$seeded"; exit 1; fi
           if ! grep -q "content-hash:" "$seeded"; then echo "::error::a seeded case must carry the hash it was verified against"; cat "$seeded"; exit 1; fi
+          # A second seed over the same reviews changes nothing, and has to
+          # say so: `updated` counted every case the file already held, so a
+          # no-op re-seed reported movement that never happened.
+          again=$(node ../dist/cli.js calibrate --seed 2>&1)
+          echo "$again"
+          case "$again" in
+            *"No new reviews to seed"*) ;;
+            *) echo "::error::a no-op re-seed must report no changes - got: $again"; exit 1 ;;
+          esac
           cd ..
           rm -rf .ci-seed-check
 

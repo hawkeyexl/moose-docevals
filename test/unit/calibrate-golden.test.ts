@@ -77,7 +77,10 @@ const alwaysPass = async (targets: { plan: { page: { file: string } }; eval: { n
       }) as unknown as EvalResult,
   );
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 describe("loadGoldenCases: the reviewed gate", () => {
   it("treats an absent `reviewed` as false", () => {
@@ -164,6 +167,26 @@ describe("calibrate --seed", () => {
     expect(cases[0]?.expected).toBe("fail");
   });
 
+  // `updated` fired whenever the key already existed, so a re-seed with no
+  // new reviews reported "N updated" having changed nothing. ADR 01016 keeps
+  // the two counts separate so the difference between runs is visible; a
+  // number that moves when nothing moved shows no difference.
+  it("counts nothing as updated when a re-seed changes no case", () => {
+    const root = scaffold();
+    recordReview(root, {
+      file: "docs/install.md",
+      evalName: "no-future-promises",
+      contentHash: contentHash(PAGE_BODY),
+      verdict: "pass",
+    });
+    expect(seedGoldenCases({ cwd: root })).toMatchObject({ added: 1, updated: 0 });
+    expect(seedGoldenCases({ cwd: root })).toMatchObject({
+      added: 0,
+      updated: 0,
+      total: 1,
+    });
+  });
+
   // Seeding judges nothing, so it must not construct a provider. This is what
   // lets it run in CI, where there is no API key.
   it("needs no provider", () => {
@@ -174,7 +197,7 @@ describe("calibrate --seed", () => {
       contentHash: contentHash(PAGE_BODY),
       verdict: "pass",
     });
-    delete process.env.ANTHROPIC_API_KEY;
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
     expect(() => seedGoldenCases({ cwd: root })).not.toThrow();
   });
 
