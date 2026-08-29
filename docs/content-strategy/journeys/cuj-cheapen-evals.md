@@ -28,7 +28,7 @@ ai evals and should not have stayed that way.
 Run time and cost now scale with the corpus, and both are trending the wrong way.
 
 **Narrative.** The grader hierarchy is a claim about *preference*, and preferences decay without a
-mechanism. Left alone every eval stays wherever it was born, and since llm is the default grader and
+mechanism. Left alone every eval stays wherever it was born, and since `ai` is the default grader and
 `fill` proposes ai-graded evals by construction, "left alone" means expensive. `promote` and
 `generate` are that mechanism, and this journey is the discipline of applying them.
 

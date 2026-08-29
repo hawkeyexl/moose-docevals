@@ -205,7 +205,7 @@ The content set is complete; these are not.
 | ~~**GitHub Pages deployment**~~ | **Done** (ADR 01006). `docs.yml` runs verify → build → link check → deploy on every push to `main`; the site is live at <https://hawkeyexl.github.io/moose-docevals/>. | — |
 | **LLM evals on the docs corpus** | The `docs-page` suite is deterministic-only. `docs-page-full` adds `no-future-promises`, `serves-one-journey`, and `readable`, and needs committed cache fixtures generated with a provider (`npm run docs:refresh-cache`). | No — but the prose quality of these pages is currently ungated. |
 | **Slimming the README** | Now unblocked: §1 maps every section to a destination that exists. | No. |
-| **`moose-docevals list --format` validation** | An unknown `--format` on `list` exits 0 rather than erroring. Documented behavior is correct today; the inconsistency with `run` is a code question. | No. |
+| ~~**`moose-docevals list --format` validation**~~ | **Done** (ADR 01007). An unknown `--format` is a usage error on every command that takes the flag; `ci.yml` asserts exit 2 and the allowed-set message through the built CLI on both runners. | — |
 
 ### What will drift first
 
