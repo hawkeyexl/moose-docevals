@@ -191,6 +191,32 @@ jobs:
           OPENAI_API_KEY: ""
         run: |
           rm -rf .ci-seed-check
+
+      # `promote` built its provider before checking whether it had anything
+      # to assess, so a corpus with no ai-graded evals demanded an API key to
+      # be told there was nothing to do. Assert the lazy path through the
+      # built CLI with no key present.
+      - name: Dogfood promote with nothing to promote
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ""
+          OPENAI_API_KEY: ""
+        run: |
+          rm -rf .ci-promote-check
+          mkdir -p .ci-promote-check/docs
+          cd .ci-promote-check
+          { echo '---'; echo 'title: Install'; echo 'last-reviewed: 2026-08-01'; echo 'evals:'; echo '  - id: fresh-enough'; echo '    assertion: Reviewed recently.'; echo '    grader: tool:freshness'; echo '---'; echo; echo 'Body.'; } > docs/install.md
+          { echo 'docevals:'; echo '  version: 1'; echo '  files:'; echo '    include: ["docs/**/*.md"]'; } > moose.config.yaml
+          out=$(node ../dist/cli.js promote 2>&1)
+          code=$?
+          echo "$out"
+          if [ "$code" -ne 0 ]; then echo "::error::promote with nothing to assess should exit 0, got $code"; exit 1; fi
+          case "$out" in
+            *"No ai-graded evals found"*) ;;
+            *) echo "::error::expected the no-op message, got: $out"; exit 1 ;;
+          esac
+          cd ..
+          rm -rf .ci-promote-check
           mkdir -p .ci-seed-check/docs
           cd .ci-seed-check
           { echo '---'; echo 'title: Install'; echo 'evals:'; echo '  - use: no-future-promises'; echo '---'; echo; echo 'Body text.'; } > docs/install.md

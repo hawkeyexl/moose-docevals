@@ -8,7 +8,7 @@
  * position: { start: { line }, ... } }] }]
  */
 import type { Finding } from "../../types.js";
-import { exited } from "../exec.js";
+import { exited, outputTail } from "../exec.js";
 import type { Grader } from "../types.js";
 
 interface DslError {
@@ -64,21 +64,40 @@ export const docStructureLintGrader: Grader = {
         });
         continue;
       }
-      let parsed: DslResult[];
+      // Output this grader cannot read is a finding, never a pass.
+      //
+      // Both branches below used to end in a bare `continue`: unparseable
+      // stdout with exit 0 produced no finding at all, and valid JSON of the
+      // wrong shape reached the loop and threw `parsed is not iterable`. The
+      // first is the green-with-nothing-checked failure the corpus gate exists
+      // to prevent — the same hazard ci.yml added an explicit guard for on
+      // doc-detective, where a page whose steps all fail to parse reports
+      // success. An eval must not pass because its tool became unreadable.
+      let parsed: unknown;
       try {
-        parsed = JSON.parse(result.stdout) as DslResult[];
+        parsed = JSON.parse(result.stdout);
       } catch {
-        if (result.code !== 0) {
-          findings.push({
-            evalName: ev.name,
-            file: plan.page.file,
-            message: `doc-structure-lint ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
-            severity: ev.severity,
-          });
-        }
+        findings.push({
+          evalName: ev.name,
+          file: plan.page.file,
+          message:
+            result.code === 0
+              ? `doc-structure-lint exited 0 but its output could not be read as JSON: ${outputTail(result)}`
+              : `doc-structure-lint ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
+          severity: ev.severity,
+        });
         continue;
       }
-      for (const r of parsed) {
+      if (!Array.isArray(parsed)) {
+        findings.push({
+          evalName: ev.name,
+          file: plan.page.file,
+          message: `doc-structure-lint returned JSON of an unexpected shape (expected a list of results): ${outputTail(result)}`,
+          severity: ev.severity,
+        });
+        continue;
+      }
+      for (const r of parsed as DslResult[]) {
         for (const err of r.errors ?? []) {
           findings.push({
             evalName: ev.name,

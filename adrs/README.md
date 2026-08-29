@@ -32,6 +32,7 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01015](01015-ship-a-composite-action-after-the-first-publish.md) | Ship a composite Action and pre-commit hook — after the first npm publish | accepted (nothing to ship yet) |
 | [01016](01016-golden-cases-are-seeded-from-reviews-and-gated-on-human-confirmation.md) | Golden cases are seeded from reviews, and gated on human confirmation | accepted |
 | [01019](01019-a-turn-budget-replaces-the-cost-budget.md) | A turn budget replaces the cost budget, and cost accounting is removed | accepted |
+| [01020](01020-unreadable-tool-output-is-a-finding-not-a-pass.md) | Unreadable tool output is a finding, not a pass | accepted |
 
 ## To backfill
 
