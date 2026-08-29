@@ -189,44 +189,32 @@ function resolveBaseline(
   options: RunOptions,
   cwd: string,
   problems: RunProblem[],
-  filtered: boolean,
 ): BaselineOutcome {
   const wants = options.writeBaseline !== undefined && options.writeBaseline !== false;
   if (options.baseline === false && !wants) return { results };
 
-  // A re-record rebuilds the file from this run's findings, so recording from a
-  // filtered run would drop every fingerprint the filter excluded — silently,
-  // permanently, and with exit 0. The suite verdict is merely withheld on a
-  // filtered run (ADR 01018); the baseline write has to be refused outright,
-  // because there is nothing to withhold once the file is gone.
-  if (wants && filtered) {
-    throw new DocevalsError(
-      "--write-baseline records the whole corpus, so it cannot be combined with " +
-        "--eval or --suite: the re-record would drop every finding the filter " +
-        "excluded. Re-run without the filter to record.",
-    );
-  }
-
-  // A bare `--baseline` or `--write-baseline` asks for the ratchet without
-  // naming a file, so it falls back to the configured path and then to the
-  // default — never to "no baseline", which would silently do nothing.
-  const asksByFlag = options.baseline === true || wants;
-  const fallback = config.baseline ?? (asksByFlag ? DEFAULT_BASELINE_PATH : null);
   // Read and write paths resolve separately. Sharing one made
   // `--baseline old.json --write-baseline new.json` read old.json and then
   // overwrite it, never creating new.json.
-  const readFrom =
+  //
+  // A bare `--baseline` falls back to the configured path and then the
+  // default. `--write-baseline` does NOT force that fallback on the *read*
+  // side: `--write-baseline snapshot.json` in a repo with no `baseline:` key
+  // should not silently subtract a file the user never named.
+  const readFallback =
+    config.baseline ?? (options.baseline === true ? DEFAULT_BASELINE_PATH : null);
+  const applyFrom =
     options.baseline === false
       ? null
       : typeof options.baseline === "string"
         ? options.baseline
-        : fallback;
+        : readFallback;
   const writeTo = !wants
     ? null
     : typeof options.writeBaseline === "string"
       ? options.writeBaseline
-      : fallback;
-  const configured = writeTo ?? readFrom;
+      : (config.baseline ?? DEFAULT_BASELINE_PATH);
+  const configured = writeTo ?? applyFrom;
   if (configured === null) return { results };
 
   // Relative to the config's directory, not the working directory: the file is
@@ -236,20 +224,28 @@ function resolveBaseline(
   // A baseline that cannot be parsed must not block the one command documented
   // to repair it. Reading unconditionally made `--write-baseline` throw the
   // very error whose message recommends running it.
-  let previous: Baseline | null = null;
-  if (readFrom !== null) {
+  const read = (from: string): Baseline | null => {
     try {
-      previous = readBaseline(resolve(config.configDir, readFrom), readFrom);
+      return readBaseline(resolve(config.configDir, from), from);
     } catch (e) {
       if (!wants) throw e;
       problems.push({
-        file: readFrom,
-        message:
-          `${e instanceof Error ? e.message : String(e)} — re-recording over it.`,
+        file: from,
+        message: `${e instanceof Error ? e.message : String(e)} — re-recording over it.`,
         level: "warning",
       });
+      return null;
     }
-  }
+  };
+
+  // What gets subtracted from this run's findings. Null under --no-baseline.
+  const previous = applyFrom === null ? null : read(applyFrom);
+  // What is about to be overwritten. This is what `removed` must be measured
+  // against — not `previous`, which may be a different file or, under
+  // --no-baseline, deliberately unread. Measuring the diff against the wrong
+  // prior silently reported `-0` for a re-record that dropped everything.
+  const overwriting =
+    writeTo === null ? null : writeTo === applyFrom ? previous : read(writeTo);
 
   let out = results;
   let recorded = 0;
@@ -275,7 +271,7 @@ function resolveBaseline(
   // about after the previous baseline was subtracted.
   const next = buildBaseline(results, options.toolVersion ?? "unknown", ctx);
   writeBaselineFile(resolve(config.configDir, writeTo!), next, writeTo!);
-  const { added, removed } = diffBaselines(previous, next);
+  const { added, removed } = diffBaselines(overwriting, next);
   // Apply the baseline this run just wrote, not the one it replaced. Recording
   // today's findings *is* declaring them the accepted state, so a recording run
   // has nothing new left to fail on. Reporting them as failures anyway would
@@ -322,6 +318,16 @@ export function applySelection(
   plans: ResolvedPagePlan[],
   config: DocevalsConfig,
   options: { evalNames?: string[]; suite?: string },
+  /**
+   * Whether a match must be something the run would actually grade.
+   *
+   * True for `run`, where a filter matching only skipped work would exit 0
+   * having executed nothing. False for `list`, which executes nothing by
+   * design — showing that an eval resolves but is skipped is the answer it
+   * exists to give, and throwing there breaks the command the run's own error
+   * message points at.
+   */
+  requireRunnable = true,
 ): boolean {
   const names = options.evalNames?.filter((n) => n.trim() !== "") ?? [];
   const suite = options.suite;
@@ -352,7 +358,7 @@ export function applySelection(
       // the one asked for, and miss ones that report under it.
       const bySuite = suite === undefined || ev.suite === suite;
       const keep = byName && bySuite;
-      if (keep && runnable && !ev.skip) matched += 1;
+      if (keep && (!requireRunnable || (runnable && !ev.skip))) matched += 1;
       return keep;
     });
   }
@@ -367,7 +373,8 @@ export function applySelection(
     throw new DocevalsError(
       `${asked} matched no evals that would run on the pages selected. Nothing ` +
         `would have been checked — the name may be wrong, or every page carrying ` +
-        `it may be skipped.`,
+        `it may be skipped. Run \`moose-docevals list\` with the same filter to ` +
+        `see the resolved plan.`,
     );
   }
   return true;
@@ -426,6 +433,24 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   const config = options.config ?? loadConfig(options.configPath, cwd);
   const exec = options.exec ?? realExec;
   const pages = discoverPages(config, options.globs ?? [], cwd);
+  // Refused up front, not at the end: a re-record rebuilds the file from this
+  // run's findings, so recording from a filtered run would drop every
+  // fingerprint the filter excluded. Deciding it here costs nothing; deciding
+  // it after `resolveBaseline` meant the generation pass had already written
+  // scripts and rewritten frontmatter, and the judge had already been paid.
+  if (
+    options.writeBaseline !== undefined &&
+    options.writeBaseline !== false &&
+    ((options.evalNames?.some((n) => n.trim() !== "") ?? false) ||
+      options.suite !== undefined)
+  ) {
+    throw new DocevalsError(
+      "--write-baseline records the whole corpus, so it cannot be combined with " +
+        "--eval or --suite: the re-record would drop every finding the filter " +
+        "excluded. Re-run without the filter to record.",
+    );
+  }
+
   const plans = resolvePages(pages, config);
   const filtered = applySelection(plans, config, options);
   const judgeOptions = options.judgeOptions ?? {};
@@ -622,7 +647,13 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     for (const t of targets) {
       const key = resultKey(t.plan.page.file, t.eval.name);
       const own = grouped.get(key) ?? [];
-      const hasError = own.some((f) => f.severity === "error");
+      // A diagnostic finding fails the eval regardless of severity: it means
+      // the grader could not reach a verdict, and "no verdict" must never read
+      // as "pass". Enforced here rather than per-adapter, so a new adapter
+      // gets it by default instead of having to remember (ADR 01022).
+      const hasError = own.some(
+        (f) => f.severity === "error" || f.diagnostic === true,
+      );
       results.push({
         evalName: t.eval.name,
         type: t.eval.type,
@@ -681,7 +712,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     });
   }
 
-  const baselineOutcome = resolveBaseline(results, config, options, cwd, problems, filtered);
+  const baselineOutcome = resolveBaseline(results, config, options, cwd, problems);
   // Copy before clearing: when no baseline applies, `resolveBaseline` hands
   // back the very array it was given, and emptying it first would leave the
   // spread with nothing to read — a run reporting zero results, green.

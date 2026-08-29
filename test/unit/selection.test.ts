@@ -12,6 +12,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runEvals } from "../../src/core/engine.js";
+import { runList } from "../../src/commands/list.js";
 import { DocevalsError } from "../../src/types.js";
 
 const BODY = "\n# Install\n\nRun the installer.\n";
@@ -173,6 +174,44 @@ describe("selection: a filter that matches only skipped work", () => {
     );
     await expect(run(root, { evalNames: ["always-passes"] })).rejects.toThrow(
       /matched no evals that would run/,
+    );
+  });
+});
+
+describe("selection: list answers what run refuses", () => {
+  /** A skipped page that still declares the eval. */
+  function skippedButDeclared(): string {
+    const root = scaffold();
+    writeFileSync(
+      join(root, "docs", "install.md"),
+      readFileSync(join(root, "docs", "install.md"), "utf8").replace(
+        "title: Install",
+        "title: Install\neval-skip: true",
+      ),
+    );
+    return root;
+  }
+
+  // `run` must refuse: executing nothing and exiting 0 is the hazard.
+  it("run still refuses a filter that would grade nothing", async () => {
+    await expect(
+      run(skippedButDeclared(), { evalNames: ["always-passes"] }),
+    ).rejects.toThrow(/matched no evals that would run/);
+  });
+
+  // `list` must not: it executes nothing by design, and showing that the eval
+  // resolves but is skipped is the answer the user came for — it is also the
+  // command run's own error message points at.
+  it("list shows the resolved plan instead of throwing", () => {
+    const run_ = runList([], { cwd: skippedButDeclared(), evalNames: ["always-passes"] });
+    expect(run_.plans).toHaveLength(1);
+    expect(run_.plans[0]?.skip).toBe(true);
+    expect(run_.plans[0]?.evals.map((e) => e.name)).toEqual(["always-passes"]);
+  });
+
+  it("list still errors on a name that resolves nowhere", () => {
+    expect(() => runList([], { cwd: scaffold(), evalNames: ["no-such-eval"] })).toThrow(
+      /no-such-eval/,
     );
   });
 });

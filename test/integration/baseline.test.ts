@@ -236,3 +236,48 @@ describe("baseline: paths, filters, and recovery", () => {
     expect(off.problems.some((p) => p.message.includes("will not read this file"))).toBe(true);
   });
 });
+
+describe("baseline: the removed count must be measured against what is overwritten", () => {
+  // `removed` is the only signal that an over-narrow re-record forgave
+  // findings. Reading `previous` from the apply path meant --no-baseline made
+  // it structurally zero, and a differing --baseline made it wrong.
+  it("reports removed under --no-baseline --write-baseline", async () => {
+    const root = scaffold(["  baseline: .moose-docevals-baseline.json"]);
+    await run(root, { writeBaseline: true });
+
+    // Fix the finding, then re-record while ignoring the old baseline.
+    writeFileSync(
+      join(root, "docs", "legacy.md"),
+      readFileSync(join(root, "docs", "legacy.md"), "utf8").replace(
+        "last-reviewed: 1999-01-01",
+        "last-reviewed: 2026-08-01",
+      ),
+    );
+    const re = await run(root, { baseline: false, writeBaseline: true });
+    expect(re.baseline?.written?.removed).toBe(1);
+  });
+
+  it("diffs against the file it overwrites, not the one it read", async () => {
+    const root = scaffold(["  baseline: team.json"]);
+    await run(root, { writeBaseline: true });            // team.json: 1 entry
+    writeFileSync(join(root, "old.json"), '{"version":1,"generatedWith":"t","entries":{}}');
+
+    // Reads old.json (empty), overwrites team.json (1 entry) with 1 entry.
+    const re = await run(root, { baseline: "old.json", writeBaseline: true });
+    expect(re.baseline?.written?.removed).toBe(0);
+    expect(re.baseline?.written?.added).toBe(0);
+  });
+
+  // `--write-baseline snapshot.json` in a repo with no `baseline:` key must not
+  // quietly subtract a default file the user never named.
+  it("does not read an unnamed default when only a write path is given", async () => {
+    const root = scaffold();
+    writeFileSync(
+      join(root, DEFAULT_BASELINE_PATH),
+      '{"version":1,"generatedWith":"t","entries":{"docs/legacy.md":["ffffffffffffffff"]}}',
+    );
+    const re = await run(root, { writeBaseline: "snapshot.json" });
+    expect(existsSync(join(root, "snapshot.json"))).toBe(true);
+    expect(re.baseline?.suppressed).toBe(0);
+  });
+});

@@ -321,3 +321,27 @@ describe("stale counts a file this run found clean", () => {
     expect(clean.stale).toBe(1);
   });
 });
+
+describe("stale distinguishes checked from merely reported", () => {
+  const recorded = () => buildBaseline([result([finding()])], "0.1.0");
+  const bare = (over: Partial<EvalResult>): EvalResult =>
+    result([], { findings: undefined, ...over });
+
+  // A clean pass is the case pruning exists for.
+  it("counts a file the run graded and found clean", () => {
+    const r = applyBaseline([bare({ outcome: "pass" })], recorded());
+    expect(r.recorded).toBe(1);
+    expect(r.stale).toBe(1);
+  });
+
+  // These never ran. Their recorded findings are unmeasured, not gone, and
+  // calling them stale invites the re-record that forgives them for good.
+  it.each(["skipped", "error", "needs-review"] as const)(
+    "does not count a %s result",
+    (outcome) => {
+      const r = applyBaseline([bare({ outcome })], recorded());
+      expect(r.recorded).toBe(0);
+      expect(r.stale).toBe(0);
+    },
+  );
+});

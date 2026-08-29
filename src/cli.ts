@@ -396,7 +396,11 @@ program
           noCache: opts.cache === false,
         });
         console.log(renderCalibration(report));
-        process.exitCode = report.meetsThreshold ? 0 : 1;
+        // Both conditions: the judge has to agree enough, AND the set has to
+        // have been measured. A stale golden file whose pages were renamed
+        // used to certify on whatever still resolved.
+        process.exitCode =
+          report.meetsThreshold && report.unjudged === 0 ? 0 : 1;
       } catch (e) {
         fail(e);
       }

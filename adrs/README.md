@@ -34,8 +34,9 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01017](01017-a-committed-baseline-ratchets-a-legacy-corpus.md) | A committed baseline ratchets a legacy corpus | accepted |
 | [01018](01018-selecting-evals-suspends-suite-enforcement.md) | Selecting a subset of evals suspends suite enforcement | accepted |
 | [01019](01019-a-turn-budget-replaces-the-cost-budget.md) | A turn budget replaces the cost budget, and cost accounting is removed | accepted |
-| [01020](01020-unreadable-tool-output-is-a-finding-not-a-pass.md) | Unreadable tool output is a finding, not a pass | accepted |
+| [01020](01020-unreadable-tool-output-is-a-finding-not-a-pass.md) | Unreadable tool output is a finding, not a pass | superseded by [01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md) |
 | [01021](01021-a-config-eval-is-one-generation-target.md) | A config-defined eval is one generation target, however many pages use it | accepted |
+| [01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md) | A grader that reached no verdict fails the eval, at any severity | accepted |
 
 ## To backfill
 

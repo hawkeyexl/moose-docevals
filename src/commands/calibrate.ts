@@ -58,6 +58,13 @@ export interface CalibrationCaseResult extends GoldenCase {
   judged?: "pass" | "fail";
   agrees?: boolean;
   error?: string;
+  /**
+   * Set when the turn budget, not the judge, is why this case has no verdict.
+   * A flag rather than a substring of `error`: the message is user-facing and
+   * interpolates a golden case's own `eval` value, so matching on it both
+   * broke when the wording changed and miscounted a case named after it.
+   */
+  budgetSkipped?: boolean;
   /** The page no longer hashes to what this case was verified against. */
   stale?: boolean;
 }
@@ -78,6 +85,17 @@ export interface CalibrationReport {
   stale: number;
   /** Cases the turn budget prevented from being judged at all. */
   budgetSkipped: number;
+  /**
+   * Cases that never reached a verdict, for any reason: a missing page, an
+   * unresolvable eval, an errored judge, or the turn budget. The agreement
+   * rate is over the rest, so a non-zero value means it measured a sample.
+   *
+   * Kept separate from `meetsThreshold` rather than folded into it, following
+   * ADR 01018: the verdict stays a statement about agreement, and this stays a
+   * statement about coverage. Overloading one boolean made the report print
+   * "refine your assertions" at 100% agreement.
+   */
+  unjudged: number;
 }
 
 export interface CalibrateOptions {
@@ -320,11 +338,11 @@ export async function runCalibrate(
         // first is a coverage problem that must not be allowed to certify
         // anything, and it used to disappear into the same error bucket.
         const reason = judged[i]?.skipReason;
+        const fromBudget = reason?.includes("turn budget") === true;
         results[at] = {
           ...slot,
-          error: reason?.includes("turn budget")
-            ? `not judged: ${reason}`
-            : "judge returned no consensus",
+          ...(fromBudget ? { budgetSkipped: true } : {}),
+          error: fromBudget ? `not judged: ${reason}` : "judge returned no consensus",
         };
         continue;
       }
@@ -354,13 +372,13 @@ export async function runCalibrate(
   // the same silent-green shape `runEvals` guards against; `calibrate` is the
   // command whose whole output is a trust claim, so here it fails the run
   // rather than merely warning.
-  const budgetSkipped = results.filter((r) =>
-    r.error?.includes("turn budget"),
-  ).length;
+  const budgetSkipped = results.filter((r) => r.budgetSkipped === true).length;
+  const unjudged = results.length - judgedCases.length;
 
   return {
     cases: results,
     budgetSkipped,
+    unjudged,
     unreviewed: judgedCases.filter((r) => !r.reviewed).length,
     stale: judgedCases.filter((r) => r.stale === true).length,
     total: results.length,
@@ -369,7 +387,7 @@ export async function runCalibrate(
     falsePositives,
     falsePositiveRate,
     falseNegatives,
-    meetsThreshold: budgetSkipped === 0 && agreementRate >= AGREEMENT_THRESHOLD,
+    meetsThreshold: agreementRate >= AGREEMENT_THRESHOLD,
     fpAlert: falsePositiveRate > config.judge.falsePositiveAlert,
   };
 }
@@ -403,7 +421,18 @@ export function renderCalibration(report: CalibrationReport): string {
   lines.push(
     `False positives: ${report.falsePositives} (${(report.falsePositiveRate * 100).toFixed(0)}% of human-passes), false negatives: ${report.falseNegatives}`,
   );
-  if (!report.meetsThreshold) {
+  if (report.unjudged > 0) {
+    lines.push(
+      pc.red(
+        `
+${report.unjudged} of ${report.total} case(s) never reached a verdict, so the rate above ` +
+          `is over a sample. A calibration measured on part of the set does not certify the judge.`,
+      ),
+    );
+  }
+  // Only when something was actually measured. "Refine the eval criteria" is
+  // advice about a rate, and there is no rate over zero judged cases.
+  if (judged > 0 && !report.meetsThreshold) {
     lines.push(
       pc.red(
         "\nAgreement is below threshold. Refine the eval criteria first — make assertions more specific — before changing the grading mechanism.",

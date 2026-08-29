@@ -271,12 +271,14 @@ export function applyBaseline(
   const touched = new Set<string>();
 
   const applied = results.map((r) => {
-    // Touched before the empty check: a file this run checked and found
-    // clean is exactly the file whose recorded entries are now prunable, and
-    // that is the case `stale` exists to surface. Returning early first made
-    // a completed cleanup report "0 recorded, 0 stale".
+    // "Touched" means this run actually graded the file, which is not the same
+    // as having produced a result for it. A clean pass must count, because a
+    // file whose findings were all fixed is exactly what `stale` exists to
+    // surface. A `skipped` or `error` result must NOT: the eval never ran, so
+    // its recorded findings are not gone, they are unmeasured — and reporting
+    // them as "no longer occur" invites the re-record that deletes them.
     const key = canonicalFilePath(r.file, ctx);
-    touched.add(key);
+    if (r.outcome === "pass" || r.outcome === "fail") touched.add(key);
     const findings = r.findings;
     if (!findings || findings.length === 0) return r;
     const known = baseline.entries[key];

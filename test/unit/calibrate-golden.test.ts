@@ -440,3 +440,60 @@ describe("calibrate --seed: a hand-written rationale survives", () => {
     expect(loadGoldenCases(dir)[0]?.rationale).toBe("second");
   });
 });
+
+describe("runCalibrate: coverage is separate from agreement", () => {
+  // ADR 01018's pattern: the verdict stays a statement about agreement, and
+  // coverage is reported beside it. Folding both into meetsThreshold made the
+  // renderer print "refine your assertions" at 100% agreement.
+  it("keeps the verdict truthful when the budget truncates", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      ["- file: docs/install.md", "  eval: no-future-promises", "  expected: pass", "  reviewed: true", ""].join("\n"),
+    );
+    const budgetOnly = async (targets: { plan: { page: { file: string } }; eval: { name: string } }[]) =>
+      targets.map(
+        (t) =>
+          ({
+            evalName: t.eval.name, type: "regression", grader: "ai",
+            file: t.plan.page.file, outcome: "skipped",
+            skipReason: "judge turn budget exhausted (3)", durationMs: 0,
+          }) as unknown as EvalResult,
+      );
+    const report = await runCalibrate({ cwd: root, judge: budgetOnly });
+    expect(report.budgetSkipped).toBe(1);
+    expect(report.unjudged).toBe(1);
+    // No case was measured, so there is no agreement to report either way.
+    expect(renderCalibration(report)).not.toMatch(/Refine the eval criteria/);
+  });
+
+  // A stale golden file used to certify on whatever still resolved: the
+  // budget was guarded, a renamed page was not.
+  it("counts a case whose page is gone as unjudged", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      [
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "- file: docs/renamed-away.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "",
+      ].join("\n"),
+    );
+    const report = await runCalibrate({ cwd: root, judge: alwaysPass });
+
+    expect(report.agreementRate).toBe(1);
+    expect(report.meetsThreshold).toBe(true);
+    // ...but one of two cases never reached a verdict, so the gate must not pass.
+    expect(report.unjudged).toBe(1);
+    expect(report.budgetSkipped).toBe(0);
+    expect(renderCalibration(report)).toMatch(/never reached a verdict/);
+  });
+});

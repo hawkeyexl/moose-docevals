@@ -10,9 +10,23 @@
 import type { Finding } from "../../types.js";
 import { exited } from "../exec.js";
 
-/** Trailing slice of one stream, for a message that must name what it read. */
-function tail(text: string, maxChars = 400): string {
-  const t = text.trim();
+/**
+ * Trailing slice of the output, for a message that must name what it read.
+ *
+ * stdout first — it is the stream that failed to parse — but falling back to
+ * stderr, because a tool that dies loading its template writes nothing to
+ * stdout and the message would otherwise end at a bare colon.
+ */
+function tail(
+  result: { stdout: string; stderr: string },
+  prefer: "stdout" | "stderr" = "stdout",
+  maxChars = 400,
+): string {
+  const [first, second] =
+    prefer === "stdout"
+      ? [result.stdout, result.stderr]
+      : [result.stderr, result.stdout];
+  const t = (first.trim() || second.trim()).trim();
   return t.length <= maxChars ? t : `…${t.slice(-maxChars)}`;
 }
 import type { Grader } from "../types.js";
@@ -57,17 +71,25 @@ export const docStructureLintGrader: Grader = {
         ...(templatePath ? ["--template-path", templatePath] : []),
         "--json",
       ];
+      const unreadable = (detail: string): void => {
+        findings.push({
+          evalName: ev.name,
+          file: plan.page.file,
+          ruleId: "doc-structure-lint/unreadable",
+          message: detail,
+          severity: ev.severity,
+          diagnostic: true,
+        });
+      };
+
       const result = await ctx.exec(cmd, {
         cwd: ctx.root,
         timeoutMs: ev.timeoutMs ?? 120000,
       });
       if (result.spawnError) {
-        findings.push({
-          evalName: ev.name,
-          file: plan.page.file,
-          message: `Failed to run doc-structure-lint: ${result.spawnError} (is it installed?)`,
-          severity: ev.severity,
-        });
+        unreadable(
+          `Failed to run doc-structure-lint: ${result.spawnError} (is it installed?)`,
+        );
         continue;
       }
       // Output this grader cannot read is a finding, never a pass.
@@ -84,40 +106,24 @@ export const docStructureLintGrader: Grader = {
       // finding, so emitting this at `severity: warning` — the natural setting
       // for a lint-style structure check — would let the tool return garbage
       // and the eval still pass, which is the silent pass ADR 01020 closes.
-      const unreadable = (detail: string): void => {
-        findings.push({
-          evalName: ev.name,
-          file: plan.page.file,
-          ruleId: "doc-structure-lint/unreadable",
-          message: detail,
-          severity: "error",
-        });
-      };
 
       let parsed: unknown;
       try {
         parsed = JSON.parse(result.stdout);
       } catch {
-        if (result.code === 0) {
-          // stdout, not `outputTail`: that prefers stderr, which on this branch
-          // is usually an unrelated Node warning rather than the payload that
-          // failed to parse.
-          unreadable(
-            `doc-structure-lint exited 0 but its output could not be read as JSON: ${tail(result.stdout)}`,
-          );
-        } else {
-          findings.push({
-            evalName: ev.name,
-            file: plan.page.file,
-            message: `doc-structure-lint ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
-            severity: ev.severity,
-          });
-        }
+        // Both branches are diagnostics: neither reached a verdict about the
+        // page. The non-zero branch is the likeliest of all — it is what an
+        // uninstalled tool produces — and it used to pass at warning severity.
+        unreadable(
+          result.code === 0
+            ? `doc-structure-lint exited 0 but its output could not be read as JSON: ${tail(result)}`
+            : `doc-structure-lint ${exited(result.code)}: ${tail(result, "stderr")}`,
+        );
         continue;
       }
       if (!Array.isArray(parsed)) {
         unreadable(
-          `doc-structure-lint returned JSON of an unexpected shape (expected a list of results): ${tail(result.stdout)}`,
+          `doc-structure-lint returned JSON of an unexpected shape (expected a list of results): ${tail(result)}`,
         );
         continue;
       }
@@ -125,19 +131,25 @@ export const docStructureLintGrader: Grader = {
       // undefined`, so the eval passed on output nobody could read, and
       // `[null]` threw out of grade(), which the engine turns into an error on
       // every target of this kind rather than a finding on the one page.
-      if (parsed.some((r) => typeof r !== "object" || r === null)) {
+      // `typeof [] === "object"`, so an array element would otherwise satisfy
+      // this and fall through to a silent pass. Every entry is validated up
+      // front so one payload yields at most one diagnostic, and so a payload
+      // declared unreadable never also contributes parsed findings.
+      const malformed = parsed.some(
+        (r) =>
+          typeof r !== "object" ||
+          r === null ||
+          Array.isArray(r) ||
+          ((r as DslResult).errors !== undefined &&
+            !Array.isArray((r as DslResult).errors)),
+      );
+      if (malformed) {
         unreadable(
-          `doc-structure-lint returned a list whose entries are not result objects: ${tail(result.stdout)}`,
+          `doc-structure-lint returned a list whose entries are not result objects: ${tail(result)}`,
         );
         continue;
       }
       for (const r of parsed as DslResult[]) {
-        if (r.errors !== undefined && !Array.isArray(r.errors)) {
-          unreadable(
-            `doc-structure-lint returned a result whose "errors" is not a list: ${tail(result.stdout)}`,
-          );
-          continue;
-        }
         for (const err of r.errors ?? []) {
           findings.push({
             evalName: ev.name,
