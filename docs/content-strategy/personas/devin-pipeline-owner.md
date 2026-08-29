@@ -48,7 +48,7 @@ reads past. The cache in particular has to survive between runs or the cost mode
 it lives and what belongs in a CI cache key is load-bearing reference material for him.
 
 **Content files drive arbitrary code execution, by two paths.** Page frontmatter can declare commands,
-gated by `scripts.allowFrontmatterCommands` and `--no-frontmatter-commands`. Separately, the
+gated by `scripts.allow-frontmatter-commands` and `--no-frontmatter-commands`. Separately, the
 `tool:doc-detective` grader executes steps embedded in page *bodies* — and the flag does **not** gate
 that. On a fork pull request an attacker controls both. Devin is the only persona equipped to reason
 about this, and the honest answer he needs is that the flag is not sufficient: the job itself must be

@@ -2,22 +2,21 @@
 title: Installation
 sidebar-title: Installation
 last-reviewed: 2026-06-01
+eval-suite: how-to
 evals:
-  suite: how-to
-  evals:
-    - name: install-command-accuracy
-      assertion: >
-        The documented global install command is `npm i -g doc-detective` and
-        the stated Node.js minimum version is 22 or later.
-      type: regression
-      grader: llm
-      evidence: Code blocks and prerequisites list
-      examples:
-        pass: Shows `npm i -g doc-detective` and Node.js v22+.
-        fail: Shows a deprecated install command or an older Node.js minimum.
-    - name: install-command-present
-      assertion: The page contains a bash code block with the command npm i -g doc-detective.
-      grader: command
+  - id: install-command-accuracy
+    assertion: >
+      The documented global install command is `npm i -g doc-detective` and
+      the stated Node.js minimum version is 22 or later.
+    type: regression
+    grader: ai
+    evidence: Code blocks and prerequisites list
+    examples:
+      pass: Shows `npm i -g doc-detective` and Node.js v22+.
+      fail: Shows a deprecated install command or an older Node.js minimum.
+  - id: install-command-present
+    assertion: The page contains a bash code block with the command npm i -g doc-detective.
+    grader: command
 ---
 
 Downloading and running Doc Detective is straightforward. You can install Doc Detective using NPX (Node.js) or Docker. Follow the instructions for your preferred method:

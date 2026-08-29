@@ -20,19 +20,104 @@ export interface Pricing {
   outputPerMTok: number;
 }
 
+/**
+ * One eval definition, as the rest of the codebase sees it.
+ *
+ * Files — config and page frontmatter alike — spell these keys in kebab-case,
+ * because that is the vocabulary docmeta publishes and a field should mean one
+ * thing wherever it is written. TypeScript keeps camelCase, because that is
+ * what TypeScript reads like. `normalizeEvalDef` is the single boundary
+ * between the two; nothing downstream should ever see a kebab key.
+ */
 export interface EvalDef {
   assertion?: string;
   type?: EvalType;
   grader?: string;
+  /** Provider or agent judging an `ai` eval; omit for the config default. */
+  provider?: string;
   evidence?: string;
-  examples?: { pass?: string; fail?: string };
+  /** Anchor examples. One or several each — a bare string normalizes to a list. */
+  examples?: { pass?: string[]; fail?: string[] };
   command?: string[];
   successExitCodes?: number[];
   timeoutMs?: number;
-  generated?: { assertionHash: string };
+  /** sha256 of the assertion when the check script was generated. */
+  generatedAssertionHash?: string;
   options?: Record<string, unknown>;
   severity?: Severity;
   severityMap?: Record<string, Severity>;
+}
+
+/** The file-side spelling of an eval definition. Kebab, exactly as authored. */
+export interface RawEvalDef {
+  assertion?: string;
+  type?: EvalType;
+  grader?: string;
+  provider?: string;
+  evidence?: string;
+  examples?: { pass?: string | string[]; fail?: string | string[] };
+  command?: string[];
+  "success-exit-codes"?: number[];
+  "timeout-ms"?: number;
+  "generated-assertion-hash"?: string;
+  options?: Record<string, unknown>;
+  severity?: Severity;
+  "severity-map"?: Record<string, Severity>;
+}
+
+/**
+ * File-side pricing keys in, camelCase `Pricing` out.
+ *
+ * Both sides are required by the schema, so there is nothing to default here.
+ * That is the point: filling a missing side with `0` would price those tokens
+ * as free — `cost.totalUsd` under-reports, and `max-cost-usd` never trips on
+ * the side that was left out.
+ */
+function normalizePricing(raw: RawPricing | undefined): Pricing | undefined {
+  if (raw === undefined) return undefined;
+  return {
+    inputPerMTok: raw["input-per-mtok"],
+    outputPerMTok: raw["output-per-mtok"],
+  };
+}
+
+/** One anchor example, or several, as a list. */
+function anchorList(v: string | string[] | undefined): string[] | undefined {
+  if (v === undefined) return undefined;
+  return Array.isArray(v) ? v : [v];
+}
+
+/**
+ * Kebab file keys in, camelCase `EvalDef` out. Used for config-defined evals
+ * and for page inline evals, so both reach the engine in one shape.
+ */
+export function normalizeEvalDef(raw: RawEvalDef): EvalDef {
+  const examples =
+    raw.examples === undefined
+      ? undefined
+      : {
+          ...(anchorList(raw.examples.pass) !== undefined && {
+            pass: anchorList(raw.examples.pass),
+          }),
+          ...(anchorList(raw.examples.fail) !== undefined && {
+            fail: anchorList(raw.examples.fail),
+          }),
+        };
+  return {
+    assertion: raw.assertion,
+    type: raw.type,
+    grader: raw.grader,
+    provider: raw.provider,
+    evidence: raw.evidence,
+    examples,
+    command: raw.command,
+    successExitCodes: raw["success-exit-codes"],
+    timeoutMs: raw["timeout-ms"],
+    generatedAssertionHash: raw["generated-assertion-hash"],
+    options: raw.options,
+    severity: raw.severity,
+    severityMap: raw["severity-map"],
+  };
 }
 
 export interface SuiteDef {
@@ -111,9 +196,123 @@ const PRE_RENAME_ROOT_KEYS = [
 const ajv = new Ajv2020({ allErrors: true, allowUnionTypes: true });
 const validateConfig = ajv.compile(configSchema);
 
+/**
+ * The config file's own shape, in its own spelling.
+ *
+ * Ajv has already validated `raw` against `config-schema.json` by the time this
+ * is used, so the optionality here is the schema's, not a guess. Declaring it
+ * is what lets `parseConfig` read the file without an `any` — and an `any` here
+ * would be the worst place for one, since every default in the tool flows
+ * through this function.
+ */
+interface RawPricing {
+  "input-per-mtok": number;
+  "output-per-mtok": number;
+}
+
+interface RawProviderSection {
+  model?: string;
+  command?: string;
+  "base-url"?: string;
+  "api-key-env"?: string;
+  pricing?: RawPricing;
+}
+
+interface RawDocevalsConfig {
+  version?: 1;
+  files?: { include?: string[]; exclude?: string[] };
+  defaults?: {
+    suite?: string | null;
+    "fail-fast"?: boolean;
+    concurrency?: number;
+  };
+  provider?: {
+    default?: ProviderName;
+    anthropic?: RawProviderSection;
+    openai?: RawProviderSection;
+    "claude-cli"?: RawProviderSection;
+  };
+  judge?: {
+    "ensemble-runs"?: number;
+    temperature?: number;
+    zones?: { "auto-pass"?: number; "auto-fail"?: number };
+    "false-positive-alert"?: number;
+    "cache-dir"?: string;
+    "max-cost-usd"?: number | null;
+  };
+  scripts?: {
+    dir?: string;
+    "config-dir"?: string;
+    "allow-frontmatter-commands"?: boolean;
+    "timeout-ms"?: number;
+  };
+  fill?: {
+    "confidence-threshold"?: number;
+    "max-evals-per-page"?: number;
+    temperature?: number;
+    "cache-dir"?: string;
+    "max-cost-usd"?: number | null;
+  };
+  evals?: Record<string, RawEvalDef>;
+  suites?: Record<string, RawSuiteDef>;
+}
+
 interface RawSuiteDef {
-  targetPassRate?: number;
+  "target-pass-rate"?: number;
   evals?: string[];
+}
+
+/**
+ * Object keys whose sub-keys are names chosen by something other than this
+ * schema, so a capital letter in them is not a stale spelling:
+ *
+ *   severity-map — keyed by the *tool's* own severity names
+ *   options      — no: grader options are ours, and they kebab with everything
+ *                  else (docmeta proposal 0023 leaves this call to each tool)
+ */
+const FOREIGN_KEY_SPACES = new Set(["severity-map"]);
+
+/** The 0.1 `generated: {assertionHash}` wrapper, as opposed to any other key of that name. */
+function isAssertionHashWrapper(value: unknown): boolean {
+  return (
+    value != null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "assertionHash" in value
+  );
+}
+
+/** Walk `node`, reporting every camelCase key with the kebab it should be. */
+function findPreKebabKeys(
+  node: unknown,
+  path: string,
+): { at: string; becomes: string }[] {
+  if (node == null || typeof node !== "object" || Array.isArray(node)) return [];
+  const found: { at: string; becomes: string }[] = [];
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    if (/[a-z0-9][A-Z]/.test(key)) {
+      found.push({
+        at: `${path}.${key}`,
+        becomes: key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase(),
+      });
+    }
+    // `generated: {assertionHash}` flattened rather than renamed, so the
+    // generic rule above would suggest the wrong thing for the wrapper itself.
+    //
+    // Matched on shape, not on the name alone: `options` is a grader’s open
+    // runtime contract, so a key called `generated` there is legal config and
+    // an error naming `generated-assertion-hash` would be advice nobody can
+    // follow. Only the 0.1 wrapper — an object carrying `assertionHash` — is
+    // the thing this rule is about.
+    if (key === "generated" && isAssertionHashWrapper(value)) {
+      found.push({ at: `${path}.generated`, becomes: "generated-assertion-hash" });
+      continue;
+    }
+    if (!FOREIGN_KEY_SPACES.has(key)) {
+      found.push(...findPreKebabKeys(value, `${path}.${key}`));
+    }
+  }
+  return found;
 }
 
 /** Parse and validate config YAML text. `configPath` is used for messages and path resolution. */
@@ -145,25 +344,41 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       );
     }
   }
+  // Every config key is kebab-case now. Ajv would reject a leftover camelCase
+  // spelling as "must NOT have additional properties", which names the parent
+  // object and leaves the reader to guess which key. Name the key and its
+  // replacement instead — this is a migration, and a migration that makes you
+  // guess is one people work around.
+  const preKebab = findPreKebabKeys(
+    (raw as Record<string, unknown>)[NAMESPACE],
+    NAMESPACE,
+  );
+  if (preKebab.length > 0) {
+    throw new DocevalsError(
+      `Invalid config in ${configPath}: camelCase keys are no longer read.\n` +
+        preKebab.map((p) => `  ${p.at} -> ${p.becomes}`).join("\n") +
+        `\nEvery moose-docevals key is kebab-case, matching the frontmatter vocabulary.`,
+    );
+  }
+
   if (!validateConfig(raw)) {
     const details = (validateConfig.errors ?? [])
-      .map((e) => `  ${e.instancePath || "/"}: ${e.message}`)
+      .map((e) => `  ${e.instancePath || "/"}: ${e.message ?? "is invalid"}`)
       .join("\n");
     throw new DocevalsError(`Invalid config in ${configPath}:\n${details}`);
   }
 
   // Sibling tools own the other root keys; this reads only its own namespace.
   // A file that configures no docevals at all leaves every default in place.
-  const r = ((raw as Record<string, any>)[NAMESPACE] ?? {}) as Record<string, any>;
+  const r = ((raw as Record<string, unknown>)[NAMESPACE] ??
+    {}) as RawDocevalsConfig;
   const abs = resolve(configPath);
   const dir = dirname(abs);
 
   const suites: Record<string, SuiteDef> = {};
-  for (const [name, def] of Object.entries(
-    (r.suites ?? {}) as Record<string, RawSuiteDef>,
-  )) {
+  for (const [name, def] of Object.entries(r.suites ?? {})) {
     suites[name] = {
-      targetPassRate: def.targetPassRate ?? 1.0,
+      targetPassRate: def["target-pass-rate"] ?? 1.0,
       evals: def.evals ?? [],
     };
   }
@@ -176,21 +391,21 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
     },
     defaults: {
       suite: r.defaults?.suite ?? null,
-      failFast: r.defaults?.failFast ?? false,
+      failFast: r.defaults?.["fail-fast"] ?? false,
       concurrency: r.defaults?.concurrency ?? 4,
     },
     provider: {
       default: r.provider?.default ?? "anthropic",
       anthropic: {
         model: r.provider?.anthropic?.model ?? "claude-sonnet-4-5",
-        apiKeyEnv: r.provider?.anthropic?.apiKeyEnv ?? "ANTHROPIC_API_KEY",
-        pricing: r.provider?.anthropic?.pricing,
+        apiKeyEnv: r.provider?.anthropic?.["api-key-env"] ?? "ANTHROPIC_API_KEY",
+        pricing: normalizePricing(r.provider?.anthropic?.pricing),
       },
       openai: {
-        baseUrl: r.provider?.openai?.baseUrl ?? "https://api.openai.com/v1",
+        baseUrl: r.provider?.openai?.["base-url"] ?? "https://api.openai.com/v1",
         model: r.provider?.openai?.model ?? "gpt-4o-mini",
-        apiKeyEnv: r.provider?.openai?.apiKeyEnv ?? "OPENAI_API_KEY",
-        pricing: r.provider?.openai?.pricing,
+        apiKeyEnv: r.provider?.openai?.["api-key-env"] ?? "OPENAI_API_KEY",
+        pricing: normalizePricing(r.provider?.openai?.pricing),
       },
       "claude-cli": {
         model: r.provider?.["claude-cli"]?.model ?? "claude-sonnet-4-5",
@@ -198,30 +413,35 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       },
     },
     judge: {
-      ensembleRuns: r.judge?.ensembleRuns ?? 3,
+      ensembleRuns: r.judge?.["ensemble-runs"] ?? 3,
       temperature: r.judge?.temperature ?? 0,
       zones: {
-        autoPass: r.judge?.zones?.autoPass ?? 0.8,
-        autoFail: r.judge?.zones?.autoFail ?? 0.8,
+        autoPass: r.judge?.zones?.["auto-pass"] ?? 0.8,
+        autoFail: r.judge?.zones?.["auto-fail"] ?? 0.8,
       },
-      falsePositiveAlert: r.judge?.falsePositiveAlert ?? 0.15,
-      cacheDir: r.judge?.cacheDir ?? ".moose-docevals/cache",
-      maxCostUsd: r.judge?.maxCostUsd ?? null,
+      falsePositiveAlert: r.judge?.["false-positive-alert"] ?? 0.15,
+      cacheDir: r.judge?.["cache-dir"] ?? ".moose-docevals/cache",
+      maxCostUsd: r.judge?.["max-cost-usd"] ?? null,
     },
     scripts: {
       dir: r.scripts?.dir ?? "{docDir}/moose-docevals",
-      configDir: r.scripts?.configDir ?? "moose-docevals-scripts",
-      allowFrontmatterCommands: r.scripts?.allowFrontmatterCommands ?? true,
-      timeoutMs: r.scripts?.timeoutMs ?? 30000,
+      configDir: r.scripts?.["config-dir"] ?? "moose-docevals-scripts",
+      allowFrontmatterCommands: r.scripts?.["allow-frontmatter-commands"] ?? true,
+      timeoutMs: r.scripts?.["timeout-ms"] ?? 30000,
     },
     fill: {
-      confidenceThreshold: r.fill?.confidenceThreshold ?? 0.7,
-      maxEvalsPerPage: r.fill?.maxEvalsPerPage ?? 3,
+      confidenceThreshold: r.fill?.["confidence-threshold"] ?? 0.7,
+      maxEvalsPerPage: r.fill?.["max-evals-per-page"] ?? 3,
       temperature: r.fill?.temperature ?? 0,
-      cacheDir: r.fill?.cacheDir ?? ".moose-docevals/cache/fill",
-      maxCostUsd: r.fill?.maxCostUsd ?? null,
+      cacheDir: r.fill?.["cache-dir"] ?? ".moose-docevals/cache/fill",
+      maxCostUsd: r.fill?.["max-cost-usd"] ?? null,
     },
-    evals: (r.evals ?? {}) as Record<string, EvalDef>,
+    evals: Object.fromEntries(
+      Object.entries(r.evals ?? {}).map(([name, def]) => [
+        name,
+        normalizeEvalDef(def),
+      ]),
+    ),
     suites,
     configPath: abs,
     configDir: dir,
@@ -258,20 +478,51 @@ export function loadConfig(path?: string, cwd = process.cwd()): DocevalsConfig {
     }
     return parseConfig(readFileSync(abs, "utf8"), abs);
   }
-  const candidate = resolve(cwd, DEFAULT_CONFIG_FILENAME);
-  if (existsSync(candidate)) {
-    return parseConfig(readFileSync(candidate, "utf8"), candidate);
+  // Walk up from cwd. A repo keeps one config at its root and people run the
+  // CLI from wherever they are — docs/, a package directory, a worktree
+  // subdirectory. Looking only in cwd resolved every one of those runs to pure
+  // defaults: no named evals, no suites, and a green exit reporting nothing,
+  // with the config sitting one directory up.
+  for (const dir of ancestorsOf(cwd)) {
+    const candidate = resolve(dir, DEFAULT_CONFIG_FILENAME);
+    if (existsSync(candidate)) {
+      return parseConfig(readFileSync(candidate, "utf8"), candidate);
+    }
+    // Falling through to defaults here would run with no named evals and no
+    // suites — and pass. Name the migration instead of failing silently. This
+    // is checked at every level, or a stale config one directory up becomes
+    // exactly the silent default-run the cwd-level guard exists to prevent.
+    const legacy = resolve(dir, LEGACY_CONFIG_FILENAME);
+    if (existsSync(legacy)) {
+      throw new DocevalsError(
+        `Found ${LEGACY_CONFIG_FILENAME} but no ${DEFAULT_CONFIG_FILENAME} in ${dir}. ` +
+          `moose-docevals now reads the shared moose config: rename the file to ` +
+          `${DEFAULT_CONFIG_FILENAME} and indent its contents under a top-level ` +
+          `"${NAMESPACE}:" key.`,
+      );
+    }
   }
-  // Falling through to defaults here would run with no named evals and no
-  // suites — and pass. Name the migration instead of failing silently.
-  const legacy = resolve(cwd, LEGACY_CONFIG_FILENAME);
-  if (existsSync(legacy)) {
-    throw new DocevalsError(
-      `Found ${LEGACY_CONFIG_FILENAME} but no ${DEFAULT_CONFIG_FILENAME} in ${cwd}. ` +
-        `moose-docevals now reads the shared moose config: rename the file to ` +
-        `${DEFAULT_CONFIG_FILENAME} and indent its contents under a top-level ` +
-        `"${NAMESPACE}:" key.`,
-    );
+  return parseConfig("{}", resolve(cwd, DEFAULT_CONFIG_FILENAME));
+}
+
+/**
+ * `cwd` and each ancestor up to the repository root, nearest first.
+ *
+ * The walk stops at the directory holding `.git`, and at the filesystem root
+ * if there is none. Without that boundary it reaches the home directory and
+ * beyond, where it would happily adopt an unrelated project's config — a
+ * failure that looks like the tool misreading your settings rather than
+ * reading someone else's.
+ */
+function ancestorsOf(cwd: string): string[] {
+  const dirs: string[] = [];
+  let dir = resolve(cwd);
+  for (;;) {
+    dirs.push(dir);
+    if (existsSync(resolve(dir, ".git"))) break;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
   }
-  return parseConfig("{}", candidate);
+  return dirs;
 }

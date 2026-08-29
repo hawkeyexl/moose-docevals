@@ -15,7 +15,7 @@ so **every setting on this page lives under `docevals:`**:
 docevals:
   version: 1
   judge:
-    ensembleRuns: 3
+    ensemble-runs: 3
 ```
 
 The key names in the tables below are written relative to that namespace: `files.include` means
@@ -52,7 +52,7 @@ Positional globs on the CLI override `files.include` for that run.
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `defaults.suite` | string \| null | `null` | Suite applied to pages that name none. Must be a defined suite or startup fails. |
-| `defaults.failFast` | boolean | `false` | |
+| `defaults.fail-fast` | boolean | `false` | |
 | `defaults.concurrency` | integer ≥ 1 | `4` | Bounded concurrency across targets. |
 
 ## `provider`
@@ -61,28 +61,28 @@ Positional globs on the CLI override `files.include` for that run.
 |---|---|---|
 | `provider.default` | `anthropic` \| `openai` \| `claude-cli` | `anthropic` |
 | `provider.anthropic.model` | string | `claude-sonnet-4-5` |
-| `provider.anthropic.apiKeyEnv` | string | `ANTHROPIC_API_KEY` |
-| `provider.openai.baseUrl` | string | `https://api.openai.com/v1` |
+| `provider.anthropic.api-key-env` | string | `ANTHROPIC_API_KEY` |
+| `provider.openai.base-url` | string | `https://api.openai.com/v1` |
 | `provider.openai.model` | string | `gpt-4o-mini` |
-| `provider.openai.apiKeyEnv` | string | `OPENAI_API_KEY` |
+| `provider.openai.api-key-env` | string | `OPENAI_API_KEY` |
 | `provider.claude-cli.model` | string | `claude-sonnet-4-5` |
 | `provider.claude-cli.command` | string | `claude` |
 
-`provider.anthropic.pricing` and `provider.openai.pricing` each take `inputPerMTok` and
-`outputPerMTok` numbers, overriding the built-in price table for cost reporting. See
+`provider.anthropic.pricing` and `provider.openai.pricing` each take `input-per-mtok` and
+`output-per-mtok` numbers, overriding the built-in price table for cost reporting. See
 [Choose a provider](/moose-docevals/judge/choose-a-provider/).
 
 ## `judge`
 
 | Key | Type | Default | Notes |
 |---|---|---|---|
-| `judge.ensembleRuns` | integer ≥ 1 | `3` | Independent runs aggregated by consensus. |
+| `judge.ensemble-runs` | integer ≥ 1 | `3` | Independent runs aggregated by consensus. |
 | `judge.temperature` | number ≥ 0 | `0` | |
-| `judge.zones.autoPass` | number 0–1 | `0.8` | Confidence at or above which a passing consensus auto-passes. |
-| `judge.zones.autoFail` | number 0–1 | `0.8` | Confidence at or above which a failing consensus auto-fails. |
-| `judge.falsePositiveAlert` | number 0–1 | `0.15` | Calibration alerts above this false-positive rate. |
-| `judge.cacheDir` | string | `.moose-docevals/cache` | |
-| `judge.maxCostUsd` | number \| null | `null` | Hard ceiling that aborts, not a warning. |
+| `judge.zones.auto-pass` | number 0–1 | `0.8` | Confidence at or above which a passing consensus auto-passes. |
+| `judge.zones.auto-fail` | number 0–1 | `0.8` | Confidence at or above which a failing consensus auto-fails. |
+| `judge.false-positive-alert` | number 0–1 | `0.15` | Calibration alerts above this false-positive rate. |
+| `judge.cache-dir` | string | `.moose-docevals/cache` | |
+| `judge.max-cost-usd` | number \| null | `null` | Hard ceiling that aborts, not a warning. |
 
 Anything between the two zone thresholds lands in human review. See
 [How judging works](/moose-docevals/judge/).
@@ -92,12 +92,12 @@ Anything between the two zone thresholds lands in human review. See
 | Key | Type | Default | Notes |
 |---|---|---|---|
 | `scripts.dir` | string | `{docDir}/moose-docevals` | Where generated scripts go. `{docDir}` expands to the page's directory. |
-| `scripts.configDir` | string | `moose-docevals-scripts` | Used when `scripts.dir` has no `{docDir}`; resolved relative to the config file. |
-| `scripts.allowFrontmatterCommands` | boolean | `true` | Gates `command` evals declared in page frontmatter. |
-| `scripts.timeoutMs` | integer ≥ 1 | `30000` | |
+| `scripts.config-dir` | string | `moose-docevals-scripts` | Used when `scripts.dir` has no `{docDir}`; resolved relative to the config file. |
+| `scripts.allow-frontmatter-commands` | boolean | `true` | Gates `command` evals declared in page frontmatter. |
+| `scripts.timeout-ms` | integer ≥ 1 | `30000` | |
 
 :::caution
-`scripts.allowFrontmatterCommands` gates **frontmatter-declared commands only**. The
+`scripts.allow-frontmatter-commands` gates **frontmatter-declared commands only**. The
 `tool:doc-detective` grader executes steps embedded in page bodies and is not covered by it. See
 [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
@@ -106,15 +106,15 @@ Anything between the two zone thresholds lands in human review. See
 
 | Key | Type | Default |
 |---|---|---|
-| `fill.confidenceThreshold` | number 0–1 | `0.7` |
-| `fill.maxEvalsPerPage` | integer ≥ 1 | `3` |
+| `fill.confidence-threshold` | number 0–1 | `0.7` |
+| `fill.max-evals-per-page` | integer ≥ 1 | `3` |
 | `fill.temperature` | number ≥ 0 | `0` |
-| `fill.cacheDir` | string | `.moose-docevals/cache/fill` |
-| `fill.maxCostUsd` | number \| null | `null` |
+| `fill.cache-dir` | string | `.moose-docevals/cache/fill` |
+| `fill.max-cost-usd` | number \| null | `null` |
 
 ## `evals`
 
-A map of eval name to definition. Names match `^[a-z0-9][a-z0-9-]*$`.
+A map of eval id to definition. Ids match `^[a-z0-9][a-z0-9-]*$`.
 
 Every field an eval can carry is documented in
 [Frontmatter reference](/moose-docevals/reference/frontmatter/) — the same shape applies whether the eval
@@ -126,7 +126,7 @@ docevals:
     no-future-promises:
       type: regression
       assertion: The page makes no claims about unreleased or future functionality.
-      grader: llm
+      grader: ai
       evidence: All prose sections
       examples:
         pass: Describes only shipped behavior.
@@ -139,17 +139,17 @@ A map of suite name to definition.
 
 | Key | Type | Default |
 |---|---|---|
-| `targetPassRate` | number 0–1 | `1.0` |
+| `target-pass-rate` | number 0–1 | `1.0` |
 | `evals` | string[] | `[]` |
 
 ```yaml
 docevals:
   suites:
     reference:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
     tutorial:
-      targetPassRate: 0.7
+      target-pass-rate: 0.7
       evals: [explains-why-before-how, no-future-promises]
 ```
 

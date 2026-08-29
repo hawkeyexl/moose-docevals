@@ -1,10 +1,10 @@
 ---
 title: Promote to deterministic
-description: Find llm evals that could be code, and convert them.
+description: Find ai evals that could be code, and convert them.
 ---
 
-The grader hierarchy is a claim about preference, and preferences decay without a mechanism. `llm` is
-the default grader and `fill` proposes llm-graded evals by construction, so "left alone" means
+The grader hierarchy is a claim about preference, and preferences decay without a mechanism. `ai` is
+the default grader and `fill` proposes ai-graded evals by construction, so "left alone" means
 "expensive" — run time and cost scaling with the corpus, forever.
 
 `promote` is the mechanism.
@@ -18,13 +18,13 @@ npx moose-docevals promote docs/
 ```console
 promotable install-command-present (page, docs/installation.mdx)
   The assertion checks for a literal code block; a script can match it directly.
-keep-llm explains-why-before-how (config, docs/tutorial.mdx)
+keep-ai explains-why-before-how (config, docs/tutorial.mdx)
   Requires judging whether motivation precedes mechanics — not expressible as a check.
 
 Re-run with --write to apply promotions.
 ```
 
-Each eval is `promotable` or `keep-llm`, with a rationale. The test applied is the manuscript's:
+Each eval is `promotable` or `keep-ai`, with a rationale. The test applied is the manuscript's:
 **if you can express the eval criterion as code, do it.**
 
 ## Report-only by default
@@ -42,28 +42,28 @@ This writes a check script per promoted eval and rewrites the eval to reference 
 ## What a promotion produces
 
 ```yaml
-    - name: install-command-present
+    - id: install-command-present
       assertion: The page contains a bash code block with `npm i -g doc-detective`.
       grader: command
       command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
-        assertionHash: aefaa89e…
+        assertion-hash: aefaa89e…
 ```
 
 The assertion is unchanged — that is the point. What changed is who decides it: a committed script
 instead of a model, at zero marginal cost and with no variance.
 
 `generate` does the same for `command` evals you wrote with an assertion and no command; `promote` is
-for evals that are currently `llm` and should not be. See
+for evals that are currently `ai` and should not be. See
 [Deterministic checks](/moose-docevals/evals/deterministic-checks/).
 
 ## Review the scripts
 
 The step people skip, and the one that decides whether this was worth doing. A generated script that
-passes for the wrong reason is **worse** than the llm eval it replaced, because it is now silent and
+passes for the wrong reason is **worse** than the ai eval it replaced, because it is now silent and
 free. See [Review generated scripts](/moose-docevals/adopt/review-generated-scripts/).
 
-## What should stay an llm eval
+## What should stay an ai eval
 
 Not everything should move. Keep the judge for criteria that genuinely need interpretation:
 
@@ -75,7 +75,7 @@ Not everything should move. Keep the judge for criteria that genuinely need inte
 
 A promotion that turns one of these into a keyword grep has not made the check cheaper — it has
 replaced it with a different, worse check that happens to be fast. `promote` reports these as
-`keep-llm`; trust that more than the urge to get the bill to zero.
+`keep-ai`; trust that more than the urge to get the bill to zero.
 
 ## Confirm the saving
 

@@ -48,7 +48,7 @@ Her defining constraint is **explicability**. She will be asked, in a pull reque
 her engineering leadership, why a build is red. "A model said so" ends the conversation badly and
 ends the pilot shortly after. Everything she adopts must produce a failure a human can read, argue
 with, and act on — which is why she reaches for `command` and `tool:*` graders wherever they will do
-the job, and treats an llm eval as the choice of last resort rather than the default. She arrives
+the job, and treats an ai eval as the choice of last resort rather than the default. She arrives
 sympathetic to that discipline; the docs need to make it easy to follow rather than argue for it.
 
 Success for Priya looks like a quarter in which nobody discussed the style guide in a code review,

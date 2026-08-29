@@ -1,6 +1,6 @@
 /**
  * `moose-docevals run` — execute the full pipeline. Deterministic graders run
- * first (cheap-first ordering); the LLM judge stage runs when a provider is
+ * first (cheap-first ordering); the AI judge stage runs when a provider is
  * available and not disabled.
  */
 import { runEvals, type EngineReport, type JudgeFn, type RunOptions } from "../core/engine.js";
@@ -16,7 +16,7 @@ export interface RunCommandOptions {
   config?: string;
   format?: ReportFormat;
   deterministicOnly?: boolean;
-  llmOnly?: boolean;
+  aiOnly?: boolean;
   frontmatterCommands?: boolean;
   generate?: boolean;
   cache?: boolean;
@@ -58,7 +58,7 @@ export async function runRun(
         generateScripts = makeGenerateScripts({ provider, root: cwd });
       }
     } catch (e) {
-      if (options.llmOnly || !(e instanceof DocevalsError)) throw e;
+      if (options.aiOnly || !(e instanceof DocevalsError)) throw e;
       if (!options.deterministicOnly || options.generate === true) {
         console.warn(
           `moose-docevals: provider unavailable — ${e.message}. Running deterministic evals only.`,
@@ -75,7 +75,7 @@ export async function runRun(
     globs,
     cwd: options.cwd,
     deterministicOnly: options.deterministicOnly,
-    llmOnly: options.llmOnly,
+    aiOnly: options.aiOnly,
     frontmatterCommands: options.frontmatterCommands,
     generate: options.generate,
     failOnReview: options.failOnReview,

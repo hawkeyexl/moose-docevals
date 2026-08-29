@@ -1,5 +1,5 @@
 /**
- * Fill prompt: asks the provider to propose llm-graded evals for a page, each
+ * Fill prompt: asks the provider to propose ai-graded evals for a page, each
  * with a self-reported 0-1 confidence. Proposals are gated by the confidence
  * threshold downstream; the prompt itself only demands honesty and restraint.
  * `command` evals are deliberately out of scope — a command eval without a
@@ -9,7 +9,7 @@
 import { Ajv2020 } from "ajv/dist/2020.js";
 
 /** Part of the cache key: bump whenever the prompt or schema changes. */
-export const FILL_PROMPT_VERSION = 1;
+export const FILL_PROMPT_VERSION = 2;
 
 export const FILL_SYSTEM_PROMPT = [
   "You propose evals for documentation pages. An eval is a plain-language",
@@ -22,7 +22,7 @@ export const FILL_SYSTEM_PROMPT = [
   "  guarded (structure, coverage, accuracy anchors) — never incidental",
   "  phrasing, styling, or facts likely to change by design.",
   "- The assertion must be judgeable from the page content alone.",
-  "- Names are short kebab-case identifiers, unique on the page.",
+  "- Ids are short kebab-case identifiers, unique on the page.",
   "- Provide examples.pass and examples.fail: one sentence each describing",
   "  a state of the page that satisfies or violates the assertion.",
   "- Report an honest confidence between 0 and 1 that the assertion is",
@@ -42,9 +42,9 @@ export const PROPOSAL_SCHEMA = {
       type: "array",
       items: {
         type: "object",
-        required: ["name", "assertion", "confidence", "examples"],
+        required: ["id", "assertion", "confidence", "examples"],
         properties: {
-          name: { type: "string", pattern: "^[a-z0-9][a-z0-9-]*$" },
+          id: { type: "string", pattern: "^[a-z0-9][a-z0-9-]*$" },
           assertion: { type: "string", minLength: 1 },
           type: { enum: ["capability", "regression"] },
           evidence: { type: "string" },
@@ -75,11 +75,11 @@ const validateProposal = ajv.compile(
 
 /** True when `value` matches PROPOSAL_SCHEMA. */
 export function isValidProposal(value: unknown): boolean {
-  return validateProposal(value) === true;
+  return validateProposal(value);
 }
 
 export interface ExistingEval {
-  name: string;
+  id: string;
   assertion?: string;
 }
 
@@ -97,7 +97,7 @@ export function buildFillUser(
     existing.length === 0
       ? ["(none)"]
       : existing.map((e) =>
-          e.assertion ? `- ${e.name}: ${e.assertion}` : `- ${e.name}`,
+          e.assertion ? `- ${e.id}: ${e.assertion}` : `- ${e.id}`,
         );
   return [
     "# Page path",

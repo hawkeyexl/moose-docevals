@@ -14,37 +14,37 @@ docevals:
 
   defaults:
     suite: null
-    failFast: false
+    fail-fast: false
     concurrency: 4
 
   provider:
     default: anthropic
     anthropic:
       model: claude-sonnet-4-5
-      apiKeyEnv: ANTHROPIC_API_KEY
+      api-key-env: ANTHROPIC_API_KEY
     claude-cli:
       model: claude-sonnet-4-5
 
   judge:
-    ensembleRuns: 3
+    ensemble-runs: 3
     temperature: 0
     zones:
-      autoPass: 0.8
-      autoFail: 0.8
-    falsePositiveAlert: 0.15
-    cacheDir: .moose-docevals/cache
+      auto-pass: 0.8
+      auto-fail: 0.8
+    false-positive-alert: 0.15
+    cache-dir: .moose-docevals/cache
 
   scripts:
     dir: "{docDir}/moose-docevals"
-    configDir: moose-docevals-scripts
-    allowFrontmatterCommands: true
-    timeoutMs: 30000
+    config-dir: moose-docevals-scripts
+    allow-frontmatter-commands: true
+    timeout-ms: 30000
 
   evals:
     no-future-promises:
       type: regression
       assertion: The page makes no claims about unreleased or future functionality.
-      grader: llm
+      grader: ai
       evidence: All prose sections
       examples:
         pass: Describes only shipped behavior.
@@ -54,7 +54,7 @@ docevals:
       assertion: >
         The page explains why a reader would use the feature before explaining
         how to use it.
-      grader: llm
+      grader: ai
       evidence: Introduction and first section
       examples:
         pass: Opens with the problem the feature solves, then gives steps.
@@ -63,7 +63,7 @@ docevals:
       assertion: Page frontmatter validates against the moose-docevals built-in schema.
       grader: tool:docmeta
       options:
-        schemas: ["schemas/frontmatter-0.1.json"]
+        schemas: ["schemas/frontmatter-1.0.0.json"]
       severity: error
     markdownlint:
       assertion: Page passes markdownlint style rules.
@@ -74,13 +74,13 @@ docevals:
       grader: tool:freshness
       options:
         field: last-reviewed
-        maxAgeDays: 365
+        max-age-days: 365
       severity: warning
     readable:
       assertion: Page prose reads below grade 12.
       grader: tool:reading-level
       options:
-        maxGrade: 12
+        max-grade: 12
       severity: warning
     distinct-action-pages:
       assertion: >
@@ -89,16 +89,16 @@ docevals:
       grader: tool:differentiation
       options:
         scope: "test/fixtures/pages/docs/actions/**"
-        maxSimilarity: 0.85
+        max-similarity: 0.85
       severity: error
 
   suites:
     reference:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]
     tutorial:
-      targetPassRate: 0.7
+      target-pass-rate: 0.7
       evals: [explains-why-before-how, no-future-promises]
     how-to:
-      targetPassRate: 1.0
+      target-pass-rate: 1.0
       evals: [no-future-promises, readable]

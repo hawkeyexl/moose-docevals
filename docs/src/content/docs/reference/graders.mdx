@@ -14,7 +14,7 @@ explicable wins; see [How moose-docevals works](/moose-docevals/get-started/how-
 | `command` | Any CLI check you supply | No |
 | `tool:markdownlint` · `tool:vale` · `tool:docmeta` · `tool:doc-structure-lint` · `tool:doc-detective` | An existing tool | No |
 | `tool:freshness` · `tool:reading-level` · `tool:differentiation` | Native checks nothing else covers | No |
-| `llm` | The judge | Yes |
+| `ai` | The judge | Yes |
 | `human` | A person | No |
 
 Deterministic evals fail only on **`error`**-severity findings. Warnings and info report and pass.
@@ -26,8 +26,8 @@ Runs any executable. `{file}` in an argument expands to the page's absolute path
 | Option | Default | Notes |
 |---|---|---|
 | `command` (eval field) | — | The argv array. |
-| `successExitCodes` (eval field) | `[0]` | |
-| `timeoutMs` (eval field) | `scripts.timeoutMs` (`30000`) | |
+| `success-exit-codes` (eval field) | `[0]` | |
+| `timeout-ms` (eval field) | `scripts.timeout-ms` (`30000`) | |
 
 A `command` eval with an assertion and **no** command is a plain-language deterministic check —
 moose-docevals generates the script. See [Deterministic checks](/moose-docevals/evals/deterministic-checks/).
@@ -51,7 +51,7 @@ Runs Vale with `--output=JSON` once per group.
 |---|---|
 | `command` | `["vale", "--output=JSON"]` |
 
-Vale's own severities map through the eval's `severityMap`, defaulting to:
+Vale's own severities map through the eval's `severity-map`, defaulting to:
 
 | Vale | moose-docevals |
 |---|---|
@@ -75,7 +75,7 @@ Validates page structure against a named YAML template.
 | Option | Default | Notes |
 |---|---|---|
 | `template` | — | **Required.** Missing it is a finding, not a crash. |
-| `templatePath` | — | Path to `templates.yaml`. |
+| `template-path` | — | Path to `templates.yaml`. |
 | `command` | `["npx", "--no-install", "doc-structure-lint"]` | |
 
 ## `tool:doc-detective`
@@ -99,34 +99,34 @@ drive a browser.
 
 :::danger
 This grader executes shell commands embedded in page **bodies**.
-`scripts.allowFrontmatterCommands` does **not** gate it. On untrusted pull requests the job itself
+`scripts.allow-frontmatter-commands` does **not** gate it. On untrusted pull requests the job itself
 must be gated — see [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
 
 ## `tool:freshness`
 
-The page's review date must be within `maxAgeDays`. No external tool covers this frontmatter-driven
+The page's review date must be within `max-age-days`. No external tool covers this frontmatter-driven
 staleness contract.
 
 | Option | Default |
 |---|---|
 | `field` | `last-reviewed` |
-| `maxAgeDays` | `365` |
+| `max-age-days` | `365` |
 
 | Rule id | Meaning |
 |---|---|
-| `freshness/stale` | Older than `maxAgeDays`. Carries the page's date line. |
+| `freshness/stale` | Older than `max-age-days`. Carries the page's date line. |
 | `freshness/missing` | The field is absent. |
 | `freshness/invalid` | The value did not parse as a date. |
 
 ## `tool:reading-level`
 
-Flesch–Kincaid grade level of the page prose must not exceed `maxGrade`. Code blocks, MDX
+Flesch–Kincaid grade level of the page prose must not exceed `max-grade`. Code blocks, MDX
 comments, tags, and link URLs are stripped before scoring.
 
 | Option | Default |
 |---|---|
-| `maxGrade` | `10` |
+| `max-grade` | `10` |
 
 Rule id `reading-level/grade`. **English-only** — a documented limitation, not a bug. Prose shorter
 than the minimum sample is not scored.
@@ -140,9 +140,9 @@ threshold against any sibling in scope fails.
 | Option | Default |
 |---|---|
 | `scope` | — Glob selecting the sibling set to compare against. |
-| `maxSimilarity` | `0.85` |
+| `max-similarity` | `0.85` |
 
-## `llm`
+## `ai`
 
 The judge. Needs `assertion`, and works far better with `evidence` and `examples` — see
 [Write good assertions](/moose-docevals/evals/write-good-assertions/). Outcome is `pass`, `fail`, or

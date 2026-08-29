@@ -23,10 +23,10 @@ function workspace(pages: Record<string, string>, config = BASE_CONFIG): string 
   return root;
 }
 
-function proposal(name: string, confidence: number, extra: Record<string, unknown> = {}) {
+function proposal(id: string, confidence: number, extra: Record<string, unknown> = {}) {
   return {
-    name,
-    assertion: `Assertion for ${name}.`,
+    id,
+    assertion: `Assertion for ${id}.`,
     confidence,
     examples: { pass: "The page satisfies it.", fail: "The page violates it." },
     ...extra,
@@ -45,8 +45,8 @@ describe("runFill", () => {
     expect(report.threshold).toBe(0.7);
     const [result] = report.results;
     expect(result?.status).toBe("filled");
-    expect(result?.written.map((p) => p.name)).toEqual(["strong-check"]);
-    expect(result?.belowThreshold.map((p) => p.name)).toEqual(["weak-check"]);
+    expect(result?.written.map((p) => p.id)).toEqual(["strong-check"]);
+    expect(result?.belowThreshold.map((p) => p.id)).toEqual(["weak-check"]);
 
     const content = readFileSync(join(root, "docs", "page.md"), "utf8");
     expect(content).toContain("strong-check");
@@ -57,11 +57,13 @@ describe("runFill", () => {
     const plan = resolvePage(readPage(join(root, "docs", "page.md"), root), loadConfig(undefined, root));
     expect(plan.problems).toEqual([]);
     const ev = plan.evals.find((e) => e.name === "strong-check");
-    expect(ev?.grader).toBe("llm");
+    expect(ev?.grader).toBe("ai");
     expect(ev?.type).toBe("regression");
+    // Anchor examples normalize to lists: the vocabulary accepts one or
+    // several, and the judge prompt should not have to branch on which.
     expect(ev?.examples).toEqual({
-      pass: "The page satisfies it.",
-      fail: "The page violates it.",
+      pass: ["The page satisfies it."],
+      fail: ["The page violates it."],
     });
   });
 
@@ -69,7 +71,7 @@ describe("runFill", () => {
     const root = workspace({ "page.md": PLAIN_PAGE });
     const provider = new MockProvider([{ json: { evals: [proposal("edge-check", 0.7)] } }]);
     const report = await runFill([], { cwd: root, providerInstance: provider, noCache: true });
-    expect(report.results[0]?.written.map((p) => p.name)).toEqual(["edge-check"]);
+    expect(report.results[0]?.written.map((p) => p.id)).toEqual(["edge-check"]);
   });
 
   it("honors a confidence override", async () => {
@@ -84,7 +86,7 @@ describe("runFill", () => {
       confidence: 0.5,
     });
     expect(report.threshold).toBe(0.5);
-    expect(report.results[0]?.written.map((p) => p.name)).toEqual([
+    expect(report.results[0]?.written.map((p) => p.id)).toEqual([
       "strong-check",
       "weak-check",
     ]);
@@ -105,12 +107,11 @@ describe("runFill", () => {
     ].join("\n");
     const page = [
       "---",
+      "eval-suite: ref",
       "evals:",
-      "  suite: ref",
-      "  evals:",
-      "    - name: inline-check",
-      "      assertion: Inline assertion.",
-      "      examples: { pass: P, fail: F }",
+      "  - id: inline-check",
+      "    assertion: Inline assertion.",
+      "    examples: { pass: P, fail: F }",
       "---",
       "body",
       "",
@@ -130,7 +131,7 @@ describe("runFill", () => {
     const report = await runFill([], { cwd: root, providerInstance: provider, noCache: true });
     const [result] = report.results;
     expect(result?.duplicates).toEqual(["inline-check", "suite-eval"]);
-    expect(result?.written.map((p) => p.name)).toEqual(["fresh-one"]);
+    expect(result?.written.map((p) => p.id)).toEqual(["fresh-one"]);
     const content = readFileSync(join(root, "docs", "page.md"), "utf8");
     expect(content.match(/inline-check/g)).toHaveLength(1);
   });
@@ -145,7 +146,7 @@ describe("runFill", () => {
       dryRun: true,
     });
     expect(report.results[0]?.status).toBe("proposed");
-    expect(report.results[0]?.written.map((p) => p.name)).toEqual(["strong-check"]);
+    expect(report.results[0]?.written.map((p) => p.id)).toEqual(["strong-check"]);
     expect(readFileSync(join(root, "docs", "page.md"), "utf8")).toBe(PLAIN_PAGE);
   });
 
@@ -161,7 +162,7 @@ describe("runFill", () => {
     const second = await runFill([], opts);
     expect(provider.requests).toHaveLength(1);
     expect(second.results[0]?.cached).toBe(true);
-    expect(second.results[0]?.written.map((p) => p.name)).toEqual(["strong-check"]);
+    expect(second.results[0]?.written.map((p) => p.id)).toEqual(["strong-check"]);
 
     await runFill([], { ...opts, noCache: true });
     expect(provider.requests).toHaveLength(2);
@@ -201,8 +202,8 @@ describe("runFill", () => {
     expect(report.exitCode).toBe(1);
   });
 
-  it("skips pages with evals.skip without calling the provider", async () => {
-    const page = ["---", "evals:", "  skip: true", "---", "body", ""].join("\n");
+  it("skips pages with eval-skip without calling the provider", async () => {
+    const page = ["---", "eval-skip: true", "---", "body", ""].join("\n");
     const root = workspace({ "page.md": page });
     const provider = new MockProvider([{ json: { evals: [] } }]);
     const report = await runFill([], { cwd: root, providerInstance: provider, noCache: true });
@@ -211,25 +212,25 @@ describe("runFill", () => {
   });
 
   it("truncates proposals to maxEvalsPerPage", async () => {
-    const config = `${BASE_CONFIG}fill:\n  maxEvalsPerPage: 1\n`;
+    const config = `${BASE_CONFIG}fill:\n  max-evals-per-page: 1\n`;
     const root = workspace({ "page.md": PLAIN_PAGE }, config);
     const provider = new MockProvider([
       { json: { evals: [proposal("first-check", 0.9), proposal("second-check", 0.9)] } },
     ]);
     const report = await runFill([], { cwd: root, providerInstance: provider, noCache: true });
-    expect(report.results[0]?.written.map((p) => p.name)).toEqual(["first-check"]);
+    expect(report.results[0]?.written.map((p) => p.id)).toEqual(["first-check"]);
     // Proposals over the cap are surfaced, not silently dropped.
-    expect(report.results[0]?.capped.map((p) => p.name)).toEqual(["second-check"]);
+    expect(report.results[0]?.capped.map((p) => p.id)).toEqual(["second-check"]);
   });
 
   it("does not let duplicates consume the per-page cap", async () => {
     // maxEvalsPerPage 1, and the model leads with a duplicate of an existing
     // eval. The duplicate must not crowd out the fresh proposal behind it.
-    const config = `${BASE_CONFIG}fill:\n  maxEvalsPerPage: 1\n`;
+    const config = `${BASE_CONFIG}fill:\n  max-evals-per-page: 1\n`;
     const page = [
       "---",
       "evals:",
-      "  - name: existing-check",
+      "  - id: existing-check",
       "    assertion: Already here.",
       "    examples: { pass: P, fail: F }",
       "---",
@@ -242,7 +243,7 @@ describe("runFill", () => {
     ]);
     const report = await runFill([], { cwd: root, providerInstance: provider, noCache: true });
     expect(report.results[0]?.duplicates).toEqual(["existing-check"]);
-    expect(report.results[0]?.written.map((p) => p.name)).toEqual(["fresh-one"]);
+    expect(report.results[0]?.written.map((p) => p.id)).toEqual(["fresh-one"]);
   });
 
   it("reports nothing-proposed when the model proposes nothing", async () => {
@@ -269,7 +270,7 @@ describe("runFill", () => {
     expect(human).toMatch(/LLM cost: \$\d+\.\d{4}/);
 
     const json = JSON.parse(renderFill(report, "json")) as typeof report;
-    expect(json.results[0]?.written[0]?.name).toBe("strong-check");
+    expect(json.results[0]?.written[0]?.id).toBe("strong-check");
     expect(json.exitCode).toBe(0);
   });
 

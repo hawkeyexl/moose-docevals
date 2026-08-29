@@ -61,7 +61,7 @@ apply them consistently by page type; and get a signal in CI when a page stops m
 - Per-run cost must be bounded and predictable enough to defend in a budget conversation; an
   unbounded per-PR LLM bill is disqualifying.
 - Sending page content to a model provider needs an answer for security review. The `claude-cli`
-  provider and any OpenAI-compatible `baseUrl` (including a self-hosted endpoint) are the answers, and
+  provider and any OpenAI-compatible `base-url` (including a self-hosted endpoint) are the answers, and
   they must be documented as such rather than buried in a provider table.
 - Adoption has to be incremental. A tool that requires annotating 2,000 pages before it produces
   value will not get past the pilot.

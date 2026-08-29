@@ -20,3 +20,15 @@ export function outputTail(result: ExecResult, maxChars = 400): string {
   if (text.length <= maxChars) return text;
   return `…${text.slice(-maxChars)}`;
 }
+
+/**
+ * How a finished process is described in a finding: "exited 2", or the truth
+ * when there was no exit code.
+ *
+ * `code` is null when the process was killed by a signal rather than exiting.
+ * "exited null" describes nothing a reader can act on, and it is the case a
+ * timeout produces — so it is the one worth naming.
+ */
+export function exited(code: number | null): string {
+  return code === null ? "was killed before exiting" : `exited ${code}`;
+}

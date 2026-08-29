@@ -57,12 +57,12 @@ evals:
 
 ## Mapping a tool's own severities
 
-Tools have their own vocabulary. `severityMap` translates it:
+Tools have their own vocabulary. `severity-map` translates it:
 
 ```yaml
   style:
     grader: tool:vale
-    severityMap:
+    severity-map:
       error: error
       warning: warning
       suggestion: info       # Vale suggestions report but never block
@@ -96,7 +96,7 @@ which is what makes `--format github` able to annotate the exact line.
 Severity also maps onto annotation levels: `error` → `::error`, `warning` → `::warning`, `info` →
 `::notice`. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/).
 
-## Severity is not the LLM's
+## Severity is not the judge's
 
 Severity applies to deterministic graders. A judged eval's outcome comes from consensus and
 confidence zones instead — see [How judging works](/moose-docevals/judge/). The capability suite target is

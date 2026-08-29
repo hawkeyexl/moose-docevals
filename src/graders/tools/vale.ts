@@ -37,7 +37,7 @@ async function gradeGroup(
     return targets.map(({ plan, eval: ev }) => ({
       evalName: ev.name,
       file: plan.page.file,
-      message: `Failed to run vale: ${result.spawnError} (is it installed?)`,
+      message: `Failed to run vale: ${result.spawnError ?? "spawn failed"} (is it installed?)`,
       severity: ev.severity,
     }));
   }

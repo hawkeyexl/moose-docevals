@@ -50,11 +50,10 @@ function fakeExec(result: Partial<ExecResult>): { exec: ExecFn; calls: string[][
 describe("commandGrader", () => {
   const fm = [
     "evals:",
-    "  evals:",
-    "    - name: check",
-    "      assertion: Something.",
-    "      grader: command",
-    '      command: ["node", "check.mjs", "{file}"]',
+    "  - id: check",
+    "    assertion: Something.",
+    "    grader: command",
+    '    command: ["node", "check.mjs", "{file}"]',
   ].join("\n");
 
   it("passes on exit 0 with no findings", async () => {
@@ -84,7 +83,7 @@ describe("commandGrader", () => {
 
   it("honors successExitCodes", async () => {
     const target = makeTarget(
-      fm.replace("grader: command", "grader: command\n      successExitCodes: [0, 3]"),
+      fm.replace("grader: command", "grader: command\n    success-exit-codes: [0, 3]"),
     );
     const { exec } = fakeExec({ code: 3 });
     const findings = await commandGrader.grade({
@@ -127,7 +126,7 @@ describe("freshnessGrader", () => {
       "evals:",
       "  fresh:",
       "    grader: tool:freshness",
-      "    options: { maxAgeDays: 365 }",
+      "    options: { max-age-days: 365 }",
       "    severity: warning",
       "suites:",
       "  s: { evals: [fresh] }",
@@ -136,7 +135,7 @@ describe("freshnessGrader", () => {
   );
 
   function freshTarget(frontmatter: string): GraderTarget {
-    const content = `---\n${frontmatter}\nevals:\n  suite: s\n---\nBody.`;
+    const content = `---\n${frontmatter}\neval-suite: s\n---\nBody.`;
     const page: PageFile = {
       file: "docs/page.md",
       absPath: "/fake/docs/page.md",
@@ -233,7 +232,7 @@ describe("reading level", () => {
         "evals:",
         "  readable:",
         "    grader: tool:reading-level",
-        "    options: { maxGrade: 5 }",
+        "    options: { max-grade: 5 }",
         "    severity: warning",
         "suites:",
         "  s: { evals: [readable] }",
@@ -245,7 +244,7 @@ describe("reading level", () => {
         "Notwithstanding organizational considerations, comprehensive implementation methodologies necessitate extraordinarily sophisticated administrative infrastructure.",
       )
       .join(" ");
-    const content = `---\ntitle: x\nevals:\n  suite: s\n---\n${body}`;
+    const content = `---\ntitle: x\neval-suite: s\n---\n${body}`;
     const page: PageFile = {
       file: "docs/page.md",
       absPath: "/fake/docs/page.md",
@@ -281,7 +280,7 @@ describe("docDetectiveGrader", () => {
 
   function ddTarget(optionsYaml = ""): GraderTarget {
     const overrides = optionsYaml ? `\n${optionsYaml}` : "";
-    const content = `---\ntitle: x\nevals:\n  suite: s${overrides}\n---\nBody.`;
+    const content = `---\ntitle: x\neval-suite: s${overrides}\n---\nBody.`;
     const page: PageFile = {
       file: "docs/page.md",
       absPath: "/fake/docs/page.md",
@@ -317,12 +316,12 @@ describe("docDetectiveGrader", () => {
   it("honors an options.command override", async () => {
     const target = ddTarget(
       [
-        "  evals:",
-        "    - name: commands-work",
-        "      assertion: Documented commands run.",
-        "      grader: tool:doc-detective",
-        "      options:",
-        '        command: ["doc-detective", "--config", ".doc-detective.json"]',
+        "evals:",
+        "  - id: commands-work",
+        "    assertion: Documented commands run.",
+        "    grader: tool:doc-detective",
+        "    options:",
+        '      command: ["doc-detective", "--config", ".doc-detective.json"]',
       ].join("\n"),
     );
     const { exec, calls } = fakeExec({ code: 0, stdout: "[]" });

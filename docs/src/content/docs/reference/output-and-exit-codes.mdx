@@ -1,6 +1,6 @@
 ---
 title: Output and exit codes
-description: The human, json, markdown, and github report shapes, and what each exit code means.
+description: The human, json, markdown, github, sarif, and junit report shapes, and what each exit code means.
 ---
 
 Verified against `src/reporters/` and `src/types.ts`, with samples captured from real runs against
@@ -26,7 +26,7 @@ earns the check a reputation for flakiness it does not deserve.
 
 | Command | Accepted formats |
 |---|---|
-| `run` | `human`, `json`, `markdown`, `github` |
+| `run` | `human`, `json`, `markdown`, `github`, `sarif`, `junit` |
 | `list` | `human`, `json` |
 | `fill` | `human`, `json` |
 
@@ -119,7 +119,7 @@ One object, for programmatic consumers.
 | Field | Notes |
 |---|---|
 | `outcome` | `pass`, `fail`, `needs-review`, `skipped`, or `error`. |
-| `consensus` | Present for llm-graded evals only. |
+| `consensus` | Present for ai-graded evals only. |
 | `findings` | Present for command/tool evals that produced findings. |
 | `generated` | True when this run generated the eval's check script. |
 | `via` | `"human-review"` when a persisted review resolved the outcome. |
@@ -128,7 +128,12 @@ One object, for programmatic consumers.
 ### `suites[]`
 
 `passRate` is `passed / (total - skipped)`, and `1` when nothing ran. `meetsTarget` compares it to
-the suite's `targetPassRate`.
+the suite's `target-pass-rate` from the config.
+
+:::note[JSON keys are camelCase]
+Every *file* key — config and frontmatter — is kebab-case. The JSON report is not a file you write;
+it is the runtime shape, so `targetPassRate` here corresponds to `target-pass-rate` in the config.
+:::
 
 ## `--format markdown`
 
@@ -138,6 +143,50 @@ The suite table plus per-page findings, suitable for a PR comment or a job summa
 
 Workflow commands for inline annotations, followed by the markdown summary — so the same output
 both annotates the diff and works as `$GITHUB_STEP_SUMMARY`.
+
+## `--format sarif`
+
+A [SARIF 2.1.0](https://sarifweb.azurewebsites.net/) log, for a code-scanning dashboard.
+
+`github` annotates one pull request and scrolls away with it. SARIF is ingested and kept: which
+finding, on which line, first seen when, still open or not. Upload it with
+`github/codeql-action/upload-sarif`.
+
+```bash
+npx moose-docevals run --format sarif > moose-docevals.sarif
+```
+
+Two properties are load-bearing, and both are asserted in CI:
+
+- **File URIs are repo-relative and forward-slashed.** An absolute or backslashed path uploads
+  successfully and then matches no file, so every finding lands on nothing.
+- **Every reported rule is declared** in `tool.driver.rules`, so the dashboard can name it instead
+  of showing a bare id.
+
+A failing ai-graded eval appears as a result too, with the judge's confidence and reasoning — it
+has no `Finding`, and omitting it would read as "the AI evals all passed".
+
+## `--format junit`
+
+JUnit XML, which every CI system already knows how to render as a test report.
+
+One `<testsuite>` per eval suite, one `<testcase>` per (page, eval) pair, with `classname` as the
+page and `name` as the eval — the grouping JUnit viewers offer: expand a file, see its checks.
+
+```bash
+npx moose-docevals run --format junit > moose-docevals.junit.xml
+```
+
+| Outcome | Element |
+|---|---|
+| `pass` | (none) |
+| `fail` | `<failure>` with the findings, or the judge's reasoning |
+| `error` | `<error>` |
+| `skipped` | `<skipped>` with the skip reason |
+| `needs-review` | `<skipped message="needs human review">` |
+
+`needs-review` is a skip rather than a failure on purpose: JUnit has no third state, and reporting
+a human-review queue as a broken build is the wrong signal for the person reading it.
 
 ```text
 ::error file=test/fixtures/pages/docs/actions/goTo.mdx,line=4,title=moose-docevals%3A fresh-enough::Page last reviewed 937 days ago (max 365)
@@ -153,9 +202,9 @@ Severity maps to the annotation level: `error` → `::error`, `warning` → `::w
 `::notice`. Values are escaped per GitHub's rules — `%`, CR, and LF in data; additionally `:` and
 `,` in properties, which is why the title reads `moose-docevals%3A`.
 
-A failing **llm** eval annotates the file with the mean confidence and the judge's reasoning, since
+A failing **ai** eval annotates the file with the mean confidence and the judge's reasoning, since
 it has no line to point at:
 
 ```text
-::error file=...,title=moose-docevals%3A no-future-promises::LLM judge: fail (confidence 0.93). <reasoning>
+::error file=...,title=moose-docevals%3A no-future-promises::AI judge: fail (confidence 0.93). <reasoning>
 ```

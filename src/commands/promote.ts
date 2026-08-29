@@ -1,5 +1,5 @@
 /**
- * `moose-docevals promote` — the grader hierarchy in tool form: review llm-graded
+ * `moose-docevals promote` — the grader hierarchy in tool form: review ai-graded
  * evals, ask the LLM which are expressible as deterministic checks, and (with
  * --write) rewrite them as command-graded evals backed by generated scripts.
  * Never runs automatically as part of `moose-docevals run`.
@@ -85,7 +85,7 @@ async function assess(
         target.plan.page.file,
         target.plan.page.body,
       ),
-      schema: PROMOTE_SCHEMA as unknown as Record<string, unknown>,
+      schema: PROMOTE_SCHEMA,
       temperature: 0,
     });
     const json = response.json as {
@@ -125,7 +125,7 @@ export async function runPromote(
   for (const plan of plans) {
     if (plan.skip || plan.problems.some((p) => p.level === "error")) continue;
     for (const ev of plan.evals) {
-      if (ev.skip || ev.grader !== "llm" || !ev.assertion) continue;
+      if (ev.skip || ev.grader !== "ai" || !ev.assertion) continue;
       if (ev.source === "config") {
         if (seenConfigEvals.has(ev.name)) continue;
         seenConfigEvals.add(ev.name);

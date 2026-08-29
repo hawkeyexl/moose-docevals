@@ -20,3 +20,7 @@ moose-docevals-run.json
 # committed judge cache that lets verify-docs replay without an API key.
 # See adrs/01004-test-the-docs-through-moose-docevals-itself.md.
 .doc-detective/
+
+# CI reporter output from the dogfood gate; also produced by a local run.
+moose-docevals.sarif
+moose-docevals.junit.xml

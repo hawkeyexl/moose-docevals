@@ -25,7 +25,7 @@ org this is the same person wearing a third hat, and the docs should not assume 
 
 A staff writer, content strategist, docs lead, or information architect who owns the style guide and
 the page templates. Medium-to-high technical proficiency: fluent in YAML and Git, comfortable reasoning
-about precedence and inheritance, actively learning what an LLM judge can and cannot reliably decide.
+about precedence and inheritance, actively learning what an AI judge can and cannot reliably decide.
 
 They are the segment that read the methodology before they found the tool. They think in terms of a
 quality bar that is *defensible*, and they are the ones who will be asked, in a review, "why did this
@@ -50,11 +50,11 @@ build on.
   conversation.
 - **False positives destroy adoption faster than false negatives.** A check that fails good pages gets
   disabled within a week. This segment feels that risk acutely, which is why
-  `judge.falsePositiveAlert` matters more to them than raw accuracy.
+  `judge.false-positive-alert` matters more to them than raw accuracy.
 - **Binary verdicts feel lossy until the model clicks.** "Pass or fail" on prose reads as crude; the
   insight that a *suite pass rate* carries the nuance — regression suites at ~100%, capability suites
   at ~70% — is the reframe that makes the whole design make sense. It has to be taught explicitly.
-- **The expensive grader is the tempting one.** Left alone, everything becomes an llm eval, and cost
+- **The expensive grader is the tempting one.** Left alone, everything becomes an ai eval, and cost
   and flakiness grow with the corpus. `promote` and `generate` are the discipline, and this segment
   owns applying it.
 

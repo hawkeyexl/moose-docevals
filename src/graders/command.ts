@@ -45,7 +45,7 @@ async function gradeOne(
       {
         evalName: ev.name,
         file: plan.page.file,
-        message: `Failed to run command "${ev.command[0]}": ${result.spawnError}`,
+        message: `Failed to run command "${ev.command[0] ?? "(empty)"}": ${result.spawnError}`,
         severity: ev.severity,
       },
     ];
@@ -68,9 +68,13 @@ async function gradeOne(
     {
       evalName: ev.name,
       file: plan.page.file,
-      message: tail
-        ? `Exit code ${result.code}: ${tail}`
-        : `Exit code ${result.code}`,
+      // "Exit code N" is the message users and docs already know; only the
+      // null case — killed by a signal, which is what a timeout produces —
+      // needs different words, because "Exit code null" describes nothing.
+      message:
+        (result.code === null
+          ? "Killed before exiting"
+          : `Exit code ${result.code}`) + (tail ? `: ${tail}` : ""),
       severity: ev.severity,
     },
   ];

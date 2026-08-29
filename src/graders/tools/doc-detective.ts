@@ -15,6 +15,7 @@
  * `extractFailureReport` carry the finding. See ADR 01005.
  */
 import type { Finding } from "../../types.js";
+import { exited } from "../exec.js";
 import type { Grader } from "../types.js";
 
 interface FailedStep {
@@ -230,7 +231,7 @@ export const docDetectiveGrader: Grader = {
           ruleId: report ? "doc-detective/step" : undefined,
           message: report
             ? clampReport(report)
-            : `doc-detective exited ${result.code}: ${result.stderr.trim().slice(-300)}`,
+            : `doc-detective ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
           severity: ev.severity,
         });
       }

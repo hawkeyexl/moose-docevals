@@ -144,11 +144,11 @@ export function makeGenerateScripts(deps: ScriptgenDeps): GenerateFn {
             target.plan.page.file,
             target.plan.page.body,
           ),
-          schema: SCRIPT_SCHEMA as unknown as Record<string, unknown>,
+          schema: SCRIPT_SCHEMA,
           temperature: 0,
         });
         const json = response.json as { code?: unknown };
-        if (typeof json?.code !== "string" || json.code.length === 0) {
+        if (typeof json.code !== "string" || json.code.length === 0) {
           continue; // Generation failed; the engine reports the eval as errored.
         }
         code = json.code;
@@ -167,7 +167,7 @@ export function makeGenerateScripts(deps: ScriptgenDeps): GenerateFn {
 
       const updates = {
         command: location.command,
-        generated: { assertionHash: sha256(ev.assertion) },
+        "generated-assertion-hash": sha256(ev.assertion),
       };
       if (ev.source === "page") {
         const abs = target.plan.page.absPath;
@@ -196,14 +196,15 @@ export function makeGenerateScripts(deps: ScriptgenDeps): GenerateFn {
         for (const t of targets) {
           if (t.eval.name === ev.name && t.eval.source === "config") {
             t.eval.command = scriptLocationFor(t, config, deps.root).command;
-            t.eval.generated = { assertionHash: updates.generated.assertionHash };
+            t.eval.generatedAssertionHash =
+              updates["generated-assertion-hash"];
           }
         }
       } else {
         // Page-sourced evals are per-page: same-named inline evals on other
         // pages have their own assertions and generate independently.
         target.eval.command = location.command;
-        target.eval.generated = { assertionHash: updates.generated.assertionHash };
+        target.eval.generatedAssertionHash = updates["generated-assertion-hash"];
       }
     }
     return { generatedPaths };

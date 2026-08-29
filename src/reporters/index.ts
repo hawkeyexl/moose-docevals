@@ -5,6 +5,8 @@ import { renderJson } from "./json.js";
 import { renderMarkdown } from "./markdown.js";
 import { renderGithub } from "./github.js";
 import { parseFormat, REPORT_FORMATS, type ReportFormat } from "./format.js";
+import { renderSarif } from "./sarif.js";
+import { renderJunit } from "./junit.js";
 
 export {
   REPORT_FORMATS,
@@ -31,6 +33,10 @@ export function render(report: EngineReport, format: ReportFormat): string {
       return renderJson(report);
     case "markdown":
       return renderMarkdown(report);
+    case "sarif":
+      return renderSarif(report);
+    case "junit":
+      return renderJunit(report);
     case "github":
       return renderGithub(report);
   }

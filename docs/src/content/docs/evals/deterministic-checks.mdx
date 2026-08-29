@@ -11,7 +11,7 @@ including the ones moose-docevals writes for you.
 
 If you expect moose-docevals to replace Vale, you will evaluate it against the wrong competitors. Vale
 keeps doing what Vale does — its findings arrive as a named eval with a severity, alongside a
-freshness check and an LLM verdict, in one report with one exit code.
+freshness check and an AI verdict, in one report with one exit code.
 
 ```yaml
 docevals:
@@ -28,7 +28,7 @@ docevals:
       assertion: Page frontmatter validates against our schema.
       grader: tool:docmeta
       options:
-        schemas: ["schemas/frontmatter-0.1.json"]
+        schemas: ["schemas/frontmatter-1.0.0.json"]
       severity: error
     structure:
       assertion: How-to pages follow the how-to template.
@@ -45,7 +45,7 @@ Five CI steps and five output formats become one. Full option tables in
 A newly wrapped linter enters at `severity: warning` — it reports without failing — and gets promoted
 to `error` once its findings are clean. Only `error` findings fail the build.
 
-Vale's own severities map through `severityMap`, defaulting to `error`→`error`,
+Vale's own severities map through `severity-map`, defaulting to `error`→`error`,
 `warning`→`warning`, `suggestion`→`info`.
 
 ## The native checks
@@ -57,19 +57,19 @@ linter.
   fresh-enough:
     assertion: Page was reviewed within the last year.
     grader: tool:freshness
-    options: { field: last-reviewed, maxAgeDays: 365 }
+    options: { field: last-reviewed, max-age-days: 365 }
     severity: warning
   readable:
     assertion: Page prose reads below grade 12.
     grader: tool:reading-level
-    options: { maxGrade: 12 }
+    options: { max-grade: 12 }
     severity: warning
   distinct-action-pages:
     assertion: Action reference pages are distinct from one another.
     grader: tool:differentiation
     options:
       scope: "docs/actions/**"
-      maxSimilarity: 0.85
+      max-similarity: 0.85
 ```
 
 **Freshness** is a frontmatter-driven staleness contract — no linter reads your review dates.
@@ -82,14 +82,14 @@ identical — the failure nobody notices because each page looks fine alone.
 Any executable. `{file}` expands to the page's absolute path.
 
 ```yaml
-- name: no-absolute-internal-links
+- id: no-absolute-internal-links
   assertion: The page uses relative links for internal docs.
   grader: command
   command: [node, scripts/check-links.mjs, "{file}"]
-  successExitCodes: [0]
+  success-exit-codes: [0]
 ```
 
-Exit code decides: `0` (or anything in `successExitCodes`) passes; anything else fails with the
+Exit code decides: `0` (or anything in `success-exit-codes`) passes; anything else fails with the
 output tail as the message. Timeouts are reported distinctly.
 
 ## Plain-language checks moose-docevals writes for you
@@ -99,28 +99,28 @@ but not implemented. `moose-docevals run` — or `moose-docevals generate` — h
 Node script for it, saves it beside the doc, and records the command back into frontmatter:
 
 ```yaml
-    - name: install-command-present
+    - id: install-command-present
       assertion: The page contains a bash code block with `npm i -g doc-detective`.
       grader: command
       command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
-        assertionHash: aefaa89e…
+        assertion-hash: aefaa89e…
 ```
 
-The LLM is used **once**, at generation time. After that the check is fully deterministic — no model
+The model is used **once**, at generation time. After that the check is fully deterministic — no model
 in the loop, no per-run cost.
 
 Three consequences worth internalising:
 
 - **The script is ordinary source.** It lands in the repo beside the page, shows up in pull requests,
   and you can edit it by hand. Review it — a generated script that passes for the wrong reason is
-  worse than the llm eval it replaced, because it is now silent and cheap.
-- **`assertionHash` keeps them honest.** Edit the assertion and the hash no longer matches, so the
+  worse than the ai eval it replaced, because it is now silent and cheap.
+- **`assertion-hash` keeps them honest.** Edit the assertion and the hash no longer matches, so the
   script regenerates rather than quietly checking the old thing.
 - **`--no-generate` turns it off**, which is what you want in CI where generation should not happen
   implicitly.
 
-Already have llm evals that should have been code? [`promote`](/moose-docevals/adopt/promote-to-deterministic/)
+Already have ai evals that should have been code? [`promote`](/moose-docevals/adopt/promote-to-deterministic/)
 finds them.
 
 ## Test the commands your docs present

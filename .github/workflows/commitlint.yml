@@ -22,9 +22,8 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # npm install, not ci — see the lockfile note in CLAUDE.md.
       # HUSKY=0 skips hook installation; this job only lints messages.
-      - run: npm install --no-fund --no-audit
+      - run: npm ci --no-fund --no-audit
         env:
           HUSKY: "0"
 

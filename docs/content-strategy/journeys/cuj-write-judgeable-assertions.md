@@ -13,7 +13,7 @@ steps:
   - { stage: "Scope what the judge looks at", doc: docs/src/content/docs/evals/write-good-assertions.mdx, exists: true }
   - { stage: "Pin the boundary with a passing and a failing example", doc: docs/src/content/docs/evals/write-good-assertions.mdx, exists: true }
   - { stage: "Decide whether it guards behavior or measures reach", doc: docs/src/content/docs/evals/regression-vs-capability.mdx, exists: true }
-  - { stage: "Ask whether it should be an llm eval at all", doc: docs/src/content/docs/evals/deterministic-checks.mdx, exists: true }
+  - { stage: "Ask whether it should be an ai eval at all", doc: docs/src/content/docs/evals/deterministic-checks.mdx, exists: true }
   - { stage: "Check the wording against how it is judged", doc: docs/src/content/docs/judge/index.mdx, exists: true }
   - { stage: "Look up every field an eval can carry", doc: docs/src/content/docs/reference/frontmatter.mdx, exists: true }
 ---
@@ -49,7 +49,7 @@ verdict?** If not, no grader will be consistent either, and tuning the model is 
 Two adjacent decisions belong in this journey because they change the wording. Whether an eval is a
 **regression** (guards behavior that must keep working, targets ~100%) or a **capability** (measures
 reach, targets ~70%) changes how strictly it should be phrased — and `regression` is the default
-because most evals guard something. And the standing question **"should this be an llm eval at all?"**
+because most evals guard something. And the standing question **"should this be an ai eval at all?"**
 belongs here rather than only in [`cuj-cheapen-evals`](cuj-cheapen-evals.md), because the cheapest
 time to notice an assertion is really a grep is while writing it.
 

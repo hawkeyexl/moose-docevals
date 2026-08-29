@@ -44,7 +44,7 @@ reader who does not know this treats the threshold as a one-shot irreversible de
 it, picks wrong, and pays twice. It belongs in the first screen, not in a caching reference.
 
 The journey's honest ending is a review step, not a green run. `fill` proposes; it does not decide.
-Proposals are llm-graded with explicit `examples` by construction, existing evals are never modified,
+Proposals are ai-graded with explicit `examples` by construction, existing evals are never modified,
 and name collisions against the page's resolved plan are dropped — all of which makes it safe to run,
 and none of which makes its output automatically good. A page implying the corpus is now covered sets
 the reader up to be wrong later.

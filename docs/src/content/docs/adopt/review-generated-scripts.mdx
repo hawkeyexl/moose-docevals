@@ -8,7 +8,7 @@ That design exists for exactly one reason: **so they show up in pull requests an
 them.**
 
 If nobody does, the design has bought you nothing — and a generated script that passes for the wrong
-reason is worse than the llm eval it replaced, because it is now silent, fast, and free.
+reason is worse than the ai eval it replaced, because it is now silent, fast, and free.
 
 ## Where they land
 
@@ -27,7 +27,7 @@ Frontmatter records the reference and the hash of the assertion that produced it
 ```yaml
       command: [node, moose-docevals/installation.install-command-present.mjs, "{file}"]
       generated:
-        assertionHash: aefaa89e…
+        assertion-hash: aefaa89e…
 ```
 
 ## What to look for
@@ -57,7 +57,7 @@ script that throws reports as a failure, which looks like a docs problem and is 
 
 They are yours. Fix a bad regex, tighten a match, add a comment explaining a non-obvious rule. Hand
 edits survive — regeneration only happens when the **assertion** changes, which is what
-`assertionHash` tracks.
+`assertion-hash` tracks.
 
 If you change the assertion, the hash stops matching, the script is stale, and moose-docevals regenerates
 it — discarding your edits. That is intended: the assertion is the contract, the script is an
@@ -71,9 +71,9 @@ Not every `promotable` verdict should be taken. Push back when:
 - The assertion was vague, and the script has now *silently made it precise* in a way nobody agreed
   to. Fix the assertion first — see
   [Write good assertions](/moose-docevals/evals/write-good-assertions/).
-- The check is cheap either way and the llm version is more robust to legitimate rewording.
+- The check is cheap either way and the AI-graded version is more robust to legitimate rewording.
 
-Reverting is just deleting the script and setting `grader: llm` back.
+Reverting is just deleting the script and setting `grader: ai` back.
 
 ## Treat them like test code
 

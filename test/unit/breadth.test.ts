@@ -74,7 +74,7 @@ describe("differentiation", () => {
   });
 
   function target(file: string, body: string, config = DIFF_CONFIG): GraderTarget {
-    const content = `---\ntitle: x\nevals:\n  suite: s\n---\n${body}`;
+    const content = `---\ntitle: x\neval-suite: s\n---\n${body}`;
     const page: PageFile = {
       file,
       absPath: `/fake/${file}`,
@@ -92,7 +92,7 @@ describe("differentiation", () => {
       "evals:",
       "  distinct:",
       "    grader: tool:differentiation",
-      "    options: { maxSimilarity: 0.9 }",
+      "    options: { max-similarity: 0.9 }",
       "suites:",
       "  s: { evals: [distinct] }",
     ].join("\n"),
@@ -113,9 +113,9 @@ describe("differentiation", () => {
       ],
       config: DIFF_CONFIG,
       root: "/fake",
-      exec: (() => {
+      exec: () => {
         throw new Error("differentiation must not exec");
-      }) as unknown as ExecFn,
+      },
     });
     const files = findings.map((f) => f.file).sort();
     expect(files).toEqual(["docs/a.md", "docs/b.md"]);
@@ -130,13 +130,13 @@ describe("valeGrader", () => {
         "evals:",
         "  style:",
         "    grader: tool:vale",
-        "    severityMap: { error: warning, suggestion: info }",
+        "    severity-map: { error: warning, suggestion: info }",
         "suites:",
         "  s: { evals: [style] }",
       ].join("\n"),
       "/fake/moose.config.yaml",
     );
-    const content = "---\ntitle: x\nevals:\n  suite: s\n---\nBody.";
+    const content = "---\ntitle: x\neval-suite: s\n---\nBody.";
     const page: PageFile = {
       file: "docs/page.md",
       absPath: "/fake/docs/page.md",

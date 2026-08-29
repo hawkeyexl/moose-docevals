@@ -16,7 +16,7 @@ import { resolvePages } from "../../src/core/resolve.js";
 const REPO = resolve(import.meta.dirname, "../..");
 
 const PROPOSAL = {
-  name: "fill-added-check",
+  id: "fill-added-check",
   assertion: "The page states what problem it solves before how to solve it.",
   confidence: 0.9,
   examples: {
@@ -56,7 +56,7 @@ describe("fill over the fixture corpus", () => {
     for (const r of report.results) {
       if (r.file === "test/fixtures/pages/index.mdx") continue;
       expect(r.status, r.file).toBe("filled");
-      expect(r.written.map((p) => p.name)).toEqual(["fill-added-check"]);
+      expect(r.written.map((p) => p.id)).toEqual(["fill-added-check"]);
     }
 
     const page = (rel: string) =>
@@ -78,7 +78,7 @@ describe("fill over the fixture corpus", () => {
     );
 
     // The rewritten corpus still resolves without errors, and every filled
-    // page's plan now includes the new eval with grader llm.
+    // page's plan now includes the new eval with grader ai.
     const config = loadConfig(undefined, root);
     const plans = resolvePages(discoverPages(config, [], root), config);
     for (const plan of plans) {
@@ -89,7 +89,7 @@ describe("fill over the fixture corpus", () => {
       if (plan.skip) continue;
       const added = plan.evals.find((e) => e.name === "fill-added-check");
       expect(added, plan.page.file).toBeDefined();
-      expect(added?.grader).toBe("llm");
+      expect(added?.grader).toBe("ai");
       expect(added?.type).toBe("regression");
     }
   });

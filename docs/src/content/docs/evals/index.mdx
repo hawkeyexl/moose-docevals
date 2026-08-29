@@ -8,45 +8,59 @@ Every eval declaration lives under the `evals` key in page frontmatter. This pag
 
 ## The minimum
 
-The array form is just the eval list:
+The `evals` key is the list of checks for a page:
 
 ```yaml
 ---
 title: Concepts
 evals:
-  - no-future-promises
-  - name: defines-core-terms
+  - use: no-future-promises
+  - id: defines-core-terms
     assertion: The page defines every core concept it introduces.
 ---
 ```
 
-Use the object form when you need a suite or a page-level skip:
+A suite assignment and a page-level skip are flat keys beside it, not an enclosing object. Every
+setting this vocabulary claims carries the reserved `eval-` prefix, so a typo like `eval-suit:` is
+an error rather than a key nobody reads:
 
 ```yaml
 ---
 title: Installation
+eval-suite: how-to
 evals:
-  suite: how-to
-  evals:
-    - no-future-promises
+  - use: no-future-promises
 ---
 ```
 
 ```yaml
 ---
 title: Index
-evals:
-  skip: true
+eval-skip: true
 ---
 ```
 
-## Three ways to name an eval
+## Three ways to declare an eval
 
-**Reference a named eval** from `moose.config.yaml` by bare string:
+**A bare string is an assertion**, judged by AI at error severity — the fastest way to guard
+something once:
 
 ```yaml
 evals:
-  - no-future-promises
+  - The install command names the current package.
+```
+
+:::caution[This changed in 1.0.0]
+A bare string used to *reference* a config-defined eval. It is an assertion now, so `- fresh-enough`
+sends those two words to the judge instead of running the freshness grader. moose-docevals warns
+when a string matches a defined eval id; write `use:` to reference one.
+:::
+
+**Reference a named eval** from `moose.config.yaml` with `use:`:
+
+```yaml
+evals:
+  - use: no-future-promises
 ```
 
 **Reference with overrides**, to narrow it for this page only:
@@ -55,7 +69,7 @@ evals:
 evals:
   - use: fresh-enough
     severity: warning
-    options: { maxAgeDays: 180 }
+    options: { max-age-days: 180 }
 ```
 
 `options` **merges** over the base rather than replacing it, so you can change one setting without
@@ -65,13 +79,14 @@ restating the rest. `type`, `severity`, and `skip` replace.
 
 ```yaml
 evals:
-  - name: install-command-present
+  - id: install-command-present
     assertion: The page contains a bash code block with `npm i -g doc-detective`.
     grader: command
 ```
 
-Inline evals need a `name`. Everything else is optional — `grader` defaults to `llm` and `type` to
-`regression`.
+Inline evals need an `id` — kebab-case, unique on the page. Everything else is optional: `grader`
+defaults to `ai` and `type` to `regression`. The id is required rather than derived from position,
+because a position-derived name orphans every cached verdict as soon as entries move.
 
 ## Prefer named evals
 
@@ -95,7 +110,7 @@ npx moose-docevals list docs/installation.mdx
 
 ```console
 test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
-  - no-future-promises [llm, regression, config]
+  - no-future-promises [ai, regression, config]
   - fresh-enough [tool:freshness, regression, config]
   - readable [tool:reading-level, regression, config]
   - frontmatter-valid [tool:docmeta, regression, config]
@@ -111,7 +126,7 @@ neighbours.
 
 A malformed page does not stop the run. Unknown suite names, unknown eval references, and
 schema-invalid frontmatter are reported as page errors with a source line; duplicate names and
-inline llm evals missing `examples` are warnings.
+inline ai evals missing `examples` are warnings.
 
 Validate the declarations themselves as an eval, so bad frontmatter fails like any other check —
 see [Frontmatter reference](/moose-docevals/reference/frontmatter/#validating-the-frontmatter-itself).

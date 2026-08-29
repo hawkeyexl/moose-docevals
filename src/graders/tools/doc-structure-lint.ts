@@ -8,6 +8,7 @@
  * position: { start: { line }, ... } }] }]
  */
 import type { Finding } from "../../types.js";
+import { exited } from "../exec.js";
 import type { Grader } from "../types.js";
 
 interface DslError {
@@ -40,7 +41,7 @@ export const docStructureLintGrader: Grader = {
         continue;
       }
       const commandOverride = ev.options.command as string[] | undefined;
-      const templatePath = ev.options.templatePath as string | undefined;
+      const templatePath = ev.options["template-path"] as string | undefined;
       const cmd = [
         ...(commandOverride ?? ["npx", "--no-install", "doc-structure-lint"]),
         "--file-path",
@@ -71,7 +72,7 @@ export const docStructureLintGrader: Grader = {
           findings.push({
             evalName: ev.name,
             file: plan.page.file,
-            message: `doc-structure-lint exited ${result.code}: ${result.stderr.trim().slice(-300)}`,
+            message: `doc-structure-lint ${exited(result.code)}: ${result.stderr.trim().slice(-300)}`,
             severity: ev.severity,
           });
         }

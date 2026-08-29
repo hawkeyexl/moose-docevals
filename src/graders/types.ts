@@ -1,7 +1,7 @@
 /**
  * Grader contract for deterministically graded evals (command and tool:*).
  * A grader receives every (page, eval) target that resolved to its kind and
- * returns normalized findings. LLM grading lives in src/judge, not here.
+ * returns normalized findings. AI grading lives in src/judge, not here.
  */
 import type { ExecFn } from "@hawkeyexl/inference";
 import type { Finding } from "../types.js";

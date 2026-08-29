@@ -66,8 +66,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # npm install, not ci — see the lockfile note in CLAUDE.md.
-      - run: npm install --no-fund --no-audit
+      - run: npm ci --no-fund --no-audit
       - run: npm run typecheck
       - run: npm run build
       - run: npm test

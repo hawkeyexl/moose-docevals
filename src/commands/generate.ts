@@ -40,9 +40,9 @@ export async function runGenerate(
       const missing = !ev.command;
       const stale =
         ev.command != null &&
-        ev.generated != null &&
+        ev.generatedAssertionHash != null &&
         ev.assertion != null &&
-        ev.generated.assertionHash !== sha256(ev.assertion);
+        ev.generatedAssertionHash !== sha256(ev.assertion);
       if ((missing || stale) && ev.assertion) {
         targets.push({ plan, eval: ev });
       }

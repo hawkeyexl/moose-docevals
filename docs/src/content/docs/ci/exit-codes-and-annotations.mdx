@@ -30,12 +30,12 @@ the step.
 Route them separately:
 
 ```yaml
-      - name: moose-docevals
+      - id: moose-docevals
         id: moose-docevals
         continue-on-error: true
         run: npx moose-docevals run --format github
 
-      - name: Fail the PR on findings
+      - id: Fail the PR on findings
         if: steps.moose-docevals.outcome == 'failure'
         run: |
           code=${{ steps.moose-docevals.outputs.exit-code || '1' }}
@@ -87,11 +87,11 @@ properties, which is why the title renders as `moose-docevals%3A fresh-enough`.
 
 ### Judged failures annotate the file
 
-An llm eval has no line to point at, so it annotates the file with the mean confidence and the
+An ai eval has no line to point at, so it annotates the file with the mean confidence and the
 judge's reasoning:
 
 ```text
-::error file=docs/tutorial.mdx,title=moose-docevals%3A no-future-promises::LLM judge: fail (confidence 0.93). <reasoning>
+::error file=docs/tutorial.mdx,title=moose-docevals%3A no-future-promises::AI judge: fail (confidence 0.93). <reasoning>
 ```
 
 That reasoning is what a contributor acts on. It is only as good as the assertion behind it — see

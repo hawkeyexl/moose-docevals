@@ -2,17 +2,17 @@
 title: Concepts
 last-reviewed: 2024-02-01
 evals:
-  - name: defines-core-terms
+  - id: defines-core-terms
     assertion: >
       The page defines what a test specification, test, and step are, and
       explains how they relate to each other.
     type: regression
-    grader: llm
+    grader: ai
     evidence: Section headings and their first paragraphs
     examples:
       pass: Each concept has a heading with a definition, and relationships are stated.
       fail: A core concept is missing or relationships are never explained.
-  - fresh-enough
+  - use: fresh-enough
 ---
 
 Learn the key concepts that form the foundation of Doc Detective.

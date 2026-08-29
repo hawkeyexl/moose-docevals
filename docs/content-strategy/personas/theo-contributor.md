@@ -38,8 +38,8 @@ to unblock a two-line edit is close to zero.
 
 His first problem is **triage**, and nothing else works until it is solved. moose-docevals produces at least
 five failures that look similar in a CI log and have completely different remedies: a deterministic
-tool finding pinned to a line; an LLM verdict with a rationale and no line; an eval parked in the
-human-review zone that he has no standing to resolve; a stale `assertionHash` meaning a generated
+tool finding pinned to a line; an AI verdict with a rationale and no line; an eval parked in the
+human-review zone that he has no standing to resolve; a stale `assertion-hash` meaning a generated
 script no longer matches its assertion; and an operational error that is not his fault at all. His
 page has to sort these in its first screen.
 

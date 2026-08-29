@@ -117,8 +117,8 @@ program
     parseFormatArg("--format", REPORT_FORMATS),
     "human" as ReportFormat,
   )
-  .option("--deterministic-only", "Run only command/tool graders, skip the LLM judge")
-  .option("--llm-only", "Run only LLM-judged evals, skip deterministic graders")
+  .option("--deterministic-only", "Run only command/tool graders, skip the AI judge")
+  .option("--ai-only", "Run only AI-judged evals, skip deterministic graders")
   .option("--no-frontmatter-commands", "Skip command evals defined in page frontmatter")
   .option("--no-generate", "Do not generate scripts for command evals missing a command")
   .option("--no-cache", "Bypass the judge response cache")
@@ -135,7 +135,7 @@ program
         // from the `unknown` that the Record-typed options bag erases it to.
         format: opts.format as ReportFormat,
         deterministicOnly: opts.deterministicOnly as boolean | undefined,
-        llmOnly: opts.llmOnly as boolean | undefined,
+        aiOnly: opts.aiOnly as boolean | undefined,
         frontmatterCommands: opts.frontmatterCommands as boolean | undefined,
         generate: opts.generate as boolean | undefined,
         cache: opts.cache as boolean | undefined,
@@ -236,7 +236,7 @@ program
 program
   .command("promote")
   .description(
-    "Find llm-graded evals expressible as deterministic checks; --write converts them",
+    "Find ai-graded evals expressible as deterministic checks; --write converts them",
   )
   .argument("[globs...]", "File globs (default: config files.include)")
   .option("-c, --config <path>", "Path to moose.config.yaml")
@@ -251,7 +251,7 @@ program
       try {
         const proposals = await runPromote(globs, opts);
         if (proposals.length === 0) {
-          console.log("No llm-graded evals found.");
+          console.log("No ai-graded evals found.");
           return;
         }
         for (const p of proposals) {
@@ -259,7 +259,7 @@ program
             ? p.applied
               ? pc.green("promoted")
               : pc.cyan("promotable")
-            : pc.dim("keep-llm");
+            : pc.dim("keep-ai");
           const script = p.scriptPath ? pc.dim(` -> ${p.scriptPath}`) : "";
           console.log(`${tag} ${p.evalName} (${p.source}, ${p.file})${script}`);
           console.log(pc.dim(`  ${p.rationale}`));

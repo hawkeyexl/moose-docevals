@@ -27,7 +27,14 @@ const EMPTY_REPORT: EngineReport = {
 
 describe("parseFormat", () => {
   it("exposes the full reporter set for run", () => {
-    expect([...REPORT_FORMATS]).toEqual(["human", "json", "markdown", "github"]);
+    expect([...REPORT_FORMATS]).toEqual([
+      "human",
+      "json",
+      "markdown",
+      "github",
+      "sarif",
+      "junit",
+    ]);
   });
 
   it("exposes the human/json pair for list and fill", () => {
@@ -54,7 +61,7 @@ describe("parseFormat", () => {
       '--format must be one of human | json, got "xml"',
     );
     expect(() => parseFormat("xml", REPORT_FORMATS, "--format")).toThrow(
-      '--format must be one of human | json | markdown | github, got "xml"',
+      '--format must be one of human | json | markdown | github | sarif | junit, got "xml"',
     );
   });
 
@@ -97,7 +104,7 @@ describe("render dispatch", () => {
     // One generator, three call sites. A hand-written message here would drift
     // from parseFormat's the first time either is reworded.
     expect(() => render(EMPTY_REPORT, "xml" as never)).toThrow(
-      'format must be one of human | json | markdown | github, got "xml"',
+      'format must be one of human | json | markdown | github | sarif | junit, got "xml"',
     );
   });
 });

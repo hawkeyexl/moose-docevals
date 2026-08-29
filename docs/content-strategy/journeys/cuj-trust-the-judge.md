@@ -53,11 +53,11 @@ are ambiguous — which routes the reader back to
 where they would waste a week.
 
 False positives get their own step because they matter more than raw accuracy. A check that fails good
-pages is disabled within a week; one that misses a few bad pages survives. `judge.falsePositiveAlert`
+pages is disabled within a week; one that misses a few bad pages survives. `judge.false-positive-alert`
 encodes that asymmetry.
 
 The provider step closes a loop opened in [`cuj-ci-wire`](cuj-ci-wire.md) and answers the security
-question the lead audience will face: an OpenAI-compatible `baseUrl` reaches a self-hosted endpoint,
+question the lead audience will face: an OpenAI-compatible `base-url` reaches a self-hosted endpoint,
 and `claude-cli` needs no API key at all.
 
 **Status.** All 7 steps are served by written pages (3 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.

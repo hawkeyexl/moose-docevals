@@ -36,7 +36,7 @@ and no other persona should be relied on to.
 There are **two distinct paths from a content file to code running on a runner**, and conflating them
 is the trap:
 
-1. **Page frontmatter can declare commands.** `scripts.allowFrontmatterCommands` in config and
+1. **Page frontmatter can declare commands.** `scripts.allow-frontmatter-commands` in config and
    `--no-frontmatter-commands` on the CLI gate this path. This is the one everybody finds.
 2. **The `tool:doc-detective` grader executes steps embedded in page bodies.** The flag above does
    **not** gate this path.
@@ -50,7 +50,7 @@ exactly this way and is the worked example.
 
 The cost half is less dangerous and more likely to end an adoption. Model spend is per-invocation, so
 the failure is not one large bill but an unpredictable one — and unpredictable is what gets a check
-removed. Two facts do the work: `judge.maxCostUsd` and `fill.maxCostUsd` are **hard ceilings that
+removed. Two facts do the work: `judge.max-cost-usd` and `fill.max-cost-usd` are **hard ceilings that
 abort**, not warnings; and caching is content-addressed, so an unchanged page and an unchanged
 assertion never re-judge. Together they make the steady-state cost of a docs PR approximately zero,
 which is the number Devin needs and the one that is least obvious from the outside.

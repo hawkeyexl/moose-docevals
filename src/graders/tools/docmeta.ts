@@ -18,6 +18,26 @@ async function gradeGroup(
   const byFile = new Map(targets.map((t) => [t.plan.page.file, t.eval] as const));
   const files = [...byFile.keys()];
 
+  // Which schemas a corpus is held to is not something moose-docevals can
+  // guess. Passing `cliSchemas: undefined` would hand the decision to docmeta's
+  // own `DEFAULT_SCHEMAS`, a set that has widened twice across major versions —
+  // so the eval's meaning would change on a dependency bump with no edit to any
+  // config here. Measured on the 1.3 → 4.12 upgrade: with no `schemas`, all 13
+  // fixture pages fail `google:okf:0.1` for a missing `type`, reported as if
+  // the pages were wrong rather than the eval underspecified.
+  if (!schemas || schemas.length === 0) {
+    return targets.map((t) => ({
+      evalName: t.eval.name,
+      file: t.plan.page.file,
+      ruleId: "docmeta/no-schemas",
+      message:
+        "tool:docmeta needs options.schemas (builtin ids, file paths, or URLs) — " +
+        'e.g. schemas: ["node_modules/moose-docevals/schemas/frontmatter-1.0.0.json"]',
+      severity: t.eval.severity,
+      line: 1,
+    }));
+  }
+
   const run = await runValidate({
     inputs: files,
     cliSchemas: schemas,
