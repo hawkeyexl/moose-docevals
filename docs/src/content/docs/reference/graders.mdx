@@ -12,7 +12,7 @@ explicable wins; see [How moose-docevals works](/moose-docevals/get-started/how-
 | Kind | Runs | Needs a provider |
 |---|---|---|
 | `command` | Any CLI check you supply | No |
-| `tool:markdownlint` · `tool:vale` · `tool:docmeta` · `tool:doc-structure-lint` · `tool:doc-detective` | An existing tool | No |
+| `tool:remark` · `tool:markdownlint` · `tool:vale` · `tool:docmeta` · `tool:doc-structure-lint` · `tool:doc-detective` | An existing tool | No |
 | `tool:freshness` · `tool:reading-level` · `tool:differentiation` | Native checks nothing else covers | No |
 | `ai` | The judge | Yes |
 | `human` | A person | No |
@@ -37,6 +37,43 @@ Runs any executable. `{file}` in an argument expands to the page's absolute path
 A `command` eval with an assertion and **no** command is a plain-language deterministic check —
 moose-docevals generates the script. See [Deterministic checks](/moose-docevals/evals/deterministic-checks/).
 
+## `tool:remark`
+
+Runs [remark](https://github.com/remarkjs/remark) once per eval-configuration group and reads its
+JSON report. Unlike markdownlint it parses **MDX**, so JSX expressions, `{/* comments */}`, and
+`import` lines are syntax rather than stray punctuation.
+
+| Option | Default |
+|---|---|
+| `command` | `["npx", "--no-install", "remark", "--no-stdout", "--quiet", "--report", "json"]` |
+
+Findings carry the rule id as `<source>/<rule>` — `remark-lint/no-undefined-references` — with line
+and column when the message has a position. Default timeout 120000 ms.
+
+:::caution[`command` is a *partial* override]
+The page list is appended to whatever you supply, and two of the default flags are load-bearing.
+`--no-stdout` stops remark printing the *reformatted document* where the report should be, and
+`--report json` produces what the adapter parses — on **stderr**, not stdout. `--frail` is
+deliberately absent, so a non-zero exit means something actually broke rather than "a rule matched".
+:::
+
+**Which rules run is remark's configuration, not moose-docevals'.** remark loads `.remarkrc.json` from
+your project; this repo's enables `remark-mdx`, `remark-frontmatter`, `remark-gfm`,
+`remark-directive`, and `remark-preset-lint-recommended`. Every plugin it names has to be installed —
+`--no-install` means npx will not fetch them for you.
+
+A page remark cannot parse at all becomes an ordinary finding pointing you at `npx remark <file>`,
+because the JSON report drops the underlying cause. A missing binary, a timeout, a report it could
+not read, or findings for a path matching no page in the run are `diagnostic` findings, and fail the
+eval at any severity.
+
+:::note[remark or markdownlint?]
+**remark for MDX, markdownlint for plain Markdown.** markdownlint has no MDX mode, so on `.mdx`
+pages it reports against syntax it cannot parse — MDX comments read as emphasis markers, for one —
+and those findings are not about the page. Both graders stay supported; this documentation site uses
+`tool:remark` because every page in it is MDX.
+:::
+
 ## `tool:markdownlint`
 
 Runs `markdownlint-cli2` once per eval-configuration group and parses its text output.
@@ -46,7 +83,7 @@ Runs `markdownlint-cli2` once per eval-configuration group and parses its text o
 | `command` | `["npx", "--no-install", "markdownlint-cli2"]` |
 
 Findings carry the rule id (`MD013/line-length`), line, and column when present. Default timeout
-120000 ms.
+120000 ms. There is no MDX mode — on an `.mdx` corpus use `tool:remark` above.
 
 ## `tool:vale`
 

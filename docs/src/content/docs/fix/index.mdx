@@ -39,7 +39,8 @@ Read it as `severity:line [rule] message`. A script found something specific at 
   [re-run that one eval locally](#re-run-only-the-eval-that-failed) before you push.
 - `freshness/stale` means the page's review date is too old — update `last-reviewed` in the
   frontmatter, **after** checking the page is actually still accurate.
-- Rules starting `MD…` are markdownlint; rules with a dot like `Vale.Spelling` are Vale.
+- Rules starting `MD…` are markdownlint; ones like `remark-lint/no-undefined-references` are remark;
+  rules with a dot like `Vale.Spelling` are Vale.
 
 Only `error` fails the build. If your message says `warning` or `info`, that check is not what turned
 the build red — keep reading the log.
