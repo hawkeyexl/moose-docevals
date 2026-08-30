@@ -29,6 +29,7 @@ import { commandGrader } from "../../src/graders/command.js";
 import { docDetectiveGrader } from "../../src/graders/tools/doc-detective.js";
 import { docStructureLintGrader } from "../../src/graders/tools/doc-structure-lint.js";
 import { markdownlintGrader } from "../../src/graders/tools/markdownlint.js";
+import { remarkGrader } from "../../src/graders/tools/remark.js";
 import { valeGrader } from "../../src/graders/tools/vale.js";
 import type { Grader, ExecFn, ExecResult, GraderTarget } from "../../src/graders/types.js";
 
@@ -117,6 +118,15 @@ const NO_VERDICT: [string, Grader, string, Partial<ExecResult>, string[]][] = [
     { timedOut: true, code: null, stderr: "partial" }, []],
   ["markdownlint: non-zero exit with nothing parseable", markdownlintGrader,
     "tool:markdownlint", { code: 2, stderr: "Cannot read config" }, []],
+
+  ["remark: spawn failure", remarkGrader, "tool:remark",
+    { spawnError: "ENOENT", code: null }, []],
+  ["remark: timeout", remarkGrader, "tool:remark",
+    { timedOut: true, code: null, stderr: "partial" }, []],
+  ["remark: no JSON report", remarkGrader, "tool:remark",
+    { code: 1, stderr: "Error: cannot find plugin remark-mdx" }, []],
+  ["remark: report is not a list of files", remarkGrader, "tool:remark",
+    { code: 0, stderr: '{"ok":true}' }, []],
 
   ["vale: spawn failure", valeGrader, "tool:vale", { spawnError: "ENOENT", code: null }, []],
   ["vale: no JSON output", valeGrader, "tool:vale",

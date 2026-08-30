@@ -65,9 +65,9 @@ docevals:
       options:
         schemas: ["schemas/frontmatter-1.0.0.json"]
       severity: error
-    markdownlint:
-      assertion: Page passes markdownlint style rules.
-      grader: tool:markdownlint
+    remark:
+      assertion: Page parses as MDX and passes remark lint rules.
+      grader: tool:remark
       severity: warning
     fresh-enough:
       assertion: Page was reviewed within the last year.
