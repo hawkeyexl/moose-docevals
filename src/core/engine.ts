@@ -747,7 +747,6 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         for (const target of group) {
           results.push({
             evalName: target.eval.name,
-            suite: target.eval.suite,
             type: target.eval.type,
             grader: target.eval.grader,
             file: target.plan.page.file,
@@ -853,11 +852,19 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       message:
         `This run graded nothing — no eval reached a verdict, so it established ` +
         `nothing about the corpus. ` +
-        (results.length === 0
-          ? `Every discovered page was skipped or scoped out of the run.`
-          : `All ${results.length} resolved eval(s) were skipped; check the skip ` +
+        (results.length > 0
+          ? `All ${results.length} resolved eval(s) were skipped; check the skip ` +
             `reasons above — a page-level \`eval-skip\`, a grader-class flag, or ` +
-            `a missing provider.`),
+            `a missing provider.`
+          : // With zero results the cause is not always the same, and naming the
+            // wrong one sends the reader to the wrong file. An error-level
+            // resolution problem makes the plan loop skip that page entirely and
+            // also suppresses the empty-plan throw above, so "skipped or scoped
+            // out" would contradict the errors printed right beside it.
+            problems.some((p) => p.level === "error")
+            ? `Every discovered page was dropped by an error-level resolution ` +
+              `problem — fix those first; they are listed above.`
+            : `Every discovered page was skipped or scoped out of the run.`),
       level: "warning",
     });
   }
