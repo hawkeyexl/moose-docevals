@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1920,
+      "outputTokens": 292
+    },
+    "durationMs": 3405,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes only shipped behavior. For example, it states 'Structured output via forced tool use, so verdicts arrive as validated JSON rather than prose to parse' and 'Uses strict json_schema structured output where the endpoint supports it, falling back to json_object automatically where it does not'. It also mentions 'The first run is the exception: it fetches the llama.cpp runtime and the model weights into a directory the inference library owns, outside your project — set provider.llama-cpp.models-directory to put them somewhere else, including inside the repo. Every run after that is offline.' All descriptions refer to current, working functionality without promising unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality. There are no claims about unreleased features, future functionality, or upcoming versions. The text focuses on how the current providers work, their configuration options, and their behavior in production use. All examples and code blocks are clearly illustrative of current capabilities."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1920,
+      "outputTokens": 292
+    },
+    "durationMs": 3407,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes only shipped behavior. For example, it states 'Structured output via forced tool use, so verdicts arrive as validated JSON rather than prose to parse' and 'Uses strict json_schema structured output where the endpoint supports it, falling back to json_object automatically where it does not'. It also mentions 'The first run is the exception: it fetches the llama.cpp runtime and the model weights into a directory the inference library owns, outside your project — set provider.llama-cpp.models-directory to put them somewhere else, including inside the repo. Every run after that is offline.' All descriptions refer to current, working functionality without promising unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality. There are no claims about unreleased features, future functionality, or upcoming versions. The text focuses on how the current providers work, their configuration options, and their behavior in production use. All examples and code blocks are clearly illustrative of current capabilities."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1920,
+      "outputTokens": 292
+    },
+    "durationMs": 3508,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes only shipped behavior. For example, it states 'Structured output via forced tool use, so verdicts arrive as validated JSON rather than prose to parse' and 'Uses strict json_schema structured output where the endpoint supports it, falling back to json_object automatically where it does not'. It also mentions 'The first run is the exception: it fetches the llama.cpp runtime and the model weights into a directory the inference library owns, outside your project — set provider.llama-cpp.models-directory to put them somewhere else, including inside the repo. Every run after that is offline.' All descriptions refer to current, working functionality without promising unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality. There are no claims about unreleased features, future functionality, or upcoming versions. The text focuses on how the current providers work, their configuration options, and their behavior in production use. All examples and code blocks are clearly illustrative of current capabilities."
+    }
+  }
+]

@@ -29,7 +29,7 @@ Most evals do not set the field. Whichever value the default takes therefore des
 
 ## Decision Outcome
 
-Chosen option: **default to `regression`**, applied in `resolvePage`/`resolveEval` in [src/core/resolve.ts](../src/core/resolve.ts).
+Chosen option: **default to `regression`**, applied in `fromDef` in [src/core/resolve.ts](../src/core/resolve.ts), which `resolvePage`/`resolvePages` use to build every resolved eval.
 
 The reasoning is about what people actually write. An eval is nearly always added because someone noticed something that must not break: a command that has to keep working, a page that has to stay fresh, frontmatter that has to keep validating. That is a regression guard. Capability evals — asserting a quality the corpus has not yet reached — are the deliberate, rarer case, written during a push to raise a standard, and the person writing one is already thinking about the distinction and will happily type the field.
 

@@ -27,9 +27,15 @@ const GIT_TIMEOUT_MS = 30_000;
  *
  * Lowercased on win32, and that is load-bearing rather than defensive: git
  * reports the case recorded in its index, fast-glob reports the case on disk,
- * and the two sources can also disagree about the drive letter. On a
- * case-insensitive filesystem none of those differences is a different file,
- * but every one of them is a different string.
+ * and the two sources can also disagree about the drive letter. None of those
+ * differences is a different file on Windows, but every one of them is a
+ * different string.
+ *
+ * Keyed on the platform rather than on case-insensitivity in general, because
+ * the latter cannot be detected reliably — a case-insensitive APFS or a
+ * case-sensitive Windows volume both exist. This is the Windows-specific
+ * behaviour the code actually implements, not a claim about every such
+ * filesystem.
  */
 export function changedKey(absPath: string): string {
   const abs = resolve(absPath);

@@ -49,7 +49,13 @@ export interface EngineReport extends RunReport {
   /**
    * Present only under `--since` (ADR 01029). `pagesTotal` is the whole
    * discovered corpus — `pages` above stays that number too — and
-   * `pagesSelected` is how much of it this run actually evaluated.
+   * `pagesSelected` is the count of pages that **changed since the ref**.
+   *
+   * It is deliberately not "pages this run evaluated", which would be a
+   * different and larger number: corpus-wide graders keep every page in scope,
+   * so an unchanged page can still be graded. Consumers reading this from
+   * `--format json` should treat it as the size of the change set, matching
+   * what the reporters print.
    */
   since?: { ref: string; pagesSelected: number; pagesTotal: number };
 }
@@ -421,9 +427,18 @@ export function applySinceScope(
       pagesSelected += 1;
       continue;
     }
-    plan.evals = plan.evals.filter(
-      (ev) => graderFor(ev.grader)?.mode === "corpus",
-    );
+    plan.evals = plan.evals.filter((ev) => {
+      const grader = graderFor(ev.grader);
+      if (grader) return grader.mode === "corpus";
+      // `graderFor` returns undefined for `ai` and `human` — which is exactly
+      // what scoping should drop, since not paying the judge is the point — and
+      // *also* for an unrecognised `tool:` kind. Dropping those too would hide a
+      // misconfiguration on every page the branch did not touch: the grading
+      // loop is what reports an unknown kind, so an eval removed here never
+      // errors. A typo would surface on a changed page and vanish on an
+      // unchanged one, which is the least predictable behaviour available.
+      return ev.grader !== "ai" && ev.grader !== "human";
+    });
   }
   return { pagesSelected };
 }

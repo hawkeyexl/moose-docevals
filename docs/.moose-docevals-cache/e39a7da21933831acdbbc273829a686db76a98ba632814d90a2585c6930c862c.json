@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1366,
+      "outputTokens": 215
+    },
+    "durationMs": 3386,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: using `--format json` to output JSON, the structure of the JSON output, useful queries with jq, tracking quality over time, the TypeScript API, and exit codes. There is no prose promising unreleased features or pointing to unreleased versions. All code blocks and examples are illustrative of current usage.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped behavior (JSON output format, jq queries, TypeScript API, exit codes). No unreleased features are promised or referenced. All code blocks and examples are clearly illustrative of current functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1366,
+      "outputTokens": 215
+    },
+    "durationMs": 3302,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: using `--format json` to output JSON, the structure of the JSON output, useful queries with jq, tracking quality over time, the TypeScript API, and exit codes. There is no prose promising unreleased features or pointing to unreleased versions. All code blocks and examples are illustrative of current usage.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped behavior (JSON output format, jq queries, TypeScript API, exit codes). No unreleased features are promised or referenced. All code blocks and examples are clearly illustrative of current functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1366,
+      "outputTokens": 215
+    },
+    "durationMs": 3348,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: using `--format json` to output JSON, the structure of the JSON output, useful queries with jq, tracking quality over time, the TypeScript API, and exit codes. There is no prose promising unreleased features or pointing to unreleased versions. All code blocks and examples are illustrative of current usage.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped behavior (JSON output format, jq queries, TypeScript API, exit codes). No unreleased features are promised or referenced. All code blocks and examples are clearly illustrative of current functionality."
+    }
+  }
+]

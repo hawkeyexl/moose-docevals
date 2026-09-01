@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2296,
+      "outputTokens": 279
+    },
+    "durationMs": 3774,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped behavior: 'Model calls are per-invocation', 'Two mechanisms keep the steady state of a docs pull request near zero', 'A cache hit spends nothing', 'The tool used to take a dollar ceiling, --max-cost. It was removed', 'Nothing reports a dollar amount now', 'The run you regret is the one you did not bound'. All claims refer to current, implemented functionality. There are no promises of future features or unreleased versions in the prose. The code blocks and configuration samples (e.g., YAML configs, bash commands, JSON usage blocks) are illustrative examples of how to use the tool, not claims about future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped, current functionality. It explicitly mentions what was removed ('--max-cost' was removed) and what currently exists (turns, caching, budgeting). There are no assertions about unreleased features, future versions, or upcoming functionality. The code blocks and configuration samples are clearly presented as examples of current usage, not as claims about future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2296,
+      "outputTokens": 279
+    },
+    "durationMs": 3699,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped behavior: 'Model calls are per-invocation', 'Two mechanisms keep the steady state of a docs pull request near zero', 'A cache hit spends nothing', 'The tool used to take a dollar ceiling, --max-cost. It was removed', 'Nothing reports a dollar amount now', 'The run you regret is the one you did not bound'. All claims refer to current, implemented functionality. There are no promises of future features or unreleased versions in the prose. The code blocks and configuration samples (e.g., YAML configs, bash commands, JSON usage blocks) are illustrative examples of how to use the tool, not claims about future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped, current functionality. It explicitly mentions what was removed ('--max-cost' was removed) and what currently exists (turns, caching, budgeting). There are no assertions about unreleased features, future versions, or upcoming functionality. The code blocks and configuration samples are clearly presented as examples of current usage, not as claims about future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2296,
+      "outputTokens": 279
+    },
+    "durationMs": 3597,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped behavior: 'Model calls are per-invocation', 'Two mechanisms keep the steady state of a docs pull request near zero', 'A cache hit spends nothing', 'The tool used to take a dollar ceiling, --max-cost. It was removed', 'Nothing reports a dollar amount now', 'The run you regret is the one you did not bound'. All claims refer to current, implemented functionality. There are no promises of future features or unreleased versions in the prose. The code blocks and configuration samples (e.g., YAML configs, bash commands, JSON usage blocks) are illustrative examples of how to use the tool, not claims about future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped, current functionality. It explicitly mentions what was removed ('--max-cost' was removed) and what currently exists (turns, caching, budgeting). There are no assertions about unreleased features, future versions, or upcoming functionality. The code blocks and configuration samples are clearly presented as examples of current usage, not as claims about future features."
+    }
+  }
+]

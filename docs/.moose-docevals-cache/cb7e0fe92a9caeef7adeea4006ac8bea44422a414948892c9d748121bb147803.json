@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3545,
+      "outputTokens": 336
+    },
+    "durationMs": 3992,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the 'calibrate' tool and its workflow for creating golden sets of test cases. It mentions that 'A golden set of obvious passes measures nothing' and discusses 'borderline pages where two reviewers had to talk it through'. It also mentions 'Model or provider change' and 'Judge prompt revisions' as things that invalidate cached verdicts. The page does not contain any prose that promises unreleased features or points to unreleased versions. All code blocks and configuration samples (like the YAML examples and bash commands) are clearly presented as examples or illustrations of the tool's usage.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content strictly describes the current functionality of the 'moose-docevals calibrate' tool. It explains how to seed golden candidates, how cases are structured, how to run calibration, and how to interpret results. There is no prose that claims unreleased or future functionality. The page discusses existing features like `--seed`, `--golden`, `--runs`, `--max-turns`, and `false-positive-alert`. All code blocks and configuration samples are clearly presented as examples or illustrations, not as claims of future functionality. The page focuses entirely on shipped behavior and current workflow."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3545,
+      "outputTokens": 336
+    },
+    "durationMs": 3978,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the 'calibrate' tool and its workflow for creating golden sets of test cases. It mentions that 'A golden set of obvious passes measures nothing' and discusses 'borderline pages where two reviewers had to talk it through'. It also mentions 'Model or provider change' and 'Judge prompt revisions' as things that invalidate cached verdicts. The page does not contain any prose that promises unreleased features or points to unreleased versions. All code blocks and configuration samples (like the YAML examples and bash commands) are clearly presented as examples or illustrations of the tool's usage.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content strictly describes the current functionality of the 'moose-docevals calibrate' tool. It explains how to seed golden candidates, how cases are structured, how to run calibration, and how to interpret results. There is no prose that claims unreleased or future functionality. The page discusses existing features like `--seed`, `--golden`, `--runs`, `--max-turns`, and `false-positive-alert`. All code blocks and configuration samples are clearly presented as examples or illustrations, not as claims of future functionality. The page focuses entirely on shipped behavior and current workflow."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3545,
+      "outputTokens": 336
+    },
+    "durationMs": 3982,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the 'calibrate' tool and its workflow for creating golden sets of test cases. It mentions that 'A golden set of obvious passes measures nothing' and discusses 'borderline pages where two reviewers had to talk it through'. It also mentions 'Model or provider change' and 'Judge prompt revisions' as things that invalidate cached verdicts. The page does not contain any prose that promises unreleased features or points to unreleased versions. All code blocks and configuration samples (like the YAML examples and bash commands) are clearly presented as examples or illustrations of the tool's usage.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content strictly describes the current functionality of the 'moose-docevals calibrate' tool. It explains how to seed golden candidates, how cases are structured, how to run calibration, and how to interpret results. There is no prose that claims unreleased or future functionality. The page discusses existing features like `--seed`, `--golden`, `--runs`, `--max-turns`, and `false-positive-alert`. All code blocks and configuration samples are clearly presented as examples or illustrations, not as claims of future functionality. The page focuses entirely on shipped behavior and current workflow."
+    }
+  }
+]

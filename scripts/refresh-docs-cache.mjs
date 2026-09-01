@@ -23,7 +23,7 @@ try {
 } catch (e) {
   // Nothing to clear is a success: a fresh checkout that has never judged, or
   // a cache dir the run is about to create.
-  if (e.code === "ENOENT") process.exit(0);
+  if (e?.code === "ENOENT") process.exit(0);
   throw e;
 }
 
