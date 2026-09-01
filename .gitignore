@@ -24,3 +24,7 @@ moose-docevals-run.json
 # CI reporter output from the dogfood gate; also produced by a local run.
 moose-docevals.sarif
 moose-docevals.junit.xml
+
+# Scratch from the CI HTML-report check, when it is run locally.
+moose-docevals.html
+check-html.mjs
