@@ -21,6 +21,7 @@ import {
   frontmatterSchema,
   frontmatterSchemaPath,
   FRONTMATTER_SCHEMA_ID,
+  FRONTMATTER_SCHEMA_VERSIONS,
 } from "../../src/schema.js";
 
 const ROOT = resolve(import.meta.dirname, "../..");
@@ -37,7 +38,16 @@ describe("published frontmatter schema", () => {
       readFileSync(resolve(ROOT, "package.json"), "utf8"),
     ) as { files: string[]; exports: Record<string, unknown> };
     expect(pkg.files).toContain("schemas");
-    expect(pkg.exports).toHaveProperty("./schemas/frontmatter-1.0.0.json");
+    // Every shipped version, not just the current one. `exports` is a closed
+    // map: a file inside a `files` directory is unreachable by subpath import
+    // unless it is listed, so publishing 1.1.0 while exporting only 1.0.0
+    // ships bytes that no consumer can `import` or resolve by path. Driving
+    // this from the version list means the next version cannot be forgotten.
+    for (const version of FRONTMATTER_SCHEMA_VERSIONS) {
+      const subpath = `./schemas/frontmatter-${version}.json`;
+      expect(pkg.exports, subpath).toHaveProperty(subpath);
+      expect(existsSync(resolve(ROOT, subpath))).toBe(true);
+    }
   });
 
   it("carries a resolvable $id, not a validator-internal registry id", () => {
