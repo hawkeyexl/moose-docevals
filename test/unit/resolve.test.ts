@@ -112,6 +112,34 @@ describe("resolvePage", () => {
     expect(plan.evals.filter((e) => e.name === "central-tool")).toHaveLength(1);
   });
 
+  it("carries a reference's weight onto the suite eval", () => {
+    // `weight` is the override that says how much a config-defined check
+    // counts *for this page*, and `use:` is how most pages join a suite at
+    // all. Accepting it in the schema and dropping it in the merge would
+    // silently score the page at the corpus default.
+    const plan = resolvePage(
+      page(
+        [
+          "eval-suite: ref",
+          "evals:",
+          "  - use: central-tool",
+          "    weight: 3",
+        ].join("\n"),
+      ),
+      CONFIG,
+    );
+    const tool = plan.evals.find((e) => e.name === "central-tool")!;
+    expect(tool.weight).toBe(3);
+  });
+
+  it("leaves the defined weight alone when the reference does not say", () => {
+    const plan = resolvePage(
+      page(["eval-suite: ref", "evals:", "  - use: central-tool"].join("\n")),
+      CONFIG,
+    );
+    expect(plan.evals.find((e) => e.name === "central-tool")?.weight).toBe(1);
+  });
+
   it("resolves inline evals as page-sourced", () => {
     const plan = resolvePage(
       page(
