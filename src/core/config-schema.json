@@ -80,6 +80,7 @@
           "type": "object",
           "properties": {
             "ensemble-runs": { "type": "integer", "minimum": 1 },
+            "concurrency": { "type": "integer", "minimum": 1 },
             "temperature": { "type": "number", "minimum": 0 },
             "zones": {
               "type": "object",

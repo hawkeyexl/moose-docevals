@@ -40,6 +40,7 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01023](01023-the-diagnostic-invariant-is-enforced-by-enumeration.md) | The diagnostic invariant is enforced by enumeration, not by inspection | accepted |
 | [01024](01024-judge-locally-with-a-pinned-llama-cpp-model.md) | Judge locally: take `llama-cpp` from the inference layer, pinned to a concrete model | accepted |
 | [01026](01026-an-errored-ensemble-is-never-cached.md) | An ensemble containing an errored run is never cached | accepted |
+| [01027](01027-judge-concurrency-is-separate-from-corpus-concurrency.md) | Judge concurrency is configured separately from corpus concurrency | accepted |
 
 ## To backfill
 

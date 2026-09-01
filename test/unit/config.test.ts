@@ -165,6 +165,39 @@ describe("parseConfig", () => {
     );
   });
 
+  // Judging is the expensive stage and its right parallelism is not the
+  // corpus's: a local in-process model serves one context at a time, while
+  // deterministic graders are happy at 4. Unset, it follows defaults.
+  it("defaults judge.concurrency to defaults.concurrency", () => {
+    expect(parseConfig(moose("version: 1"), PATH).judge.concurrency).toBe(4);
+    const c = parseConfig(
+      moose("version: 1", "defaults:", "  concurrency: 8"),
+      PATH,
+    );
+    expect(c.judge.concurrency).toBe(8);
+  });
+
+  it("lets judge.concurrency be set independently of defaults.concurrency", () => {
+    const c = parseConfig(
+      moose(
+        "version: 1",
+        "defaults:",
+        "  concurrency: 4",
+        "judge:",
+        "  concurrency: 1",
+      ),
+      PATH,
+    );
+    expect(c.defaults.concurrency).toBe(4);
+    expect(c.judge.concurrency).toBe(1);
+  });
+
+  it("rejects a judge.concurrency below 1", () => {
+    expect(() =>
+      parseConfig(moose("version: 1", "judge:", "  concurrency: 0"), PATH),
+    ).toThrow(/Invalid config/);
+  });
+
   // A concrete model, not the library's "auto" selector: the model is
   // cache-key material and a selector cannot be resolved synchronously.
   it("applies llama-cpp provider defaults for a minimal config", () => {

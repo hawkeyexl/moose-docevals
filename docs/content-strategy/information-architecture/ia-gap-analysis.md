@@ -25,8 +25,9 @@ This document therefore no longer enumerates a backlog. It keeps three jobs:
    deciding whether a page still earns its place.
 3. **§4** is the live check: every command, config key, and grader kind maps to a page. **Re-run it
    whenever the CLI grows.** A new capability with no page is a gap the moment it ships, and this
-   table is where that becomes visible. Last re-run against ADR 01024, which added the `llama-cpp`
-   provider and its four `provider.llama-cpp.*` config keys. Before that, ADRs 01016–01020 added
+   table is where that becomes visible. Last re-run against ADRs 01024–01027, which added the
+   `llama-cpp` provider, its four `provider.llama-cpp.*` config keys, and `judge.concurrency`.
+   Before that, ADRs 01016–01020 added
    `--seed`, `--eval`, `--suite`, `--baseline`, `--no-baseline`, `--write-baseline` and the
    `baseline` config key, and removed the `max-cost-usd` keys and the `pricing` block.
 
@@ -169,6 +170,7 @@ Keys are written fully qualified so this table is greppable against
 | `defaults.fail-fast`, `defaults.concurrency` | `reference/configuration.mdx` |
 | `provider.default`, `provider.anthropic`, `provider.openai`, `provider.claude-cli`, `provider.llama-cpp` | `judge/choose-a-provider.mdx`, `reference/configuration.mdx` |
 | `judge.ensemble-runs`, `judge.temperature`, `judge.zones` | `judge/index.mdx` |
+| `judge.concurrency` | `judge/choose-a-provider.mdx`, `reference/configuration.mdx` |
 | `judge.false-positive-alert` | `judge/calibrate.mdx` |
 | `judge.cache-dir`, `fill.cache-dir` | `ci/cost-and-caching.mdx`, `reference/files-and-state.mdx` |
 | `judge.max-turns`, `fill.max-turns` | `ci/cost-and-caching.mdx` |

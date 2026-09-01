@@ -61,7 +61,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     let turnsSpent = 0;
 
     const results: EvalResult[] = [];
-    const concurrency = config.defaults.concurrency;
+    const concurrency = config.judge.concurrency;
     let index = 0;
 
     // Safeguard layer 1: a model judging its own output shows self-preference

@@ -134,6 +134,8 @@ export interface DocevalsConfig {
   baseline: string | null;
   judge: {
     ensembleRuns: number;
+    /** Judge-stage parallelism. Falls back to `defaults.concurrency` (ADR 01027). */
+    concurrency: number;
     temperature: number;
     zones: { autoPass: number; autoFail: number };
     falsePositiveAlert: number;
@@ -227,6 +229,7 @@ interface RawDocevalsConfig {
   baseline?: string | null;
   judge?: {
     "ensemble-runs"?: number;
+    concurrency?: number;
     temperature?: number;
     zones?: { "auto-pass"?: number; "auto-fail"?: number };
     "false-positive-alert"?: number;
@@ -433,6 +436,11 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
     baseline: r.baseline ?? null,
     judge: {
       ensembleRuns: r.judge?.["ensemble-runs"] ?? 3,
+      // Falls back to the corpus-wide setting, so an unset value behaves
+      // exactly as it did before this knob existed. It is separable because
+      // the judge's right parallelism is not the deterministic graders': a
+      // local in-process model serves one context at a time (ADR 01027).
+      concurrency: r.judge?.concurrency ?? r.defaults?.concurrency ?? 4,
       temperature: r.judge?.temperature ?? 0,
       zones: {
         autoPass: r.judge?.zones?.["auto-pass"] ?? 0.8,
