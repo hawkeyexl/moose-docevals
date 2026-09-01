@@ -435,15 +435,28 @@ function summarizeSuites(
     let critSuspended = 0;
     /** "<file> <evalName>" of members a *scored* criterion speaks for. */
     const absorbed = new Set<string>();
+    // Indexed once for the whole suite. The loop below is criterion x page x
+    // member, and a `filter`/`find` inside it rescans every result each time —
+    // quadratic in a corpus's result count, on the one code path that runs
+    // after everything else has finished.
+    const byKey = new Map<string, EvalResult>();
+    const filesByEval = new Map<string, Set<string>>();
+    for (const r of rs) {
+      byKey.set(resultKey(r.file, r.evalName), r);
+      const files = filesByEval.get(r.evalName) ?? new Set<string>();
+      files.add(r.file);
+      filesByEval.set(r.evalName, files);
+    }
     for (const critName of suiteCriteria) {
       const def = config.criteria[critName];
       if (!def) continue;
-      const pages = new Set(
-        rs.filter((r) => def.evals.includes(r.evalName)).map((r) => r.file),
-      );
+      const pages = new Set<string>();
+      for (const name of def.evals) {
+        for (const file of filesByEval.get(name) ?? []) pages.add(file);
+      }
       for (const file of pages) {
         const members = def.evals.map((name) =>
-          rs.find((r) => r.file === file && r.evalName === name),
+          byKey.get(resultKey(file, name)),
         );
         // Every member must have been graded for the group to mean anything.
         // A missing or ungraded member suspends it rather than failing it.
