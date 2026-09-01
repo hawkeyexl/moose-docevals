@@ -13,6 +13,8 @@ import { docDetectiveGrader } from "./tools/doc-detective.js";
 import { freshnessGrader } from "./native/freshness.js";
 import { readingLevelGrader } from "./native/reading-level.js";
 import { differentiationGrader } from "./native/differentiation.js";
+import { regexGrader } from "./native/regex.js";
+import { fileExistsGrader } from "./native/file-exists.js";
 
 const GRADERS = new Map<string, Grader>(
   [
@@ -26,6 +28,8 @@ const GRADERS = new Map<string, Grader>(
     freshnessGrader,
     readingLevelGrader,
     differentiationGrader,
+    regexGrader,
+    fileExistsGrader,
   ].map((g) => [g.kind, g]),
 );
 

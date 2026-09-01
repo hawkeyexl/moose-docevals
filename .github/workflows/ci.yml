@@ -91,6 +91,22 @@ jobs:
             const fm = r.evalResults.filter((x) => x.evalName === "frontmatter-valid");
             if (fm.length === 0) { console.error("no frontmatter-valid results"); process.exitCode = 1; }
             for (const x of fm) check(`${x.file} frontmatter-valid`, x.outcome, "pass");
+            // The deterministic rungs below the judge run over the real corpus.
+            const named = r.evalResults.filter((x) => x.evalName === "names-an-action");
+            if (named.length === 0) { console.error("no names-an-action results"); process.exitCode = 1; }
+            for (const x of named) {
+              check(`${x.file} names-an-action`, x.outcome, "pass");
+              // A secondary check carries its declared weight into the rate.
+              check(`${x.file} names-an-action weight`, x.weight, 0.5);
+            }
+            for (const x of r.evalResults.filter((x) => x.evalName === "ships-a-schema")) {
+              check(`${x.file} ships-a-schema`, x.outcome, "pass");
+            }
+            // A criterion is scored once per page, and its members do not also
+            // vote — goTo.mdx fails freshness, so exactly one criterion fails.
+            const ref = r.suites.find((s) => s.suite === "reference");
+            check("reference criteria failed", ref?.criteria?.failed, 1);
+            check("reference criteria suspended", ref?.criteria?.suspended, 0);
           '
 
       # ADR 01007. An unrecognized --format used to fall through to the human

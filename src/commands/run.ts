@@ -11,13 +11,18 @@ import { makeProvider } from "../judge/provider.js";
 import { makeGenerateScripts } from "../graders/scriptgen.js";
 import type { GenerateFn } from "../core/engine.js";
 import { DocevalsError } from "../types.js";
+import { EXECUTION_GRANTS } from "../core/config.js";
+import type { ExecutionGrant } from "../core/config.js";
 
 export interface RunCommandOptions {
   config?: string;
   format?: ReportFormat;
   deterministicOnly?: boolean;
   aiOnly?: boolean;
-  frontmatterCommands?: boolean;
+  /** Extra execution grants for this run. */
+  allowExecution?: string[];
+  /** `false` clears every grant for this run. */
+  execution?: boolean;
   generate?: boolean;
   cache?: boolean;
   failOnReview?: boolean;
@@ -31,6 +36,30 @@ export interface RunCommandOptions {
   writeBaseline?: string | boolean;
   toolVersion?: string;
   cwd?: string;
+}
+
+/**
+ * Grants, checked rather than asserted.
+ *
+ * The CLI validates in `collectGrant`, but this is also the entry point for
+ * programmatic callers, and an unknown grant that silently does nothing is the
+ * exact failure the default-deny posture exists to avoid: the run skips every
+ * command eval and exits 0, which reads as a clean corpus rather than a
+ * misspelled grant.
+ */
+function asGrants(values: string[] | undefined): ExecutionGrant[] | undefined {
+  if (values === undefined) return undefined;
+  const unknown = values.filter(
+    (v) => !(EXECUTION_GRANTS as readonly string[]).includes(v),
+  );
+  if (unknown.length > 0) {
+    throw new DocevalsError(
+      `unknown execution grant${unknown.length > 1 ? "s" : ""} ` +
+        `${unknown.map((u) => `"${u}"`).join(", ")}; ` +
+        `expected one of ${EXECUTION_GRANTS.join(" | ")}`,
+    );
+  }
+  return values as ExecutionGrant[];
 }
 
 export async function runRun(
@@ -81,7 +110,8 @@ export async function runRun(
     cwd: options.cwd,
     deterministicOnly: options.deterministicOnly,
     aiOnly: options.aiOnly,
-    frontmatterCommands: options.frontmatterCommands,
+    allowExecution: asGrants(options.allowExecution),
+    execution: options.execution,
     generate: options.generate,
     failOnReview: options.failOnReview,
     evalNames: options.evalNames,

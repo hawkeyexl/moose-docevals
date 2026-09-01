@@ -12,7 +12,7 @@ import type {
   RunReport,
   SuiteSummary,
 } from "../types.js";
-import { loadConfig, type DocevalsConfig } from "./config.js";
+import { loadConfig, type DocevalsConfig, type ExecutionGrant } from "./config.js";
 import { discoverPages } from "./discover.js";
 import { resolvePages, type ResolvedPagePlan } from "./resolve.js";
 import {
@@ -27,6 +27,7 @@ import {
   type FingerprintContext,
 } from "./baseline.js";
 import { graderFor } from "../graders/registry.js";
+import { checkFeasibility } from "./feasibility.js";
 import { realExec } from "../graders/exec.js";
 import type { ExecFn, GraderTarget } from "../graders/types.js";
 import { sha256 } from "../judge/cache.js";
@@ -78,7 +79,10 @@ export interface RunOptions {
   cwd?: string;
   deterministicOnly?: boolean;
   aiOnly?: boolean;
-  frontmatterCommands?: boolean;
+  /** Additional execution grants for this run; never widens beyond these. */
+  allowExecution?: ExecutionGrant[];
+  /** `false` clears every grant for this run. */
+  execution?: boolean;
   /** Run only these evals by name. Empty match is a usage error (ADR 01018). */
   evalNames?: string[];
   /** Run only evals belonging to this suite. */
@@ -591,9 +595,28 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   /** "<file> <evalName>" keys whose check script this run generated. */
   const generatedThisRun = new Set<string>();
 
-  const allowFrontmatterCommands =
-    (options.frontmatterCommands ?? true) &&
-    config.scripts.allowFrontmatterCommands;
+  // Default deny, with the CLI able to withhold a configured grant but never
+  // to widen one: `--allow-execution` on the command line is still an operator
+  // act, so it grants; `--no-execution` clears everything for one run.
+  const granted = new Set<ExecutionGrant>([
+    ...config.execution.allow,
+    ...(options.allowExecution ?? []),
+  ]);
+  if (options.execution === false) granted.clear();
+  const allowFrontmatterCommands = granted.has("frontmatter-commands");
+  const allowPageEmbeddedSteps = granted.has("page-embedded-steps");
+
+  // Before anything is dispatched: an eval that cannot reach a verdict as
+  // configured is a configuration error, and saying so now costs nothing where
+  // discovering it at grade time costs a judge call.
+  problems.push(
+    ...checkFeasibility(plans, {
+      allowFrontmatterCommands,
+      canGenerate: options.generate !== false && options.generateScripts != null,
+      ...(options.deterministicOnly === true ? { deterministicOnly: true } : {}),
+      ...(options.aiOnly === true ? { aiOnly: true } : {}),
+    }),
+  );
 
   for (const plan of plans) {
     if (plan.problems.some((p) => p.level === "error")) continue;
@@ -632,9 +655,38 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         results.push(skippedResult(plan, ev, "deterministic evals skipped (--ai-only)"));
         continue;
       }
-      if (ev.grader === "command" && ev.source === "page" && !allowFrontmatterCommands) {
+      // Page-authored argv, whatever grader carries it. `command` evals name
+      // it in `command`; every `tool:*` adapter also accepts an
+      // `options.command` override and hands it to the same `exec`. Gating
+      // only the grader left a second spelling of "run this" that reached a
+      // shell ungated, which made default-deny decorative — a page that cannot
+      // say `grader: command` could say `grader: tool:vale` with the same argv.
+      // Config-authored argv is the operator's own and is not content, so the
+      // gate is on `source === "page"` rather than on the key's presence.
+      const pageAuthoredArgv =
+        ev.source === "page" &&
+        (ev.grader === "command" || Array.isArray(ev.options.command));
+      if (pageAuthoredArgv && !allowFrontmatterCommands) {
         results.push(
-          skippedResult(plan, ev, "frontmatter commands disabled"),
+          skippedResult(
+            plan,
+            ev,
+            "frontmatter commands not granted (execution.allow: [frontmatter-commands])",
+          ),
+        );
+        continue;
+      }
+      // The second path from content to a shell: doc-detective executes steps
+      // written in the page *body*, which no flag covered before. Same grant
+      // model, different capability — an operator who trusts a repo's
+      // frontmatter has not thereby trusted arbitrary steps in its prose.
+      if (ev.grader === "tool:doc-detective" && !allowPageEmbeddedSteps) {
+        results.push(
+          skippedResult(
+            plan,
+            ev,
+            "page-embedded steps not granted (execution.allow: [page-embedded-steps])",
+          ),
         );
         continue;
       }

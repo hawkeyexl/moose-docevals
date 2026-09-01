@@ -8,6 +8,13 @@
 import { runValidate } from "docmeta";
 import type { Finding } from "../../types.js";
 import { groupTargetsByEval, type Grader, type GraderContext, type GraderTarget } from "../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalStringArray,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 async function gradeGroup(
   ctx: GraderContext,
@@ -69,6 +76,18 @@ async function gradeGroup(
 
 export const docmetaGrader: Grader = {
   kind: "tool:docmeta",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["schemas"]),
+      optionalStringArray(options, "schemas"),
+      // Required, not optional (ADR 01013): with no `schemas`, docmeta falls
+      // back to its own DEFAULT_SCHEMAS, which widened in both 2.0.0 and
+      // 3.0.0 — so a bare eval would change meaning on a dependency bump.
+      options.schemas === undefined
+        ? "options.schemas is required — naming the schema set is what keeps this eval's meaning stable across docmeta upgrades"
+        : undefined,
+    );
+  },
   mode: "batch",
   async grade(ctx) {
     const findings: Finding[] = [];

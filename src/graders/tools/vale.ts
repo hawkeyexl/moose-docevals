@@ -7,6 +7,13 @@
  */
 import type { Finding, Severity } from "../../types.js";
 import { groupTargetsByEval, type Grader, type GraderContext, type GraderTarget } from "../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalStringArray,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 interface ValeIssue {
   Check?: string;
@@ -81,6 +88,12 @@ async function gradeGroup(
 
 export const valeGrader: Grader = {
   kind: "tool:vale",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["command"]),
+      optionalStringArray(options, "command"),
+    );
+  },
   mode: "batch",
   async grade(ctx) {
     const findings: Finding[] = [];

@@ -5,6 +5,14 @@
  */
 import type { Finding } from "../../types.js";
 import type { Grader } from "./../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalNumber,
+  optionalString,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 interface FreshnessOptions {
   field?: string;
@@ -30,6 +38,13 @@ function describe(raw: unknown): string {
 
 export const freshnessGrader: Grader = {
   kind: "tool:freshness",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["field", "max-age-days"]),
+      optionalString(options, "field"),
+      optionalNumber(options, "max-age-days", { min: 0 }),
+    );
+  },
   mode: "per-file",
   async grade(ctx) {
     const findings: Finding[] = [];

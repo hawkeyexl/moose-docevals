@@ -42,10 +42,16 @@ docevals:
     false-positive-alert: 0.15
     cache-dir: .moose-docevals/cache
 
+  execution:
+    # Default deny. Grant only what this corpus needs, and only if you trust
+    # whoever can edit its pages:
+    #   frontmatter-commands  - command evals declared in page frontmatter
+    #   page-embedded-steps   - tool:doc-detective running steps in page bodies
+    allow: []
+
   scripts:
     dir: "{docDir}/moose-docevals" # generated check scripts live beside the docs
     config-dir: moose-docevals-scripts
-    allow-frontmatter-commands: true
 
   evals:
     no-future-promises:

@@ -30,6 +30,14 @@ function tail(
   return t.length <= maxChars ? t : `…${t.slice(-maxChars)}`;
 }
 import type { Grader } from "../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalString,
+  optionalStringArray,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 interface DslError {
   type?: string;
@@ -46,6 +54,14 @@ interface DslResult {
 
 export const docStructureLintGrader: Grader = {
   kind: "tool:doc-structure-lint",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["template", "template-path", "command"]),
+      optionalString(options, "template"),
+      optionalString(options, "template-path"),
+      optionalStringArray(options, "command"),
+    );
+  },
   mode: "per-file",
   async grade(ctx) {
     const findings: Finding[] = [];

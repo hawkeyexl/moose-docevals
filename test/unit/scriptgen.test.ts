@@ -113,7 +113,11 @@ function tempWorkspace(): { root: string; pagePath: string } {
   // A real moose.config.yaml on disk: the engine loads this one itself.
   writeFileSync(
     join(root, "moose.config.yaml"),
-    nestUnderDocevals('version: 1\nfiles:\n  include: ["docs/**/*.md"]\n'),
+    // A generated script becomes a `command` eval on the page, so running it
+    // needs the execution grant — without it these tests assert on a skip.
+    nestUnderDocevals(
+      'version: 1\nfiles:\n  include: ["docs/**/*.md"]\nexecution:\n  allow: [frontmatter-commands]\n',
+    ),
   );
   return { root, pagePath };
 }

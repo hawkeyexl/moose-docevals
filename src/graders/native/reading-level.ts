@@ -5,6 +5,13 @@
  */
 import type { Finding } from "../../types.js";
 import type { Grader } from "./../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalNumber,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 interface ReadingLevelOptions {
   "max-grade"?: number;
@@ -60,6 +67,12 @@ export function fleschKincaidGrade(prose: string): number | null {
 
 export const readingLevelGrader: Grader = {
   kind: "tool:reading-level",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["max-grade"]),
+      optionalNumber(options, "max-grade", { min: 1 }),
+    );
+  },
   mode: "per-file",
   async grade(ctx) {
     const findings: Finding[] = [];

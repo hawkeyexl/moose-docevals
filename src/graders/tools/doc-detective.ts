@@ -17,6 +17,13 @@
 import type { Finding } from "../../types.js";
 import { exited } from "../exec.js";
 import type { Grader } from "../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalStringArray,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 interface FailedStep {
   description: string;
@@ -164,6 +171,12 @@ export function lastJsonBlob(stdout: string): unknown {
 
 export const docDetectiveGrader: Grader = {
   kind: "tool:doc-detective",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["command"]),
+      optionalStringArray(options, "command"),
+    );
+  },
   mode: "per-file",
   async grade(ctx) {
     const findings: Finding[] = [];

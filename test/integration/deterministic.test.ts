@@ -67,7 +67,7 @@ describe("deterministic run over fixtures", () => {
       cwd: ROOT,
       deterministicOnly: true,
       generate: false,
-      frontmatterCommands: false,
+      execution: false,
     });
     const finding = report.evalResults.find(
       (r) =>
@@ -75,6 +75,6 @@ describe("deterministic run over fixtures", () => {
         r.evalName === "has-examples-heading",
     );
     expect(finding?.outcome).toBe("skipped");
-    expect(finding?.skipReason).toMatch(/frontmatter commands disabled/);
+    expect(finding?.skipReason).toMatch(/frontmatter commands not granted/);
   });
 });

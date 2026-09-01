@@ -104,6 +104,45 @@ describe("target on a deterministic grader", () => {
     expect(r.skipReason).toContain("sample.ts");
   });
 
+  it("lets a grader that declares the target through", async () => {
+    // `tool:regex` calls readTarget itself, so the guard must not stand
+    // between it and the feature it implements. Without the declaration this
+    // errors exactly like tool:freshness above.
+    const root = mkdtempSync(join(tmpdir(), "moose-docevals-dettarget-ok-"));
+    mkdirSync(join(root, "docs"), { recursive: true });
+    writeFileSync(
+      join(root, "docs", "install.md"),
+      [
+        "---",
+        "title: Install",
+        "evals:",
+        "  - id: title-present",
+        "    assertion: The frontmatter names a title.",
+        "    grader: tool:regex",
+        "    target: frontmatter",
+        "    options:",
+        "      pattern: 'title:'",
+        "      match: contains",
+        "---",
+        BODY,
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(root, "moose.config.yaml"),
+      [
+        "docevals:",
+        "  version: 1",
+        "  files:",
+        '    include: ["docs/**/*.md"]',
+        "",
+      ].join("\n"),
+    );
+    const report = await run(root);
+    const r = report.evalResults.find((e) => e.evalName === "title-present");
+    expect(r?.outcome).toBe("pass");
+    expect(r?.skipReason).toBeUndefined();
+  });
+
   it("counts as a failure, so a run cannot go green on an ignored target", async () => {
     // The point of erroring rather than skipping: a skip keeps exit 0, and an
     // eval that silently measured the wrong bytes would look like coverage.

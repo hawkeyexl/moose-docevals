@@ -101,10 +101,14 @@ jobs:
               (frontmatter-edit.ts preserves line endings byte-for-byte).
 
             Safety
-            - Evals declared in page frontmatter can name commands, which is
-              arbitrary code execution driven by content files. Any change near
-              command graders or script generation must preserve the
-              `allowFrontmatterCommands` / `--no-frontmatter-commands` gate.
+            - Content files drive arbitrary code execution by two paths, and both
+              are default-deny behind one operator grant. `command` evals declared
+              in page frontmatter need `execution.allow: [frontmatter-commands]`;
+              `tool:doc-detective` runs steps embedded in page *bodies* and needs
+              `execution.allow: [page-embedded-steps]`. Any change near command
+              graders, script generation or the doc-detective adapter must
+              preserve both gates, and neither is a substitute for restricting
+              the job to same-repo pull requests.
             - Script generation writes to the user's source tree. Writes must stay
               surgical: the page body outside the edited frontmatter node is
               byte-identical.
