@@ -78,8 +78,10 @@ export function checkFeasibility(
           file: plan.page.file,
           level: "error",
           message:
-            `${where}: a page-declared command eval with no command, while frontmatter ` +
-            `commands are disabled and generation is off — it can only ever be skipped`,
+            `${where}: a page-declared command eval with no command, while ` +
+            `frontmatter commands are not granted (execution.allow: ` +
+            `[frontmatter-commands]) and generation is off — it can only ever ` +
+            `be skipped`,
         });
       }
     }

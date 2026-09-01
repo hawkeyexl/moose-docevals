@@ -169,8 +169,12 @@ program
   .option("--deterministic-only", "Run only command/tool graders, skip the AI judge")
   .option("--ai-only", "Run only AI-judged evals, skip deterministic graders")
   .option(
-    "--allow-execution <kind...>",
-    "Grant content-authored execution: frontmatter-commands | page-embedded-steps (repeatable)",
+    // `<kind>`, not `<kind...>`: a variadic option greedily eats the
+    // positional `[globs...]` that follow it, so `--allow-execution
+    // frontmatter-commands docs/**` would silently swallow the glob and run
+    // over the default file set instead. Repeat the flag to grant twice.
+    "--allow-execution <kind>",
+    "Grant content-authored execution: frontmatter-commands | page-embedded-steps (repeat to grant both)",
     collectGrant,
     [],
   )

@@ -633,7 +633,18 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         results.push(skippedResult(plan, ev, "deterministic evals skipped (--ai-only)"));
         continue;
       }
-      if (ev.grader === "command" && ev.source === "page" && !allowFrontmatterCommands) {
+      // Page-authored argv, whatever grader carries it. `command` evals name
+      // it in `command`; every `tool:*` adapter also accepts an
+      // `options.command` override and hands it to the same `exec`. Gating
+      // only the grader left a second spelling of "run this" that reached a
+      // shell ungated, which made default-deny decorative — a page that cannot
+      // say `grader: command` could say `grader: tool:vale` with the same argv.
+      // Config-authored argv is the operator's own and is not content, so the
+      // gate is on `source === "page"` rather than on the key's presence.
+      const pageAuthoredArgv =
+        ev.source === "page" &&
+        (ev.grader === "command" || Array.isArray(ev.options?.command));
+      if (pageAuthoredArgv && !allowFrontmatterCommands) {
         results.push(
           skippedResult(
             plan,
