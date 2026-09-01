@@ -13,7 +13,7 @@
  * verdict at all (ADR 01022).
  */
 import { readFileSync } from "node:fs";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 import type { ResolvedPagePlan } from "./resolve.js";
 
@@ -72,7 +72,13 @@ export function readTarget(
   }
   const abs = resolve(pageDir, t.path);
   const rel = relative(pageDir, abs);
-  if (rel.startsWith("..")) {
+  // The segment has to *end* at the dots. `startsWith("..")` alone rejects a
+  // legitimate sibling whose name merely begins with them — `..notes.ts`,
+  // `..rc` — which is a refusal the author cannot act on, since the file is
+  // inside the root and named exactly what they wrote. `isAbsolute` covers the
+  // Windows case where the target sits on another drive and `relative` cannot
+  // express the step at all.
+  if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
     return {
       ok: false,
       reason: `target file "${t.path}" resolves outside the page's directory`,

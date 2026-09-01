@@ -199,3 +199,99 @@ describe("per-eval target", () => {
     expect(p2.requests).toHaveLength(3);
   });
 });
+
+describe("the file-target escape guard", () => {
+  it("serves a sibling whose name begins with two dots", async () => {
+    // `..rc` starts with the traversal spelling and goes nowhere. Refusing it
+    // is a refusal the author cannot act on: the file is inside the root and
+    // named exactly what they wrote.
+    const root = tempRoot();
+    mkdirSync(join(root, "docs"), { recursive: true });
+    writeFileSync(join(root, "docs", "..notes.ts"), "const kept = 1;\n");
+    const p = provider();
+    await makeJudge({ provider: p, root })(
+      [
+        makeTarget(
+          ["    target:", "      source: file", "      path: ..notes.ts"],
+          root,
+        ),
+      ],
+      config,
+      {},
+    );
+    const req = p.requests[0];
+    expect(req?.user).toContain("const kept = 1;");
+  });
+
+  it("still refuses a real climb out of the root", async () => {
+    const root = tempRoot();
+    mkdirSync(join(root, "docs"), { recursive: true });
+    const p = provider();
+    const results = await makeJudge({ provider: p, root })(
+      [
+        makeTarget(
+          ["    target:", "      source: file", "      path: ../../secrets"],
+          root,
+        ),
+      ],
+      config,
+      {},
+    );
+    expect(results[0]?.outcome).toBe("error");
+    expect(p.requests).toHaveLength(0);
+  });
+});
+
+describe("judge provider memoization", () => {
+  /** Counts how many providers the judge asks to be built. */
+  const countingJudge = (
+    evals: Array<{ provider?: string; model?: string }>,
+    cli: { provider?: string; model?: string } = {},
+  ) => {
+    const built: string[] = [];
+    const targets = evals.map((e) =>
+      makeTarget([
+        ...(e.provider === undefined ? [] : [`    provider: ${e.provider}`]),
+        ...(e.model === undefined ? [] : [`    model: ${e.model}`]),
+      ]),
+    );
+    // Distinct eval ids, so nothing is deduplicated upstream of the provider.
+    targets.forEach((t, i) => {
+      t.eval.name = `claim-${String(i)}`;
+    });
+    const judge = makeJudge({
+      provider: provider(),
+      root: tempRoot(),
+      providerFor: (ev) => {
+        built.push(`${ev.provider ?? ""}:${ev.model ?? ""}`);
+        return provider();
+      },
+    });
+    return { built, go: () => judge(targets, config, cli) };
+  };
+
+  it("builds one provider per distinct effective identity", async () => {
+    const { built, go } = countingJudge([
+      { provider: "mock", model: "a" },
+      { provider: "mock", model: "a" },
+      { provider: "mock", model: "b" },
+    ]);
+    await go();
+    expect(built).toHaveLength(2);
+  });
+
+  it("builds nothing when a CLI flag overrides every eval's choice", async () => {
+    // With both halves flagged, every eval resolves to the run's own provider.
+    // Keying on the authored value instead would build one per eval and cache
+    // them under names that no longer describe what they are.
+    const { built, go } = countingJudge(
+      [
+        { provider: "mock", model: "a" },
+        { provider: "anthropic", model: "b" },
+      ],
+      { provider: "mock", model: "pinned" },
+    );
+    await go();
+    expect(built).toEqual([]);
+  });
+});

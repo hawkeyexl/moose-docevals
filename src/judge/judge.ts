@@ -77,9 +77,20 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
           provider: options.provider ?? ev.provider,
           model: options.model ?? ev.model,
         }));
+    // Keyed on what the eval *resolves to*, not on what it wrote. With
+    // `--provider anthropic` in force, an eval naming `openai` and one naming
+    // `mock` both resolve to the same provider: keying on the authored value
+    // builds it twice and stores two entries for one identity. The effective
+    // pair is also what decides the short-circuit — once a flag has overridden
+    // both halves, every eval resolves to the run's default and none of them
+    // needs a provider of its own.
+    const defaultIdentity = `${options.provider ?? ""}:${options.model ?? ""}`;
     const providerFor = (ev: ResolvedEval): InferenceProvider => {
-      if (ev.provider === undefined && ev.model === undefined) return provider;
-      const key = `${ev.provider ?? ""}:${ev.model ?? ""}`;
+      const effProvider = options.provider ?? ev.provider;
+      const effModel = options.model ?? ev.model;
+      if (effProvider === undefined && effModel === undefined) return provider;
+      const key = `${effProvider ?? ""}:${effModel ?? ""}`;
+      if (key === defaultIdentity) return provider;
       let p = overridden.get(key);
       if (p === undefined) {
         p = buildProvider(ev);
