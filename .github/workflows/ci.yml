@@ -371,6 +371,49 @@ jobs:
             *) echo "::error::--eval is not repeatable: $out"; exit 1 ;;
           esac
 
+      # ADR 01029. A clean checkout has nothing changed since HEAD, so this is
+      # the exact shape a CI job hits on a branch that touched only source: it
+      # must exit 0 *and say so*. A green run that is indistinguishable from a
+      # corpus that passed is the failure this step exists to catch.
+      - name: Dogfood --since scoping
+        shell: bash
+        run: |
+          expect_code() {
+            want=$1; shift
+            set +e
+            out=$("$@" 2>&1); code=$?
+            set -e
+            if [ "$code" -ne "$want" ]; then
+              echo "::error::expected exit $want from: $* - got $code"; echo "$out"; exit 1
+            fi
+            printf "%s" "$out"
+          }
+          # Nothing changed between HEAD and HEAD. Unlike an --eval that matches
+          # nothing, that is a correct answer and not a usage error.
+          out=$(expect_code 0 node dist/cli.js run --deterministic-only --no-generate --since HEAD)
+          echo "$out"
+          case "$out" in
+            *"nothing was evaluated"*) ;;
+            *) echo "::error::a clean --since run must say nothing was evaluated"; exit 1 ;;
+          esac
+          # It must not have graded the corpus anyway: goTo.mdx fails freshness
+          # at error severity, so a scope that leaked would exit 1 above.
+          case "$out" in
+            *"vs target"*ok*) echo "::error::a scoped run reported a suite target as met"; exit 1 ;;
+            *) ;;
+          esac
+          # A ref git cannot resolve is operational, not the author's problem —
+          # and the message has to name shallow clones, because fetch-depth: 1
+          # is the default and will be the most common report.
+          out=$(expect_code 2 node dist/cli.js run --deterministic-only --since no/such/ref)
+          case "$out" in
+            *shallow*fetch-depth*) ;;
+            *) echo "::error::an unresolvable --since ref must mention shallow clones: $out"; exit 1 ;;
+          esac
+          # A re-record from a scoped run would forgive every finding the scope
+          # excluded, so the combination is refused before git is spawned.
+          expect_code 2 node dist/cli.js run --deterministic-only --since HEAD --write-baseline > /dev/null
+
       # ADR 01017. The ratchet is only useful if a recorded finding actually
       # stops failing the build, and only *safe* if a re-record says what it
       # dropped. Both are asserted here, in a scratch corpus so nothing is

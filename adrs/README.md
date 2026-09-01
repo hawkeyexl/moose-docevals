@@ -49,6 +49,7 @@ Numbering starts at `01000`. The `00001`–`00999` range holds decisions that pr
 | [01026](01026-an-errored-ensemble-is-never-cached.md) | An ensemble containing an errored run is never cached | accepted |
 | [01027](01027-judge-concurrency-is-separate-from-corpus-concurrency.md) | Judge concurrency is configured separately from corpus concurrency | accepted |
 | [01028](01028-a-local-judge-gates-locatable-properties-only.md) | A local judge gates locatable properties, not holistic ones | accepted |
+| [01029](01029-since-scopes-a-run-and-exempts-corpus-graders.md) | `--since <ref>` scopes a run to changed pages, and exempts corpus graders | accepted |
 
 ## The backfilled range
 

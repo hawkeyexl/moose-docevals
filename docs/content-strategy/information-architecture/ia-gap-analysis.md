@@ -25,9 +25,10 @@ This document therefore no longer enumerates a backlog. It keeps three jobs:
    deciding whether a page still earns its place.
 3. **§4** is the live check: every command, config key, and grader kind maps to a page. **Re-run it
    whenever the CLI grows.** A new capability with no page is a gap the moment it ships, and this
-   table is where that becomes visible. Last re-run against ADRs 01024–01027, which added the
-   `llama-cpp` provider, its four `provider.llama-cpp.*` config keys, and `judge.concurrency`.
-   Before that, ADRs 01016–01020 added
+   table is where that becomes visible. Last re-run against ADR 01029, which added `run --since`
+   and no config key — deliberately, on the `--eval`/`--suite` precedent. Before that, ADRs
+   01024–01027 added the `llama-cpp` provider, its four `provider.llama-cpp.*` config keys, and
+   `judge.concurrency`; and ADRs 01016–01020 added
    `--seed`, `--eval`, `--suite`, `--baseline`, `--no-baseline`, `--write-baseline` and the
    `baseline` config key, and removed the `max-cost-usd` keys and the `pricing` block.
 
@@ -157,6 +158,11 @@ Notable flags with a home beyond the CLI reference: `--deterministic-only` and `
 `--no-baseline` and `--write-baseline` (`adopt/retrofit-a-legacy-corpus.mdx`,
 `reference/files-and-state.mdx`).
 
+`--since` (ADR 01029) is documented **only** in `reference/cli.mdx`. That is a mapped surface, not an
+unmapped one, but it is the thinnest kind: the flag exists to make a CI job affordable on a large
+corpus, and the CUJ that wants it — `cuj-run-in-ci`, via `ci/index.mdx` and `ci/cost-and-caching.mdx`
+— still shows only unscoped invocations. Listed in [§5](#5-still-outstanding).
+
 ### Config keys
 
 Keys are written fully qualified so this table is greppable against
@@ -221,6 +227,7 @@ The content set is complete; these are not.
 | ~~**`moose-docevals list --format` validation**~~ | **Done** (ADR 01007). An unknown `--format` is a usage error on every command that takes the flag; `ci.yml` asserts exit 2 and the allowed-set message through the built CLI on both runners. | — |
 | **A `baseline` glossary entry** | The term now recurs across six pages. `reference/glossary.mdx` is alphabetical and its description reads "The ten terms", so adding one is an edit rather than a consistency fix. | No. |
 | **A recording recipe in `ci/recipes.mdx`** | `ci/exit-codes-and-annotations.mdx` says `--write-baseline` does not belong in the gating job, but no page shows the separate recording invocation. | No. |
+| **`--since` in the CI journey pages** | Documented in `reference/cli.mdx` only (ADR 01029). `ci/index.mdx` and `ci/cost-and-caching.mdx` show unscoped runs, and neither mentions the `fetch-depth: 0` that a scoped run needs — which is the one detail a reader hits before anything else. | No — but it is the gap most likely to produce a support question. |
 | **`calibrate --max-turns` is run-wide only because its cases now batch** | Recorded in ADR 01016. If `calibrate` ever returns to judging case-by-case, the flag silently becomes per case again — the reason ADR 01019 withheld it in the first place. | No — a note for whoever touches that loop. |
 
 ### What will drift first

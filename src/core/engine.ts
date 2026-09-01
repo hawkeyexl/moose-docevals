@@ -26,6 +26,7 @@ import {
   type Baseline,
   type FingerprintContext,
 } from "./baseline.js";
+import { changedFilesSince, changedKey } from "./since.js";
 import { graderFor } from "../graders/registry.js";
 import { realExec } from "../graders/exec.js";
 import type { ExecFn, GraderTarget } from "../graders/types.js";
@@ -45,6 +46,12 @@ export interface EngineReport extends RunReport {
   problems: RunProblem[];
   /** Present only when a baseline was read or written (ADR 01017). */
   baseline?: BaselineOutcome["summary"];
+  /**
+   * Present only under `--since` (ADR 01029). `pagesTotal` is the whole
+   * discovered corpus — `pages` above stays that number too — and
+   * `pagesSelected` is how much of it this run actually evaluated.
+   */
+  since?: { ref: string; pagesSelected: number; pagesTotal: number };
 }
 
 export interface JudgeOptions {
@@ -83,6 +90,11 @@ export interface RunOptions {
   evalNames?: string[];
   /** Run only evals belonging to this suite. */
   suite?: string;
+  /**
+   * Evaluate only pages that differ between this ref and HEAD. Unlike
+   * `evalNames`, an empty match is *not* a usage error (ADR 01029).
+   */
+  since?: string;
   /**
    * Baseline in four states, like docmeta's: `undefined` leaves the config in
    * charge, a string names a file, `true` means "use the resolved path even if
@@ -382,6 +394,41 @@ export function applySelection(
 }
 
 /**
+ * Narrow each plan to the pages that changed, in place, leaving corpus graders
+ * alone (ADR 01029).
+ *
+ * **The corpus exemption is the subtle half.** `GraderContext` carries
+ * `targets`, not a page list, so `tool:differentiation` builds its comparison
+ * population out of whatever it is handed. `gradeGroup` returns `[]` below two
+ * targets, and an eval with no findings is recorded as a **pass** — so
+ * narrowing a corpus grader's input does not narrow the check, it silently
+ * converts it into a pass. Corpus evals therefore survive on unchanged pages,
+ * which costs no subprocess and no tokens because the only corpus grader is
+ * native. The visible consequence is that a scoped run can report a finding on
+ * a page nobody touched; the message already names the other page.
+ *
+ * An empty result is **not** a usage error, which is where this parts company
+ * with `applySelection`. "No page changed" is a correct answer to a correct
+ * question; "`--eval` matched nothing" is a typo.
+ */
+export function applySinceScope(
+  plans: ResolvedPagePlan[],
+  changed: Set<string>,
+): { pagesSelected: number } {
+  let pagesSelected = 0;
+  for (const plan of plans) {
+    if (changed.has(changedKey(plan.page.absPath))) {
+      pagesSelected += 1;
+      continue;
+    }
+    plan.evals = plan.evals.filter(
+      (ev) => graderFor(ev.grader)?.mode === "corpus",
+    );
+  }
+  return { pagesSelected };
+}
+
+/**
  * Per-suite aggregates. Reads the suite `stampSuites` recorded on each result
  * rather than rebuilding the plan-to-suite map a second time — two copies of
  * one derivation are two things to keep in agreement.
@@ -439,21 +486,37 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   // fingerprint the filter excluded. Deciding it here costs nothing; deciding
   // it after `resolveBaseline` meant the generation pass had already written
   // scripts and rewritten frontmatter, and the judge had already been paid.
+  //
+  // `--since` is refused here for the same reason and, being *before* the git
+  // call below, a usage error never spawns a subprocess.
   if (
     options.writeBaseline !== undefined &&
     options.writeBaseline !== false &&
     ((options.evalNames?.some((n) => n.trim() !== "") ?? false) ||
-      options.suite !== undefined)
+      options.suite !== undefined ||
+      options.since !== undefined)
   ) {
     throw new DocevalsError(
       "--write-baseline records the whole corpus, so it cannot be combined with " +
-        "--eval or --suite: the re-record would drop every finding the filter " +
-        "excluded. Re-run without the filter to record.",
+        "--eval, --suite or --since: the re-record would drop every finding the " +
+        "narrowing excluded. Re-run without it to record.",
     );
   }
 
+  // Before `resolvePages`, so an unresolvable ref fails the run without paying
+  // for resolution — but applied after `applySelection` below, because
+  // `PageFile.absPath` only exists post-discovery and resolution problems must
+  // surface for every page, scoped or not (ADR 01018's driver).
+  const sinceRef = options.since;
+  const changed =
+    sinceRef === undefined ? null : await changedFilesSince(sinceRef, cwd, exec);
+
   const plans = resolvePages(pages, config);
   const filtered = applySelection(plans, config, options);
+  const scope =
+    changed === null || sinceRef === undefined
+      ? null
+      : { ref: sinceRef, ...applySinceScope(plans, changed) };
   const judgeOptions = options.judgeOptions ?? {};
 
   const problems: RunProblem[] = plans.flatMap((p) =>
@@ -720,7 +783,10 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   results.push(...baselinedResults);
 
   stampSuites(results, plans);
-  const suites = summarizeSuites(results, config, filtered);
+  // A scoped run measured part of the corpus, which is the same claim-from-a-
+  // sample problem `--eval` has — so it reuses ADR 01018's mechanism rather
+  // than growing a second, differently-behaved one.
+  const suites = summarizeSuites(results, config, filtered || scope !== null);
   const judged = results.filter((r) => r.consensus != null);
   const totalTokens = judged.reduce(
     (n, r) =>
@@ -755,5 +821,8 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     exitCode: hasFailure ? 1 : 0,
     problems,
     ...(baselineOutcome.summary ? { baseline: baselineOutcome.summary } : {}),
+    ...(scope
+      ? { since: { ...scope, pagesTotal: plans.length } }
+      : {}),
   };
 }
