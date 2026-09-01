@@ -112,6 +112,34 @@ describe("resolvePage", () => {
     expect(plan.evals.filter((e) => e.name === "central-tool")).toHaveLength(1);
   });
 
+  it("carries a reference's weight onto the suite eval", () => {
+    // `weight` is the override that says how much a config-defined check
+    // counts *for this page*, and `use:` is how most pages join a suite at
+    // all. Accepting it in the schema and dropping it in the merge would
+    // silently score the page at the corpus default.
+    const plan = resolvePage(
+      page(
+        [
+          "eval-suite: ref",
+          "evals:",
+          "  - use: central-tool",
+          "    weight: 3",
+        ].join("\n"),
+      ),
+      CONFIG,
+    );
+    const tool = plan.evals.find((e) => e.name === "central-tool")!;
+    expect(tool.weight).toBe(3);
+  });
+
+  it("leaves the defined weight alone when the reference does not say", () => {
+    const plan = resolvePage(
+      page(["eval-suite: ref", "evals:", "  - use: central-tool"].join("\n")),
+      CONFIG,
+    );
+    expect(plan.evals.find((e) => e.name === "central-tool")?.weight).toBe(1);
+  });
+
   it("resolves inline evals as page-sourced", () => {
     const plan = resolvePage(
       page(
@@ -376,5 +404,51 @@ describe("resolvePage: shorthand naming", () => {
   it("still numbers plain shorthands by position", () => {
     const plan = resolvePage(page("evals:\n  - One.\n  - Two."), CONFIG);
     expect(plan.evals.map((e) => e.name)).toEqual(["assertion-1", "assertion-2"]);
+  });
+
+  // Two page entries claiming one id means one of them is dropped, so the page
+  // checks less than it declares. The behavior was already here; nothing
+  // pinned it, so a refactor could have quietly turned it back into
+  // last-one-wins.
+  it("errors when two page entries claim the same id", () => {
+    const plan = resolvePage(
+      page(
+        [
+          "evals:",
+          "  - id: same-id",
+          "    assertion: First claim.",
+          "    examples: { pass: yes, fail: no }",
+          "  - id: same-id",
+          "    assertion: Second claim.",
+          "    examples: { pass: yes, fail: no }",
+        ].join("\n"),
+      ),
+      CONFIG,
+    );
+    const errors = plan.problems.filter((p) => p.level === "error");
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toContain('Duplicate eval id "same-id"');
+    // The survivor is still resolved — the error reports the loss, it does not
+    // drop both and leave the page checking nothing.
+    expect(plan.evals.filter((e) => e.name === "same-id")).toHaveLength(1);
+  });
+
+  it("stays silent when a page entry overrides a suite eval of the same id", () => {
+    const plan = resolvePage(
+      page(
+        [
+          "eval-suite: ref",
+          "evals:",
+          "  - id: central-ai",
+          "    assertion: Overridden locally.",
+          "    examples: { pass: yes, fail: no }",
+        ].join("\n"),
+      ),
+      CONFIG,
+    );
+    expect(
+      plan.problems.filter((p) => p.message.includes("Duplicate eval id")),
+    ).toHaveLength(0);
+    expect(plan.evals.find((e) => e.name === "central-ai")?.source).toBe("page");
   });
 });

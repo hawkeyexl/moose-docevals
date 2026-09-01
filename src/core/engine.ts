@@ -123,6 +123,28 @@ export interface RunOptions {
   generateScripts?: GenerateFn;
 }
 
+/**
+ * Why this eval's `target` cannot be served, or `undefined` when it can.
+ *
+ * `body` is what every deterministic grader already reads, so naming it
+ * explicitly is a no-op rather than an error.
+ */
+function unsupportedTarget(
+  ev: ResolvedPagePlan["evals"][number],
+): string | undefined {
+  const target = ev.target;
+  if (target === undefined || target === "body") return undefined;
+  const grader = graderFor(ev.grader);
+  const named = typeof target === "string" ? target : target.path;
+  if (grader?.targets?.includes(typeof target === "string" ? target : "file")) {
+    return undefined;
+  }
+  return (
+    `grader ${ev.grader} cannot read target "${named}" — it grades the page ` +
+    `body. Use the ai grader for this target, or drop the target.`
+  );
+}
+
 function skippedResult(
   plan: ResolvedPagePlan,
   ev: ResolvedPagePlan["evals"][number],
@@ -171,13 +193,21 @@ function stampSuites(
   plans: ResolvedPagePlan[],
 ): void {
   const suiteOf = new Map<string, string>();
+  const weightOf = new Map<string, number>();
   for (const plan of plans) {
     for (const ev of plan.evals) {
-      suiteOf.set(resultKey(plan.page.file, ev.name), ev.suite);
+      const key = resultKey(plan.page.file, ev.name);
+      suiteOf.set(key, ev.suite);
+      weightOf.set(key, ev.weight);
     }
   }
   for (const r of results) {
-    r.suite = suiteOf.get(resultKey(r.file, r.evalName)) ?? "default";
+    const key = resultKey(r.file, r.evalName);
+    r.suite = suiteOf.get(key) ?? "default";
+    // A result with no matching plan entry cannot be weighted from one, so it
+    // counts as 1 rather than 0 — dropping it out of the denominator would let
+    // an unresolvable eval quietly raise a suite's rate.
+    r.weight = weightOf.get(key) ?? 1;
   }
 }
 
@@ -467,8 +497,86 @@ function summarizeSuites(
     const errored = rs.filter((r) => r.outcome === "error").length;
     const needsReview = rs.filter((r) => r.outcome === "needs-review").length;
     const skipped = rs.filter((r) => r.outcome === "skipped").length;
-    const graded = passed + failed + errored;
-    const passRate = graded > 0 ? passed / graded : 1;
+    // Counts stay unweighted and per-eval: they report how many evals did
+    // what, and a reader comparing "1 failed" against a rate of 0.33 is
+    // reading two different questions, both answered honestly.
+    //
+    // The rate is weighted over the same membership as before — the graded
+    // set, pass + fail + error. `needs-review` and `skipped` stay out of both
+    // halves, so a page awaiting review neither helps nor hurts.
+    const graded = (r: EvalResult): boolean =>
+      r.outcome === "pass" || r.outcome === "fail" || r.outcome === "error";
+    const suiteCriteria = config.suites[suite]?.criteria ?? [];
+
+    const contributions: { weight: number; passed: boolean }[] = [];
+
+    // Criteria first, because which evals a criterion actually absorbs is only
+    // known once it is evaluated. A group scored once is the whole point —
+    // three checks written as a criterion must not outvote three standalone
+    // evals just for being grouped.
+    let critPassed = 0;
+    let critFailed = 0;
+    let critSuspended = 0;
+    /** "<file> <evalName>" of members a *scored* criterion speaks for. */
+    const absorbed = new Set<string>();
+    // Indexed once for the whole suite. The loop below is criterion x page x
+    // member, and a `filter`/`find` inside it rescans every result each time —
+    // quadratic in a corpus's result count, on the one code path that runs
+    // after everything else has finished.
+    const byKey = new Map<string, EvalResult>();
+    const filesByEval = new Map<string, Set<string>>();
+    for (const r of rs) {
+      byKey.set(resultKey(r.file, r.evalName), r);
+      const files = filesByEval.get(r.evalName) ?? new Set<string>();
+      files.add(r.file);
+      filesByEval.set(r.evalName, files);
+    }
+    for (const critName of suiteCriteria) {
+      const def = config.criteria[critName];
+      if (!def) continue;
+      const pages = new Set<string>();
+      for (const name of def.evals) {
+        for (const file of filesByEval.get(name) ?? []) pages.add(file);
+      }
+      for (const file of pages) {
+        const members = def.evals.map((name) =>
+          byKey.get(resultKey(file, name)),
+        );
+        // Every member must have been graded for the group to mean anything.
+        // A missing or ungraded member suspends it rather than failing it.
+        if (members.some((m) => m === undefined || !graded(m))) {
+          critSuspended++;
+          // Deliberately does NOT absorb its members. A suspended criterion
+          // contributes nothing, so absorbing them too would delete their
+          // outcomes from the rate entirely — a failing member would move the
+          // total by nothing and silently inflate the suite.
+          continue;
+        }
+        const passes = members.map((m) => m?.outcome === "pass");
+        const passed =
+          def.combine === "any" ? passes.some(Boolean) : passes.every(Boolean);
+        if (passed) critPassed++;
+        else critFailed++;
+        contributions.push({ weight: def.weight, passed });
+        for (const m of members) {
+          if (m) absorbed.add(resultKey(m.file, m.evalName));
+        }
+      }
+    }
+
+    // Standalone evals: everything a scored criterion did not speak for.
+    for (const r of rs) {
+      if (!graded(r) || absorbed.has(resultKey(r.file, r.evalName))) continue;
+      contributions.push({ weight: r.weight ?? 1, passed: r.outcome === "pass" });
+    }
+
+    const totalWeight = contributions.reduce((sum, c) => sum + c.weight, 0);
+    const passRate =
+      totalWeight > 0
+        ? contributions
+            .filter((c) => c.passed)
+            .reduce((sum, c) => sum + c.weight, 0) / totalWeight
+        : 1;
     const targetPassRate = config.suites[suite]?.targetPassRate ?? 1.0;
     summaries.push({
       suite,
@@ -486,6 +594,16 @@ function summarizeSuites(
       // rather than fixed (ADR 01018).
       meetsTarget: partial ? false : passRate >= targetPassRate,
       ...(partial ? { partial: true } : {}),
+      ...(suiteCriteria.length > 0
+        ? {
+            criteria: {
+              total: critPassed + critFailed + critSuspended,
+              passed: critPassed,
+              failed: critFailed,
+              suspended: critSuspended,
+            },
+          }
+        : {}),
     });
   }
   return summaries;
@@ -659,6 +777,24 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
           message: `Eval "${ev.name}": assertion changed since its script was generated — run \`moose-docevals generate\` to regenerate`,
           level: "warning",
         });
+      }
+      // ADR 01033: a grader that cannot serve a requested target says so,
+      // rather than grading something else and reporting a verdict about
+      // bytes nobody asked about. An *error* and not a skip, because a skip
+      // keeps the run green and an eval that measured the wrong thing would
+      // then read as coverage.
+      const unsupported = unsupportedTarget(ev);
+      if (unsupported !== undefined) {
+        results.push({
+          evalName: ev.name,
+          type: ev.type,
+          grader: ev.grader,
+          file: plan.page.file,
+          outcome: "error",
+          skipReason: unsupported,
+          durationMs: 0,
+        });
+        continue;
       }
       deterministicTargets.push({ plan, eval: ev });
     }
@@ -896,6 +1032,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   // A scoped run measured part of the corpus, which is the same claim-from-a-
   // sample problem `--eval` has — so it reuses ADR 01018's mechanism rather
   // than growing a second, differently-behaved one.
+  //
   // `partial` means coverage was actually lost, not that a narrowing flag was
   // present. Deriving it from the flag disabled suite-target enforcement on a
   // `--since` run that happened to touch every page — and since ADR 01029

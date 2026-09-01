@@ -60,7 +60,11 @@ export function cleanBody(body: string): string {
   return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
-export function buildUserContent(ev: ResolvedEval, body: string): string {
+export function buildUserContent(
+  ev: ResolvedEval,
+  body: string,
+  targetLabel = "body",
+): string {
   const parts: string[] = [
     `# Assertion`,
     ev.assertion ?? "",
@@ -80,6 +84,20 @@ export function buildUserContent(ev: ResolvedEval, body: string): string {
       parts.push(`A failing page: ${anchor}`);
     }
   }
-  parts.push("", "# Page content", "", cleanBody(body));
+  // Name what the judge is looking at. Told only "page content" while being
+  // handed a frontmatter block or a companion file, a judge reasons about the
+  // wrong thing and says so confidently.
+  //
+  // Only the page body carries MDX noise worth stripping. Running `cleanBody`
+  // over a companion source file would delete its `import`/`export` lines —
+  // the judge would then be asked whether code exports something it can no
+  // longer see.
+  const isBody = targetLabel === "body";
+  parts.push(
+    "",
+    isBody ? "# Page content" : `# Page content (${targetLabel})`,
+    "",
+    isBody ? cleanBody(body) : body,
+  );
   return parts.join("\n");
 }

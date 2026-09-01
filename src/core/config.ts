@@ -12,6 +12,9 @@ import { parse as parseYaml } from "yaml";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import configSchema from "./config-schema.json" with { type: "json" };
 import { DocevalsError, type EvalType, type Severity } from "../types.js";
+// Type-only, so the cycle with target.ts (which needs ResolvedPagePlan) is
+// erased at compile time rather than existing at runtime.
+import type { EvalTarget } from "./target.js";
 
 export type ProviderName = "anthropic" | "openai" | "claude-cli" | "llama-cpp";
 
@@ -41,6 +44,14 @@ export interface EvalDef {
   options?: Record<string, unknown>;
   severity?: Severity;
   severityMap?: Record<string, Severity>;
+  /** Relative contribution to the suite pass rate. Never changes the outcome. */
+  weight?: number;
+  /** Which bytes the grader receives. Defaults to the page body. */
+  target?: EvalTarget;
+  /** Judge model for this eval; a CLI --model still wins. */
+  model?: string;
+  /** Ensemble runs for this eval; a CLI --runs still wins. */
+  runs?: number;
 }
 
 /** The file-side spelling of an eval definition. Kebab, exactly as authored. */
@@ -58,6 +69,14 @@ export interface RawEvalDef {
   options?: Record<string, unknown>;
   severity?: Severity;
   "severity-map"?: Record<string, Severity>;
+  target?: EvalTarget;
+  model?: string;
+  runs?: number;
+  // One word, so kebab and camel are the same string — it still passes through
+  // normalizeEvalDef, because that is the only boundary between the two
+  // spellings and a field that skips it is a field the next reader has to
+  // check for.
+  weight?: number;
 }
 
 /** One anchor example, or several, as a list. */
@@ -96,12 +115,31 @@ export function normalizeEvalDef(raw: RawEvalDef): EvalDef {
     options: raw.options,
     severity: raw.severity,
     severityMap: raw["severity-map"],
+    weight: raw.weight,
+    target: raw.target,
+    model: raw.model,
+    runs: raw.runs,
   };
 }
 
 export interface SuiteDef {
   targetPassRate: number;
   evals: string[];
+  /** Criteria scored in this suite, alongside `evals`. */
+  criteria: string[];
+}
+
+/**
+ * Several evals scored as one unit.
+ *
+ * The grouping lives here rather than in page frontmatter because the page
+ * vocabulary is docmeta's and this is our scoring model — a criterion is a
+ * statement about how a corpus is graded, not a fact about a page.
+ */
+export interface CriterionDef {
+  evals: string[];
+  combine: "all" | "any";
+  weight: number;
 }
 
 export interface DocevalsConfig {
@@ -156,6 +194,7 @@ export interface DocevalsConfig {
     maxTurns: number | null;
   };
   evals: Record<string, EvalDef>;
+  criteria: Record<string, CriterionDef>;
   suites: Record<string, SuiteDef>;
   /** Absolute path of the loaded config file. */
   configPath: string;
@@ -250,12 +289,20 @@ interface RawDocevalsConfig {
     "max-turns"?: number | null;
   };
   evals?: Record<string, RawEvalDef>;
+  criteria?: Record<string, RawCriterionDef>;
   suites?: Record<string, RawSuiteDef>;
+}
+
+interface RawCriterionDef {
+  evals?: string[];
+  combine?: "all" | "any";
+  weight?: number;
 }
 
 interface RawSuiteDef {
   "target-pass-rate"?: number;
   evals?: string[];
+  criteria?: string[];
 }
 
 /**
@@ -392,6 +439,16 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
     suites[name] = {
       targetPassRate: def["target-pass-rate"] ?? 1.0,
       evals: def.evals ?? [],
+      criteria: def.criteria ?? [],
+    };
+  }
+
+  const criteria: Record<string, CriterionDef> = {};
+  for (const [name, def] of Object.entries(r.criteria ?? {})) {
+    criteria[name] = {
+      evals: def.evals ?? [],
+      combine: def.combine ?? "all",
+      weight: def.weight ?? 1,
     };
   }
 
@@ -469,6 +526,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
         normalizeEvalDef(def),
       ]),
     ),
+    criteria,
     suites,
     configPath: abs,
     configDir: dir,
@@ -480,6 +538,24 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       if (!(evalName in config.evals)) {
         throw new DocevalsError(
           `Invalid config in ${configPath}: suite "${suiteName}" references undefined eval "${evalName}"`,
+        );
+      }
+    }
+  }
+  for (const [critName, crit] of Object.entries(config.criteria)) {
+    for (const evalName of crit.evals) {
+      if (!(evalName in config.evals)) {
+        throw new DocevalsError(
+          `Invalid config in ${configPath}: criterion "${critName}" references undefined eval "${evalName}"`,
+        );
+      }
+    }
+  }
+  for (const [suiteName, suite] of Object.entries(config.suites)) {
+    for (const critName of suite.criteria) {
+      if (!(critName in config.criteria)) {
+        throw new DocevalsError(
+          `Invalid config in ${configPath}: suite "${suiteName}" references undefined criterion "${critName}"`,
         );
       }
     }
