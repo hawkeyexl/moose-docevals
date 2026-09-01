@@ -65,6 +65,12 @@ long one gathers per part and judges once, and that a part which cannot be gathe
 than judging on an incomplete collection. `chunk-<budget>` is in both cache keys for the reason
 docmeta documents at its own call site: halve-and-retry makes two budgets produce genuinely
 different content, and without the budget in the key the second run silently replays the first.
+`test/unit/fill.test.ts` pins that the budget in `fill`'s key is the one the proposals were
+*produced* at rather than the one the run asked for — the first implementation stored a
+halved-budget result under the full-budget key, which is the replay this rule exists to stop.
+There is deliberately no fallback lookup at the halved budget: serving across the two keys is the
+same collision spread over two entries, and a page that overflows does so deterministically for
+one provider and body, so the retry path finds its own entry from the second run onward.
 
 ## Pros and Cons of the Options
 

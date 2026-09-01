@@ -183,16 +183,27 @@ export async function runFill(
       assertion: e.assertion,
     }));
     const existingNames = existing.map((e) => e.id).sort();
-    const key = fillCacheKey(
-      identity.provider,
-      identity.model,
-      temperature,
-      maxEvals,
-      plan.page.body,
-      existingNames,
-      chunkChars,
-    );
-
+    // Keyed on the budget the proposals were actually produced at, not the
+    // one the run asked for. Halve-and-retry means those differ: the split
+    // boundaries move, so the parts differ, so the proposals differ. Storing
+    // a halved-budget result under the full-budget key lets a later run that
+    // did *not* overflow replay proposals from a split it never performed.
+    const keyFor = (budget: number): string =>
+      fillCacheKey(
+        identity.provider,
+        identity.model,
+        temperature,
+        maxEvals,
+        plan.page.body,
+        existingNames,
+        budget,
+      );
+    // Deliberately no fallback lookup at the halved budget. Serving a halved
+    // result to a run that asked for the full one is the collision itself,
+    // just spread over two keys — and a page that overflows does so
+    // deterministically for the same provider and body, so the retry path
+    // finds its own entry from the second run onward.
+    const key = keyFor(chunkChars);
     let raw = cache.get(key);
     const cached = raw !== undefined;
     if (!raw) {
@@ -205,6 +216,10 @@ export async function runFill(
       // than truncated. Each part is its own call; the results merge by eval
       // id, keeping the highest confidence — docmeta's `mergeProposals`.
       let budget = chunkChars;
+      // This page's own parts. `turns` is the run-wide budget counter and
+      // includes every earlier page, so reporting it as "N of M parts" names
+      // a number that has nothing to do with this page.
+      let partsRead = 0;
       let merged: Map<string, ProposedEval> | undefined;
       let failure: string | undefined;
       for (let attempt = 0; attempt < 2 && merged === undefined; attempt++) {
@@ -212,12 +227,14 @@ export async function runFill(
         const collected = new Map<string, ProposedEval>();
         let overflowed = false;
         let outOfTurns = false;
+        partsRead = 0;
         for (const [i, chunk] of chunks.entries()) {
           if (maxTurns !== null && turns >= maxTurns) {
             outOfTurns = true;
             break;
           }
           turns += 1;
+          partsRead += 1;
           let response;
           try {
             response = await getProvider().completeJSON({
@@ -258,7 +275,11 @@ export async function runFill(
             ...base,
             status: "skipped-budget",
             ...(chunks.length > 1
-              ? { error: `--max-turns reached after ${String(turns)} of ${String(chunks.length)} part(s)` }
+              ? {
+                  error:
+                    `--max-turns reached after ${String(partsRead)} of ` +
+                    `${String(chunks.length)} part(s) of this page`,
+                }
               : {}),
           };
         }
@@ -276,7 +297,7 @@ export async function runFill(
         };
       }
       raw = { evals: [...merged.values()] };
-      cache.set(key, raw);
+      cache.set(keyFor(budget), raw);
     }
 
     // Drop duplicates (against the resolved plan and within the batch) before
