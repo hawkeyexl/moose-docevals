@@ -68,7 +68,8 @@
               "enum": [
                 "anthropic",
                 "openai",
-                "claude-cli"
+                "claude-cli",
+                "llama-cpp"
               ]
             },
             "anthropic": {
@@ -109,6 +110,27 @@
                 }
               },
               "additionalProperties": false
+            },
+            "llama-cpp": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "model": {
+                  "type": "string",
+                  "description": "A tier the library resolves against this machine (auto | fast | balanced | quality), or a pinned model reference. A tier is convenient but is not a stable cache key on its own - the library resolves it to a concrete model before any key is built, so two machines never share a verdict under one tier name."
+                },
+                "models-dir": {
+                  "type": "string",
+                  "description": "Where GGUF weights are downloaded and looked for. Defaults to the inference library's own directory."
+                },
+                "thought-tokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 0,
+                  "description": "Thinking budget before the JSON. Zero by default: a grammar constrains generation from the first token, so an unbudgeted thinking model starts reasoning and is cut off mid-thought."
+                }
+              },
+              "description": "Local inference over GGUF weights, in-process. No API key and no network at judge time once the weights are on disk - which is what lets a contributor without provider credentials regenerate the docs cache."
             }
           },
           "additionalProperties": false
@@ -150,6 +172,12 @@
             },
             "max-turns": {
               "$ref": "#/$defs/maxTurns"
+            },
+            "chunk-chars": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 12000,
+              "description": "Characters of page content per judge call. A page longer than this is graded by gathering evidence from each part and judging the collected evidence once."
             }
           },
           "additionalProperties": false
@@ -209,6 +237,12 @@
             },
             "max-turns": {
               "$ref": "#/$defs/maxTurns"
+            },
+            "chunk-chars": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 12000,
+              "description": "Characters of page content per fill call. A longer page is proposed against in parts and the proposals merged by id, keeping the highest confidence."
             }
           },
           "additionalProperties": false

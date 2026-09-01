@@ -26,7 +26,16 @@ import type { GraderTarget } from "../graders/types.js";
 import { findReview, loadReviews } from "../core/reviews.js";
 import { cacheKey } from "./cache.js";
 import { turnBudgetSkipReason } from "./budget.js";
-import { JUDGE_SYSTEM_PROMPT, buildUserContent } from "./prompt.js";
+import {
+  JUDGE_SYSTEM_PROMPT,
+  buildUserContent,
+  EVIDENCE_SYSTEM_PROMPT,
+  EVIDENCE_SCHEMA,
+  buildEvidenceUser,
+  renderEvidence,
+  type PartEvidence,
+} from "./prompt.js";
+import { splitBody } from "../core/split.js";
 import { readTarget } from "../core/target.js";
 import { makeProvider } from "./provider.js";
 import type { ResolvedEval } from "../core/resolve.js";
@@ -104,6 +113,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     const runsFor = (ev: ResolvedEval): number =>
       options.runs ?? ev.runs ?? config.judge.ensembleRuns;
     const temperature = config.judge.temperature;
+    const chunkChars = options.chunkChars ?? config.judge.chunkChars;
     const cache = new JsonCache<JudgeRun[]>(
       resolvePath(root, config.judge.cacheDir),
       options.noCache !== true,
@@ -116,6 +126,41 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     const results: EvalResult[] = [];
     const concurrency = config.defaults.concurrency;
     let index = 0;
+
+    /**
+     * Safeguard layer 1: a model judging its own output shows self-preference
+     * bias.
+     *
+     * Two axes, deliberately reported apart because the remedy differs. The
+     * *content* axis is the page's `generated-by` (docmeta:ai-context) — the
+     * model wrote the prose it is now grading, and the fix is to judge with a
+     * different model. The *criterion* axis is `eval-provenance` — the model
+     * proposed the assertion it is now grading, and the fix is for a human to
+     * confirm the assertion, which is what `calibrate`'s `reviewed` bit is for.
+     *
+     * Marked on the result rather than written to stderr: a verdict formed
+     * under self-preference must not look identical to any other in JSON,
+     * SARIF, JUnit or the HTML report. It stays a warning, not a failure —
+     * bias skews a verdict, it does not prevent one forming, so ADR 01022's
+     * "no verdict fails" rule does not apply, and erroring would punish a
+     * single-model corpus with no second provider to reach for.
+     */
+    const selfPreferenceFor = (
+      target: GraderTarget,
+      judgeModel: string,
+    ): EvalResult["selfPreference"] => {
+      const { plan, eval: ev } = target;
+      if (plan.generatedBy && plan.generatedBy === judgeModel) {
+        return { axis: "content", model: judgeModel };
+      }
+      const proposed = plan.provenance.some(
+        (p) =>
+          p.generatedBy === judgeModel &&
+          (p.evals === undefined || p.evals.includes(ev.name)),
+      );
+      if (proposed) return { axis: "criterion", model: judgeModel };
+      return undefined;
+    };
 
     const judgeTarget = async (target: GraderTarget): Promise<EvalResult> => {
       const { plan, eval: ev } = target;
@@ -154,17 +199,83 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
         };
       }
 
+      // A page longer than the chunk budget is read in parts: each part
+      // contributes the passages bearing on the assertion, and one judge then
+      // answers the original question against the collection. Merging
+      // per-part *verdicts* would be unsound — see EVIDENCE_SYSTEM_PROMPT.
+      //
+      // Content that fits skips this entirely and is judged exactly as before,
+      // so the common path costs nothing and its cached verdicts stay valid.
+      const chunks = splitBody(selected.text, chunkChars);
+      let judged = selected.text;
+      let judgedLabel = selected.label;
+
+      // The key is built from what was *selected*, never from the evidence.
+      // Evidence is model output: keying on it would change every run, so a
+      // split page could never hit its cached verdict — and the committed docs
+      // fixtures for long pages would be dead weight. The chunk budget rides
+      // along because it decides how the page was read.
       const key = cacheKey(
         judgeProvider.provider(),
         judgeProvider.modelName(),
         runsPerEval,
         temperature,
-        // The selected bytes, not the page body: two targets on one page are
-        // two different questions and must not share a cached verdict.
-        selected.text,
+        `chunk${String(chunkChars)}
+${selected.text}`,
         ev,
       );
       const cached = cache.get(key) !== undefined;
+
+      // Gathering evidence costs one call per part, so it happens only on a
+      // miss. A cached ensemble must make no inference call at all (ADR 01019).
+      if (chunks.length > 1 && !cached) {
+        const gathered: PartEvidence[] = [];
+        for (const [i, chunk] of chunks.entries()) {
+          if (maxTurns != null && turnsSpent >= maxTurns) {
+            return {
+              evalName: ev.name,
+              type: ev.type,
+              grader: ev.grader,
+              file: plan.page.file,
+              outcome: "skipped",
+              skipReason: `${turnBudgetSkipReason(maxTurns)} (after ${String(i)} of ${String(chunks.length)} parts)`,
+              durationMs: Date.now() - start,
+            };
+          }
+          turnsSpent += 1;
+          try {
+            const res = await judgeProvider.completeJSON({
+              system: EVIDENCE_SYSTEM_PROMPT,
+              user: buildEvidenceUser(ev, chunk, {
+                index: i,
+                total: chunks.length,
+              }),
+              schema: EVIDENCE_SCHEMA,
+              temperature,
+            });
+            const json = res.json as Partial<PartEvidence>;
+            gathered.push({
+              supports: json.supports ?? [],
+              contradicts: json.contradicts ?? [],
+            });
+          } catch (e) {
+            // A part that could not be read leaves the collection incomplete,
+            // and a verdict over incomplete evidence is exactly the silent
+            // wrong answer this stage exists to avoid (ADR 01022).
+            return {
+              evalName: ev.name,
+              type: ev.type,
+              grader: ev.grader,
+              file: plan.page.file,
+              outcome: "error",
+              skipReason: `gathering evidence from part ${String(i + 1)} of ${String(chunks.length)} failed: ${e instanceof Error ? e.message : String(e)}`,
+              durationMs: Date.now() - start,
+            };
+          }
+        }
+        judged = renderEvidence(gathered, chunks.length);
+        judgedLabel = `${selected.label}, ${String(chunks.length)} parts`;
+      }
 
       // A cached ensemble makes no inference call, so it never touches the
       // budget — the docs corpus replays committed fixtures under any cap.
@@ -195,7 +306,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
       const runs = await runEnsemble({
         provider: judgeProvider,
         system: JUDGE_SYSTEM_PROMPT,
-        user: buildUserContent(ev, selected.text, selected.label),
+        user: buildUserContent(ev, judged, judgedLabel),
         runs: runsPerEval,
         temperature,
         schema: verdictSchema,
@@ -219,6 +330,11 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
         }
       }
 
+      const selfPreference = selfPreferenceFor(
+        target,
+        judgeProvider.modelName(),
+      );
+
       return {
         evalName: ev.name,
         type: ev.type,
@@ -227,6 +343,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
         outcome,
         consensus,
         via,
+        ...(selfPreference ? { selfPreference } : {}),
         durationMs: Date.now() - start,
       };
     };

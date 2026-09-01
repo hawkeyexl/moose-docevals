@@ -133,8 +133,13 @@ Seeding gives you the cases your reviewers happened to hit. It does not give you
 borderline pages where two reviewers had to talk it through — those are exactly where an ambiguous
 assertion shows up as disagreement.
 
-Aim for a realistic mix of `pass` and `fail`. A set that is 90% passes will report high agreement
-from a judge that simply passes everything.
+Aim for a realistic mix of `pass` and `fail` — and **at least one of each is required**, not
+merely advisable. A set with no `expected: fail` case certifies a judge that answers "pass"
+unconditionally: agreement 100%, false negatives 0, threshold met, and nothing in the set could
+ever have disagreed. `calibrate` refuses to certify such a run and names the missing class.
+
+A set that is 90% passes is legal but still reports flattering agreement, for the same reason in
+weaker form.
 
 Hand-authored cases go in any `*.yaml` file under the golden directory. Mark them `source: manual`
 and `reviewed: true` — you wrote them, so they are confirmed by construction.
@@ -155,7 +160,10 @@ same run-wide meaning it has on `run`, not a per-case budget — and a cached ca
 [Caching and turn budgets](/moose-docevals/ci/cost-and-caching/) and the full flag list in
 [the CLI reference](/moose-docevals/reference/cli/).
 
-**Below 70% agreement it exits 1.**
+**It exits 1 unless all three hold:** agreement is at or above 70%, every case reached a verdict,
+and both `expected` classes are represented. They are separate statements and are reported
+separately — the agreement rate stays a statement about agreement, and 100% agreement over one
+class genuinely *is* 100% agreement. What it is not, is a certification.
 
 ## Read the report
 

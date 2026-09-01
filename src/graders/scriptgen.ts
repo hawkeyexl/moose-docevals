@@ -43,16 +43,19 @@ const SCRIPT_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const MAX_BODY_CHARS = 6000;
-
 export function buildScriptgenUser(
   assertion: string,
   evalName: string,
   file: string,
   body: string,
 ): string {
-  const sample =
-    body.length > MAX_BODY_CHARS ? `${body.slice(0, MAX_BODY_CHARS)}\n…(truncated)` : body;
+  // No cap. Generation produces one script, so there is nothing to merge and
+  // splitting has no meaning here — but truncating was worse than either: a
+  // script generated from the first 6000 characters expresses an assertion
+  // about a page whose rest the model never read, and nothing downstream could
+  // tell that from a script generated with full sight of it. If the body
+  // overflows the model's context the call fails, and a failed generation is
+  // already an errored result (ADR 01022) rather than a half-informed script.
   return [
     `# Assertion to check`,
     assertion,
@@ -66,7 +69,7 @@ export function buildScriptgenUser(
     "# Current page content (for grounding — the script must express the",
     "# assertion generally, not hardcode this exact content)",
     "",
-    sample,
+    body,
   ].join("\n");
 }
 

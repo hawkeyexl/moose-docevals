@@ -140,9 +140,11 @@ A timeout is reported distinctly from a failure. Default timeout 600000 ms, sinc
 drive a browser.
 
 :::danger
-This grader executes shell commands embedded in page **bodies**.
-`scripts.allow-frontmatter-commands` does **not** gate it. On untrusted pull requests the job itself
-must be gated — see [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
+This grader executes shell commands embedded in page **bodies**, and needs its own grant:
+`execution.allow: [page-embedded-steps]`. Granting `frontmatter-commands` does not grant it. On
+untrusted pull requests the job itself must still be gated — a grant says *this corpus* is trusted,
+and a fork's pages are not this corpus. See
+[Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
 
 ## `tool:freshness`
@@ -183,6 +185,54 @@ threshold against any sibling in scope fails.
 |---|---|
 | `scope` | — Glob selecting the sibling set to compare against. |
 | `max-similarity` | `0.85` |
+
+## `tool:regex`
+
+A pattern must appear — or not appear, or appear exactly _n_ times — in whatever
+[`target`](/moose-docevals/reference/frontmatter/) selects. The cheapest grader that can express an
+assertion is the one to reach for; this is the rung below the AI judge.
+
+| Option | Default | Notes |
+|---|---|---|
+| `pattern` | — | Required. A JavaScript regular expression. |
+| `flags` | `""` | JS RegExp flags (`d g i m s u v y`). |
+| `match` | `contains` | `contains`, `not-contains`, or `count:N` for exactly _n_ matches. |
+
+```yaml
+- id: names-the-package
+  assertion: The install command names the current package.
+  grader: tool:regex
+  options:
+    pattern: "npm i -g moose-docevals"
+```
+
+Rule ids `regex/not-found`, `regex/found`, `regex/count`. A pattern that does not compile is a
+**configuration** error, not a page failure — blaming the page for the eval's own bug is how a
+corpus learns to ignore its findings.
+
+## `tool:file-exists`
+
+A file must exist beside the page — or must no longer exist. Documentation routinely promises
+companion artifacts (a sample project, a spec, an image), and nothing else could assert they still
+ship.
+
+| Option | Default | Notes |
+|---|---|---|
+| `path` | — | Required. A glob, relative to the page's directory. |
+| `exists` | `true` | Set `false` for a file the page should no longer ship. |
+
+```yaml
+- id: sample-still-ships
+  assertion: The quickstart's example project is still here.
+  grader: tool:file-exists
+  options:
+    path: examples/quickstart/*
+```
+
+Rule ids `file-exists/missing`, `file-exists/present`. A path that climbs out of the page's
+directory is refused: a page is content, and content naming an arbitrary path on the machine
+running the eval is the hazard the [execution grant](/moose-docevals/reference/configuration/)
+exists for.
 
 ## `ai`
 

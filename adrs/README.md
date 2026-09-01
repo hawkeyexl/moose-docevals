@@ -39,6 +39,19 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md) | A grader that reached no verdict fails the eval, at any severity | accepted |
 | [01023](01023-the-diagnostic-invariant-is-enforced-by-enumeration.md) | The diagnostic invariant is enforced by enumeration, not by inspection | accepted |
 | [01024](01024-remark-lints-mdx-where-markdownlint-cannot.md) | remark lints this repo's MDX; markdownlint stays for Markdown | accepted |
+| [01025](01025-an-operator-grant-replaces-the-frontmatter-commands-boolean.md) | An operator grant replaces the frontmatter-commands boolean | accepted |
+| [01026](01026-split-long-content-never-truncate-it.md) | Split long content for inference; never truncate it | accepted |
+| [01027](01027-calibration-requires-both-expected-classes.md) | Calibration requires both expected classes | accepted |
+| [01028](01028-a-pre-run-feasibility-pass.md) | A pre-run feasibility pass | accepted |
+| [01029](01029-a-regex-grader-and-a-file-exists-grader.md) | `tool:regex` and `tool:file-exists`: the deterministic rungs below the judge | accepted |
+| [01030](01030-weight-changes-the-suite-rate-never-the-outcome.md) | `weight` changes a suite's rate, never an eval's outcome | accepted |
+| [01031](01031-grader-options-are-validated-per-grader.md) | Grader options are validated per grader | accepted |
+| [01032](01032-criteria-group-evals-in-config-not-the-vocabulary.md) | Criteria group evals in config, not in the page vocabulary | accepted |
+| [01033](01033-target-selects-the-graded-bytes.md) | `target` selects the graded bytes — and it is called `target`, not `focus` | accepted |
+| [01034](01034-self-preference-is-reported-not-warned-to-stderr.md) | Self-preference is reported on the result, not warned to stderr | accepted |
+| [01035](01035-publish-frontmatter-1-1-0-for-the-proposal-2-vocabulary.md) | Publish `frontmatter-1.1.0.json` for the proposal.2 vocabulary | accepted |
+| [01036](01036-a-self-contained-html-report.md) | A self-contained HTML report | accepted |
+| [01037](01037-a-local-llama-cpp-judge-provider.md) | A local `llama-cpp` judge provider | accepted |
 
 ## To backfill
 

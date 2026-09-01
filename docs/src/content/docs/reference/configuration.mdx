@@ -86,7 +86,7 @@ corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file's
 
 | Key | Type | Default |
 |---|---|---|
-| `provider.default` | `anthropic` \| `openai` \| `claude-cli` | `anthropic` |
+| `provider.default` | `anthropic` \| `openai` \| `claude-cli` \| `llama-cpp` | `anthropic` |
 | `provider.anthropic.model` | string | `claude-sonnet-4-5` |
 | `provider.anthropic.api-key-env` | string | `ANTHROPIC_API_KEY` |
 | `provider.openai.base-url` | string | `https://api.openai.com/v1` |
@@ -94,6 +94,9 @@ corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file's
 | `provider.openai.api-key-env` | string | `OPENAI_API_KEY` |
 | `provider.claude-cli.model` | string | `claude-sonnet-4-5` |
 | `provider.claude-cli.command` | string | `claude` |
+| `provider.llama-cpp.model` | string | `balanced` |
+| `provider.llama-cpp.models-dir` | string \| null | `null` |
+| `provider.llama-cpp.thought-tokens` | integer ≥ 0 | `0` |
 
 Which of the three to pick, and what each one implies about where your pages go, is covered in
 [Choose a provider](/moose-docevals/judge/choose-a-provider/).
@@ -109,6 +112,7 @@ Which of the three to pick, and what each one implies about where your pages go,
 | `judge.false-positive-alert` | number 0–1 | `0.15` | Calibration alerts above this false-positive rate. |
 | `judge.cache-dir` | string | `.moose-docevals/cache` | |
 | `judge.max-turns` | integer ≥ 1 \| null | `null` | Stop judging after this many uncached inference calls. One ai eval spends `judge.ensemble-runs` turns; a cached ensemble spends none. `null` is unbounded. |
+| `judge.chunk-chars` | integer ≥ 1 | `12000` | Characters of page per judge call. A longer page is read in parts: each part contributes the passages bearing on the assertion, and one judge then answers against the collected evidence. Content that fits is judged in a single call, exactly as before. |
 
 Anything between the two zone thresholds lands in human review. See
 [How judging works](/moose-docevals/judge/).
@@ -119,13 +123,35 @@ Anything between the two zone thresholds lands in human review. See
 |---|---|---|---|
 | `scripts.dir` | string | `{docDir}/moose-docevals` | Where generated scripts go. `{docDir}` expands to the page's directory. |
 | `scripts.config-dir` | string | `moose-docevals-scripts` | Used when `scripts.dir` has no `{docDir}`; resolved relative to the config file. |
-| `scripts.allow-frontmatter-commands` | boolean | `true` | Gates `command` evals declared in page frontmatter. |
 | `scripts.timeout-ms` | integer ≥ 1 | `30000` | |
 
+## `execution` — what content is allowed to run
+
+Two things in a content file can reach a shell: a `command` eval declared in page frontmatter, and
+`tool:doc-detective` running steps written in a page **body**. Both are code whoever edits the page
+controls, so both are **denied until you grant them**.
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `execution.allow` | list | `[]` | `frontmatter-commands`, `page-embedded-steps`, or both. |
+
+```yaml
+docevals:
+  execution:
+    allow: [frontmatter-commands]
+```
+
+Grant only what the corpus needs. Granting `frontmatter-commands` does not grant
+`page-embedded-steps`: trusting a repo's frontmatter is not the same as trusting arbitrary steps in
+its prose.
+
+`--allow-execution <kind...>` adds a grant for one run; `--no-execution` clears every grant for one
+run.
+
 :::caution
-`scripts.allow-frontmatter-commands` gates **frontmatter-declared commands only**. The
-`tool:doc-detective` grader executes steps embedded in page bodies and is not covered by it. See
-[Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
+A grant says *this corpus* is trusted to execute. A fork's pages are not this corpus, so no
+combination of grants makes a run over untrusted contributions safe — restrict the job to same-repo
+pull requests instead. See [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).
 :::
 
 ## `fill`
@@ -137,6 +163,7 @@ Anything between the two zone thresholds lands in human review. See
 | `fill.temperature` | number ≥ 0 | `0` |
 | `fill.cache-dir` | string | `.moose-docevals/cache/fill` |
 | `fill.max-turns` | integer ≥ 1 \| null | `null` |
+| `fill.chunk-chars` | integer ≥ 1 | `12000` | Characters of page per fill call. A longer page is proposed against in parts and the proposals merged by id, keeping the highest confidence. |
 
 ## `evals`
 
@@ -167,6 +194,7 @@ A map of suite name to definition.
 |---|---|---|
 | `target-pass-rate` | number 0–1 | `1.0` |
 | `evals` | string[] | `[]` |
+| `criteria` | string[] | `[]` |
 
 ```yaml
 docevals:
@@ -179,10 +207,42 @@ docevals:
       evals: [explains-why-before-how, no-future-promises]
 ```
 
+## `criteria`
+
+Several evals scored as **one** unit. A criterion contributes a single weighted outcome to its
+suite, and its members contribute none — so writing three checks as a group cannot outvote three
+standalone evals just for being a group. Members keep their own results, so a report still says
+which one failed.
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `evals` | string[] | — | Required. The eval ids this criterion is made of. |
+| `combine` | `all` \| `any` | `all` | `all`: every member must pass. `any`: one passing member is enough. |
+| `weight` | number > 0 | `1` | The criterion's contribution to its suite's pass rate. |
+
+```yaml
+docevals:
+  criteria:
+    install-path-is-complete:
+      evals: [has-prereqs, has-verify-step]
+      combine: all
+      weight: 2
+  suites:
+    reference:
+      evals: [fresh-enough]
+      criteria: [install-path-is-complete]
+```
+
+A criterion whose members were not all graded in a run — because `--eval` selected only some of
+them, or a member was skipped — is **suspended** rather than failed. A group measured in part has
+numbers but no verdict.
+
 ## Referential integrity
 
-Two checks run at load time and fail the process with exit 2 rather than surfacing later as a
+Four checks run at load time and fail the process with exit 2 rather than surfacing later as a
 confusing per-page problem:
 
 - A suite may only reference evals defined under `evals`.
+- A criterion may only reference evals defined under `evals`.
+- A suite may only reference criteria defined under `criteria`.
 - `defaults.suite` must name a defined suite.

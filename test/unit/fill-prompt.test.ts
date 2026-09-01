@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import {
   FILL_SYSTEM_PROMPT,
-  MAX_BODY_CHARS,
   PROPOSAL_SCHEMA,
   buildFillUser,
 } from "../../src/fill/prompt.js";
@@ -37,11 +36,22 @@ describe("buildFillUser", () => {
     expect(user).toMatch(/\(none\)/);
   });
 
-  it("truncates the body at MAX_BODY_CHARS", () => {
-    const body = "x".repeat(MAX_BODY_CHARS + 100);
+  it("sends the whole body, however long", () => {
+    // The old behavior truncated at 6000 characters and appended a marker, so
+    // a long page was filled from its first half with nothing to say so. Long
+    // pages are split across calls now; the prompt builder never drops bytes.
+    const body = "x".repeat(20000);
     const user = buildFillUser("docs/page.mdx", body, [], 3);
-    expect(user).toContain("…(truncated)");
-    expect(user).not.toContain("x".repeat(MAX_BODY_CHARS + 1));
+    expect(user).toContain(body);
+    expect(user).not.toContain("(truncated)");
+  });
+
+  it("names the part when a page was split", () => {
+    const user = buildFillUser("docs/page.mdx", "body", [], 3, {
+      index: 1,
+      total: 3,
+    });
+    expect(user).toContain("part 2 of 3");
   });
 });
 

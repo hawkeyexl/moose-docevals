@@ -3,7 +3,7 @@ title: Choose a provider
 description: Three ways to reach a judge — including one that needs no API key and one that stays on your own infrastructure.
 ---
 
-Three providers. The differences that matter are where your page content goes and what credential CI
+Four providers. The differences that matter are where your page content goes and what credential CI
 needs.
 
 | Provider | Credential | Content goes to |
@@ -11,6 +11,7 @@ needs.
 | `anthropic` | `ANTHROPIC_API_KEY` | Anthropic's API |
 | `openai` | `OPENAI_API_KEY` | Whatever `base-url` points at — including your own server |
 | `claude-cli` | None — uses local CLI auth | Anthropic, via the local `claude` CLI |
+| `llama-cpp` | None | Nowhere. The model runs in-process on your machine. |
 
 ## `anthropic` (default)
 
@@ -71,6 +72,46 @@ Shells out to the local `claude` CLI and uses its existing auth. Useful when:
 It depends on the CLI being installed and authenticated on the machine, which makes it better for
 local work than for a fresh CI runner.
 
+## `llama-cpp` — nothing leaves the machine
+
+```yaml
+docevals:
+  provider:
+    default: llama-cpp
+    llama-cpp:
+      model: balanced       # auto | fast | balanced | quality, or a pinned reference
+      thought-tokens: 0
+```
+
+Runs GGUF weights in-process. No API key, no CLI, and — once the weights are on disk — no network
+at judge time at all. That is the one property the other three cannot offer, and it is what makes
+judged evals reachable for a contributor with no credentials, or a corpus whose pages may not leave
+the building.
+
+The named tiers (`fast`, `balanced`, `quality`) are resolved against your machine's memory. Prefer
+a named tier to `auto` in a committed config, so two contributors reading it see the same intent —
+and note the library resolves a tier to a *concrete* model before building any cache key, so two
+machines never share a verdict under one tier name.
+
+`thought-tokens` defaults to `0`. A grammar constrains generation from the first token, so an
+unbudgeted thinking model starts reasoning and gets cut off mid-thought; raise it only if you want
+reasoning before the JSON.
+
+Two costs to know about. It owns weights — gigabytes downloaded on first use and held in RAM once
+loaded. And it needs `node-llama-cpp`, a native module declared here as an **optional peer
+dependency**: nobody who does not choose this provider pays the install cost or the toolchain risk.
+Install it alongside moose-docevals when you want local judging:
+
+```bash
+npm i -D node-llama-cpp
+```
+
+:::note
+A smaller judge is not automatically a worse one, but it is not automatically a good one either.
+[Calibrate](/moose-docevals/judge/calibrate/) it against your own golden set before trusting it —
+that is what the command is for, and it now refuses to certify on a one-sided set.
+:::
+
 ## Pin the model. Always.
 
 ```yaml
@@ -99,6 +140,7 @@ See [Caching and turn budgets](/moose-docevals/ci/cost-and-caching/).
 ```bash
 npx moose-docevals run --provider claude-cli
 npx moose-docevals run --provider openai --model llama3.1:8b
+npx moose-docevals run --provider llama-cpp --model quality
 ```
 
 Handy for comparing a cheaper model against your golden set before committing to it:

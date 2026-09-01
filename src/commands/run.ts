@@ -29,6 +29,7 @@ export interface RunCommandOptions {
   provider?: string;
   model?: string;
   runs?: number;
+  chunkChars?: number;
   maxTurns?: number;
   evalNames?: string[];
   suite?: string;
@@ -72,6 +73,7 @@ export async function runRun(
     provider: options.provider,
     model: options.model,
     runs: options.runs,
+    chunkChars: options.chunkChars,
     noCache: options.cache === false,
     maxTurns: options.maxTurns ?? null,
   };

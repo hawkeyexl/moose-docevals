@@ -21,8 +21,8 @@ evals:
     command: [node, scripts/whatever.mjs, "{file}"]
 ```
 
-Gated by `scripts.allow-frontmatter-commands` (config) and `--no-frontmatter-commands` (CLI). This is
-the one everybody finds.
+Gated by `execution.allow: [frontmatter-commands]` (config) or `--allow-execution
+frontmatter-commands` (CLI). Denied unless you grant it. This is the one everybody finds.
 
 ### 2. Steps embedded in page bodies
 
@@ -30,12 +30,19 @@ the one everybody finds.
 {/* STEP {"runShell":{"command":"...","exitCodes":[0]}} */}
 ```
 
-Executed by the `tool:doc-detective` grader. **`--no-frontmatter-commands` does not gate this.**
+Executed by the `tool:doc-detective` grader, and gated **separately** by
+`execution.allow: [page-embedded-steps]`. Granting frontmatter commands does not grant this:
+trusting a repo's frontmatter is not the same as trusting arbitrary steps written in its prose.
 
 :::danger
-A reader who sets `--no-frontmatter-commands` and concludes they are safe against a hostile fork is
-wrong, and confidently so. The flag covers frontmatter only. If any eval uses
-`tool:doc-detective`, a fork can still run arbitrary commands on your runner.
+**No combination of grants makes a run over untrusted contributions safe.**
+
+A grant says *this corpus* is trusted to execute. A fork's pages are not this corpus — a fork
+rewrites the pages, and if the job runs with a grant, it runs the fork's code. Denying both grants
+does protect the runner, but a reader who grants either and concludes they are safe against a
+hostile fork is wrong, and confidently so.
+
+The control is the job trigger, not the flag. Restrict execution to same-repo pull requests.
 :::
 
 ## The complete answer: gate the job
@@ -69,7 +76,7 @@ Then give forks a separate job that executes nothing and needs no secret:
       - uses: actions/setup-node@v5
         with: { node-version: 24, cache: npm }
       - run: npm ci
-      - run: npx moose-docevals run --deterministic-only --no-frontmatter-commands --format github
+      - run: npx moose-docevals run --deterministic-only --no-execution --format github
 ```
 
 Fork contributors still get freshness, lint, structure, and frontmatter validation — most of the
@@ -93,8 +100,8 @@ tempted toward the unsafe workaround above.
 
 - [ ] The job that can execute content code is gated to same-repo pull requests.
 - [ ] Forks run a separate `--deterministic-only` job with no secrets.
-- [ ] `scripts.allow-frontmatter-commands: false` unless you need it — defence in depth, not the
-      defence.
+- [ ] `execution.allow` grants only what the corpus needs, and nothing on a fork-facing job —
+      defence in depth, not the defence.
 - [ ] Third-party actions pinned to a full commit SHA, not a tag.
 - [ ] `permissions:` set to least privilege (`contents: read` for a check job).
 - [ ] A spend ceiling set, so a malicious or accidental loop cannot run up a bill.

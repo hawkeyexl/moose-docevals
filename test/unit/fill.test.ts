@@ -293,3 +293,73 @@ describe("runFill", () => {
     expect(report.exitCode).toBe(1);
   });
 });
+
+describe("the fill cache under halve-and-retry", () => {
+  /**
+   * A page long enough to split, so the two budgets produce different parts
+   * and therefore different proposals.
+   */
+  const LONG_PAGE = [
+    "---",
+    "title: Sample",
+    "---",
+    "",
+    ...Array.from({ length: 60 }, (_, i) => `Paragraph ${String(i)} of prose.\n`),
+  ].join("\n");
+
+  const overflow = { error: "prompt is too long: 200000 tokens > 100000 maximum" };
+
+  it("does not serve a halved-budget result to a run that did not halve", async () => {
+    // The provider overflows once, so the first run halves the budget and
+    // proposes from a different split. Caching that under the full-budget key
+    // would let the second run — which never overflowed — replay proposals
+    // from a split it did not perform.
+    const root = workspace({ "page.md": LONG_PAGE });
+    const first = new MockProvider([
+      overflow,
+      { json: { evals: [proposal("from-halved", 0.5)] } },
+      { json: { evals: [proposal("from-halved", 0.5)] } },
+      { json: { evals: [proposal("from-halved", 0.5)] } },
+      { json: { evals: [proposal("from-halved", 0.5)] } },
+    ]);
+    await runFill([], {
+      cwd: root,
+      providerInstance: first,
+      chunkChars: 400,
+    });
+
+    const second = new MockProvider([
+      { json: { evals: [proposal("from-full", 0.5)] } },
+      { json: { evals: [proposal("from-full", 0.5)] } },
+      { json: { evals: [proposal("from-full", 0.5)] } },
+      { json: { evals: [proposal("from-full", 0.5)] } },
+    ]);
+    const report = await runFill([], {
+      cwd: root,
+      providerInstance: second,
+      chunkChars: 400,
+    });
+    // The second run reached the provider rather than replaying the first.
+    expect(second.requests.length).toBeGreaterThan(0);
+    const proposed =
+      report.results[0]?.belowThreshold.map((p) => p.id) ?? [];
+    expect(proposed).toContain("from-full");
+    expect(proposed).not.toContain("from-halved");
+  });
+
+  it("still replays a full-budget result for an identical run", async () => {
+    // The other half of the contract: caching has to keep working when
+    // nothing overflowed, or the key change would have cost every hit.
+    const root = workspace({ "page.md": PLAIN_PAGE });
+    const first = new MockProvider([
+      { json: { evals: [proposal("cached-check", 0.5)] } },
+    ]);
+    await runFill([], { cwd: root, providerInstance: first, chunkChars: 400 });
+
+    const second = new MockProvider([
+      { json: { evals: [proposal("should-not-be-asked", 0.5)] } },
+    ]);
+    await runFill([], { cwd: root, providerInstance: second, chunkChars: 400 });
+    expect(second.requests).toHaveLength(0);
+  });
+});

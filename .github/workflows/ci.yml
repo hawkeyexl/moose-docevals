@@ -109,6 +109,40 @@ jobs:
             check("reference criteria suspended", ref?.criteria?.suspended, 0);
           '
 
+      # The HTML report is what a documentation owner actually opens, so it has
+      # to be self-contained: a CI artifact that reaches for a CDN renders
+      # unstyled, and one that reaches anywhere at all is a report that leaks
+      # where it was opened.
+      # Written to a file through a quoted heredoc rather than passed to
+      # `node -e '...'`: the check needs to match an apostrophe (it looks for
+      # src/href="http and src/href='http), and an apostrophe inside a
+      # single-quoted shell argument closes it and hands the rest of the
+      # script to the shell. That is a syntax error, not a failed assertion,
+      # so the step fails identically whatever the report contains.
+      - name: HTML report is self-contained
+        # Explicit, as every other multi-line step here is: the default `run:`
+        # shell on windows-latest is PowerShell, which has no heredoc.
+        shell: bash
+        run: |
+          node dist/cli.js run --deterministic-only --no-generate --format html > moose-docevals.html || true
+          cat > check-html.mjs <<'CHECK'
+          import { readFileSync } from "node:fs";
+
+          const html = readFileSync("moose-docevals.html", "utf8");
+          const externals = html.match(/(src|href)\s*=\s*["']https?:/gi) ?? [];
+          if (externals.length > 0) {
+            console.error("HTML report references external resources:", externals);
+            process.exitCode = 1;
+          }
+          for (const needle of ["<!doctype html>", "moose-docevals results", "Suites"]) {
+            if (!html.includes(needle)) {
+              console.error(`HTML report missing ${needle}`);
+              process.exitCode = 1;
+            }
+          }
+          CHECK
+          node check-html.mjs
+
       # ADR 01007. An unrecognized --format used to fall through to the human
       # renderer (list, fill) or print the literal string "undefined" (run), in
       # both cases exiting 0. Assert the usage-error contract through the built

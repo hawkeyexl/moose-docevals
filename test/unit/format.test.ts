@@ -34,6 +34,7 @@ describe("parseFormat", () => {
       "github",
       "sarif",
       "junit",
+      "html",
     ]);
   });
 
@@ -61,7 +62,7 @@ describe("parseFormat", () => {
       '--format must be one of human | json, got "xml"',
     );
     expect(() => parseFormat("xml", REPORT_FORMATS, "--format")).toThrow(
-      '--format must be one of human | json | markdown | github | sarif | junit, got "xml"',
+      '--format must be one of human | json | markdown | github | sarif | junit | html, got "xml"',
     );
   });
 
@@ -104,7 +105,7 @@ describe("render dispatch", () => {
     // One generator, three call sites. A hand-written message here would drift
     // from parseFormat's the first time either is reworded.
     expect(() => render(EMPTY_REPORT, "xml" as never)).toThrow(
-      'format must be one of human | json | markdown | github | sarif | junit, got "xml"',
+      'format must be one of human | json | markdown | github | sarif | junit | html, got "xml"',
     );
   });
 });

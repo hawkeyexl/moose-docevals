@@ -88,6 +88,32 @@ evals:
 | `options` | **Merged** over the base options, not replaced. |
 | `skip` | Skips this one eval on this page. |
 
+## `target` — which bytes are graded
+
+`evidence` tells the judge where to look *within* what it is given. `target` decides what it is
+given in the first place, which is why deterministic graders honour it too — a regex grader has no
+focus, it has a target.
+
+| Value | What the grader receives |
+|---|---|
+| `body` (default) | The page body, frontmatter stripped and MDX noise removed. |
+| `raw` | The file verbatim, frontmatter included. |
+| `frontmatter` | The parsed frontmatter alone. |
+| `{source: file, path: <rel>}` | A companion file, resolved against the page's directory. |
+
+```yaml
+evals:
+  - id: has-an-owner
+    grader: tool:regex
+    target: frontmatter
+    options:
+      pattern: "^owner:"
+```
+
+A target that cannot be read is an **error**, not a quiet fall back to the page body: a verdict
+about the wrong bytes is worse than no verdict. A companion path may not be absolute and may not
+climb out of the page's directory.
+
 **An inline definition** declares an eval that exists only on this page. It requires an `id` —
 kebab-case, unique on the page — and takes every field below. Ids are required rather than derived
 from position, because a position-derived name orphans every cached verdict as soon as entries move.
@@ -100,7 +126,10 @@ from position, because a position-derived name orphans every cached verdict as s
 | `type` | `regression` \| `capability` | `regression` | Most evals guard behavior that must keep working. |
 | `grader` | string | `ai` | `ai`, `command`, `human`, or `tool:<name>`. It is `ai`, not `llm`, because the judge may be an agent rather than a bare model. |
 | `provider` | string | config default | Which configured provider or agent judges this `ai` eval. |
-| `evidence` | string | — | Scopes what the judge looks at. |
+| `model` | string | config default | Which model judges this `ai` eval, within `provider`. A CLI `--model` still wins. Use it to name a stronger judge for an eval that matters — or a judge other than the model that wrote the page. |
+| `runs` | integer 1–50 | `judge.ensemble-runs` | Ensemble runs for this eval alone. A CLI `--runs` still wins. Capped because it multiplies judge cost directly. |
+| `evidence` | string | — | Scopes what the judge looks at **within** what is graded. A hint, not a selector — see `target`. |
+| `target` | see below | `body` | Which bytes the grader receives. |
 | `examples.pass` / `examples.fail` | string or string[] | — | Pins the boundary; one anchor or several. An inline ai eval without them raises a warning. |
 | `command` | string[] | — | For `command` graders. `{file}` expands to the page's absolute path. |
 | `success-exit-codes` | integer[] | `[0]` | Exit codes treated as a pass. |
@@ -108,6 +137,7 @@ from position, because a position-derived name orphans every cached verdict as s
 | `generated-assertion-hash` | string | — | Written by script generation, always beside `command`; a mismatch means the script is stale. |
 | `options` | object | `{}` | Grader-specific. See [Graders](/moose-docevals/reference/graders/). |
 | `severity` | `error` \| `warning` \| `info` | `error` | Only `error` findings fail the build. |
+| `weight` | number > 0 | `1` | How much this eval moves its suite's pass rate. It does **not** change the eval's own pass/fail. Zero is rejected — a weightless eval is a silent disable, and `skip` already means that, loudly. |
 | `severity-map` | object | — | Maps a tool's own severities onto moose-docevals severities. |
 
 ## Resolution order

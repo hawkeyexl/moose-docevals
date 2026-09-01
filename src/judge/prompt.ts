@@ -8,8 +8,9 @@
  * changes so stale cached verdicts never survive a prompt revision.
  */
 import type { ResolvedEval } from "../core/resolve.js";
+import { partLabel } from "../core/split.js";
 
-export const PROMPT_VERSION = 2;
+export const PROMPT_VERSION = 3;
 
 export const JUDGE_SYSTEM_PROMPT = [
   "You are a meticulous technical documentation judge. You evaluate whether a",
@@ -100,4 +101,91 @@ export function buildUserContent(
     isBody ? cleanBody(body) : body,
   );
   return parts.join("\n");
+}
+
+/**
+ * Gathering evidence from one part of a page too long to judge in one call.
+ *
+ * Why a two-stage shape rather than judging each part and merging verdicts:
+ * merging is unsound. "The page documents the --force flag" is satisfied if
+ * *any* part documents it; "the page never promises unreleased features" is
+ * violated if *any* part promises one. One needs OR across parts, the other
+ * AND, and nothing in an assertion's text reliably says which — so a merge
+ * rule has to guess, and guesses wrong quietly.
+ *
+ * Gathering evidence sidesteps the quantifier entirely. Each part contributes
+ * what it saw; one judge then answers the original question against the whole
+ * collection, exactly as it would have with the page in front of it. The
+ * verdict contract is unchanged — still one `JudgeVerdict` per run — so
+ * consensus, zones, the response cache, human review and `calibrate` need to
+ * know nothing about any of this.
+ */
+export const EVIDENCE_SYSTEM_PROMPT = [
+  "You are gathering evidence from one part of a documentation page so that a",
+  "judge can later evaluate an assertion about the whole page.",
+  "",
+  "Rules:",
+  "- Do NOT decide whether the assertion holds. You are seeing one part; the",
+  "  part that settles it may be elsewhere.",
+  "- Quote page text verbatim. Quote anything that supports the assertion and",
+  "  anything that contradicts it.",
+  "- Quote only what bears on this assertion. An empty list is the right",
+  "  answer for a part that says nothing about it.",
+  "Respond with a JSON object matching the provided schema.",
+].join("\n");
+
+export const EVIDENCE_SCHEMA = {
+  type: "object",
+  required: ["supports", "contradicts"],
+  properties: {
+    supports: { type: "array", items: { type: "string" } },
+    contradicts: { type: "array", items: { type: "string" } },
+  },
+  additionalProperties: false,
+} as const;
+
+export interface PartEvidence {
+  supports: string[];
+  contradicts: string[];
+}
+
+export function buildEvidenceUser(
+  ev: ResolvedEval,
+  chunk: string,
+  part: { index: number; total: number },
+): string {
+  return [
+    "# Assertion (do not judge it — only gather evidence)",
+    ev.assertion ?? "",
+    ...(ev.evidence ? ["", "# Where to look", ev.evidence] : []),
+    "",
+    `# Page content (${partLabel(part.index, part.total)})`,
+    "",
+    chunk,
+  ].join("\n");
+}
+
+/**
+ * Render gathered evidence as the "page content" a judge sees.
+ *
+ * The judge is told plainly that it is reading extracts rather than the page,
+ * because a judge that believes it saw everything will happily report that
+ * something is absent when it was merely in a part that contributed nothing.
+ */
+export function renderEvidence(parts: PartEvidence[], total: number): string {
+  const supports = parts.flatMap((p) => p.supports);
+  const contradicts = parts.flatMap((p) => p.contradicts);
+  const lines = [
+    `The page was too long to read in one pass, so it was read in ${String(total)} parts`,
+    "and the passages bearing on this assertion were collected below. Judge the",
+    "assertion against this evidence. Absence of a quotation is weak evidence of",
+    "absence in the page: parts that bore on nothing contributed nothing.",
+    "",
+    "## Passages supporting the assertion",
+    ...(supports.length > 0 ? supports.map((q) => `- ${q}`) : ["(none)"]),
+    "",
+    "## Passages contradicting the assertion",
+    ...(contradicts.length > 0 ? contradicts.map((q) => `- ${q}`) : ["(none)"]),
+  ];
+  return lines.join("\n");
 }

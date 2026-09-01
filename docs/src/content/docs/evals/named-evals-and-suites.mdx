@@ -81,7 +81,50 @@ Suites
 A suite below target fails the run. Treating a capability finding as a build break — because the
 suite was left at the default 1.0 — is the most common way to conclude the tool is unusable.
 
-Skipped evals are excluded from the denominator: `passed / (total - skipped)`.
+Skipped evals are excluded from the rate entirely, and so are evals awaiting human review: the
+rate is computed over the **graded** set — pass, fail, and error.
+
+### Not every eval has to count the same
+
+By default each eval contributes 1. `weight` changes how much an outcome moves the rate, and
+nothing else — the eval still passes or fails on its own terms, and the counts stay counts.
+
+```yaml
+docevals:
+  evals:
+    install-command-is-current:
+      assertion: The page shows the current global install command.
+    house-style-heading-case:
+      grader: tool:regex
+      options: { pattern: "^## [A-Z][a-z]" }
+      severity: warning
+      weight: 0.5      # secondary: it reports, it does not dominate
+```
+
+Zero is rejected. A weightless eval is a silent disable, and `eval-skip` already means that,
+loudly.
+
+### Several evals scored as one
+
+Sometimes two checks only mean something together. A `criterion` groups them and scores the group
+**once**, so writing three checks as a group cannot outvote three standalone evals:
+
+```yaml
+docevals:
+  criteria:
+    install-path-is-complete:
+      evals: [has-prereqs, has-verify-step]
+      combine: all      # or `any`
+      weight: 2
+  suites:
+    reference:
+      evals: [fresh-enough]
+      criteria: [install-path-is-complete]
+```
+
+Members keep their own results, so a report still says which one failed. A criterion whose members
+were not all graded — a filtered run, or a skipped member — is **suspended** rather than failed: a
+group measured in part has numbers but no verdict.
 
 ## Run one suite
 

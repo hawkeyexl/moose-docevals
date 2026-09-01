@@ -7,9 +7,10 @@
  * run, and determinism already flows through promote/generate.
  */
 import { Ajv2020 } from "ajv/dist/2020.js";
+import { partLabel } from "../core/split.js";
 
 /** Part of the cache key: bump whenever the prompt or schema changes. */
-export const FILL_PROMPT_VERSION = 2;
+export const FILL_PROMPT_VERSION = 3;
 
 export const FILL_SYSTEM_PROMPT = [
   "You propose evals for documentation pages. An eval is a plain-language",
@@ -28,11 +29,22 @@ export const FILL_SYSTEM_PROMPT = [
   "- Report an honest confidence between 0 and 1 that the assertion is",
   "  correct, checkable, and worth guarding. Do not inflate it.",
   "- Do not duplicate or rephrase the page's existing evals.",
+  "- Do NOT restate the page. An assertion derived from the page's own",
+  "  headings, or lifted from a style guide, passes by construction and keeps",
+  "  passing however the page rots. Anchor on what a reader would notice if it",
+  "  broke.",
+  "- Prefer the cheapest check that can express the assertion. A verifiable",
+  "  fact — a string that must appear, a file that must exist — belongs in a",
+  "  deterministic eval; propose a judged assertion only for what genuinely",
+  "  needs reading comprehension.",
+  "- A check lifted from a style rule is secondary: propose it at",
+  "  severity warning, never as a page's only guard.",
+  "- Do not soften an assertion until it always passes. An eval that cannot",
+  "  fail is a vanity metric — if you cannot state a version that would catch",
+  "  a real regression, propose nothing for it.",
   "- Propose at most the requested number, fewer when the page offers",
   "  little worth guarding, and nothing at all when nothing qualifies.",
 ].join("\n");
-
-export const MAX_BODY_CHARS = 6000;
 
 export const PROPOSAL_SCHEMA = {
   type: "object",
@@ -88,11 +100,8 @@ export function buildFillUser(
   body: string,
   existing: ExistingEval[],
   maxEvals: number,
+  part?: { index: number; total: number },
 ): string {
-  const sample =
-    body.length > MAX_BODY_CHARS
-      ? `${body.slice(0, MAX_BODY_CHARS)}\n…(truncated)`
-      : body;
   const existingLines =
     existing.length === 0
       ? ["(none)"]
@@ -109,8 +118,13 @@ export function buildFillUser(
     "# Maximum proposals",
     String(maxEvals),
     "",
-    "# Page content",
+    part === undefined
+      ? "# Page content"
+      : `# Page content (${partLabel(part.index, part.total)})`,
     "",
-    sample,
+    // No cap. A page longer than one call is split and proposed against in
+    // parts; truncating instead meant proposing evals for a page whose second
+    // half the model never saw, with nothing in the output to say so.
+    body,
   ].join("\n");
 }

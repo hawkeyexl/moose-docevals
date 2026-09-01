@@ -55,6 +55,8 @@ export interface JudgeOptions {
   noCache?: boolean;
   /** Stop after this many uncached inference calls (ADR 01019). */
   maxTurns?: number | null;
+  /** Characters of content per judge call; longer content is read in parts. */
+  chunkChars?: number;
 }
 
 /** Injected AI judging stage; absent → ai-graded evals are skipped. */
@@ -908,6 +910,24 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   results.push(...baselinedResults);
 
   stampSuites(results, plans);
+
+  // Self-preference reaches the reporters as a problem, not just as a field on
+  // the result: a run whose verdicts were formed by the model that wrote the
+  // pages should say so where anyone reads it. One per affected eval — the
+  // earlier stderr warning deduped by model name and so named only the first
+  // page, leaving every other page with the same problem silent.
+  for (const r of results) {
+    if (!r.selfPreference) continue;
+    const { axis, model } = r.selfPreference;
+    problems.push({
+      file: r.file,
+      level: "warning",
+      message:
+        axis === "content"
+          ? `Eval "${r.evalName}" was judged by ${model}, which also generated this page (generated-by). A model favors its own output — judge with a different model, or set \`model:\` on the eval.`
+          : `Eval "${r.evalName}" was judged by ${model}, which also proposed the assertion (eval-provenance). Have a human confirm the assertion before trusting the verdict.`,
+    });
+  }
 
   const suites = summarizeSuites(results, config, filtered);
   const judged = results.filter((r) => r.consensus != null);

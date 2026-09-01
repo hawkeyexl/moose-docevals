@@ -15,8 +15,13 @@ import { DocevalsError, type EvalType, type Severity } from "../types.js";
 // Type-only, so the cycle with target.ts (which needs ResolvedPagePlan) is
 // erased at compile time rather than existing at runtime.
 import type { EvalTarget } from "./target.js";
+import { DEFAULT_CHUNK_CHARS } from "./split.js";
 
-export type ProviderName = "anthropic" | "openai" | "claude-cli";
+export type ProviderName =
+  | "anthropic"
+  | "openai"
+  | "claude-cli"
+  | "llama-cpp";
 
 /** One capability the operator can grant to content-authored code. */
 export type ExecutionGrant = "frontmatter-commands" | "page-embedded-steps";
@@ -163,6 +168,11 @@ export interface DocevalsConfig {
       apiKeyEnv: string;
     };
     "claude-cli": { model: string; command: string };
+    "llama-cpp": {
+      model: string;
+      modelsDir: string | null;
+      thoughtTokens: number;
+    };
   };
   /** Findings baseline path, resolved against the config's directory (ADR 01017). */
   baseline: string | null;
@@ -173,6 +183,7 @@ export interface DocevalsConfig {
     falsePositiveAlert: number;
     cacheDir: string;
     maxTurns: number | null;
+    chunkChars: number;
   };
   scripts: {
     dir: string;
@@ -194,6 +205,7 @@ export interface DocevalsConfig {
     temperature: number;
     cacheDir: string;
     maxTurns: number | null;
+    chunkChars: number;
   };
   evals: Record<string, EvalDef>;
   criteria: Record<string, CriterionDef>;
@@ -260,6 +272,11 @@ interface RawDocevalsConfig {
     anthropic?: RawProviderSection;
     openai?: RawProviderSection;
     "claude-cli"?: RawProviderSection;
+    "llama-cpp"?: {
+      model?: string;
+      "models-dir"?: string;
+      "thought-tokens"?: number;
+    };
   };
   baseline?: string | null;
   judge?: {
@@ -269,6 +286,7 @@ interface RawDocevalsConfig {
     "false-positive-alert"?: number;
     "cache-dir"?: string;
     "max-turns"?: number | null;
+    "chunk-chars"?: number;
   };
   execution?: { allow?: ExecutionGrant[] };
   scripts?: {
@@ -282,6 +300,7 @@ interface RawDocevalsConfig {
     temperature?: number;
     "cache-dir"?: string;
     "max-turns"?: number | null;
+    "chunk-chars"?: number;
   };
   evals?: Record<string, RawEvalDef>;
   criteria?: Record<string, RawCriterionDef>;
@@ -498,6 +517,14 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
         model: r.provider?.["claude-cli"]?.model ?? "claude-sonnet-4-5",
         command: r.provider?.["claude-cli"]?.command ?? "claude",
       },
+      "llama-cpp": {
+        // `balanced` rather than `auto`: a tier the library resolves against
+        // this machine's memory, but a named one, so two contributors reading
+        // the config see the same intent.
+        model: r.provider?.["llama-cpp"]?.model ?? "balanced",
+        modelsDir: r.provider?.["llama-cpp"]?.["models-dir"] ?? null,
+        thoughtTokens: r.provider?.["llama-cpp"]?.["thought-tokens"] ?? 0,
+      },
     },
     baseline: r.baseline ?? null,
     judge: {
@@ -510,6 +537,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       falsePositiveAlert: r.judge?.["false-positive-alert"] ?? 0.15,
       cacheDir: r.judge?.["cache-dir"] ?? ".moose-docevals/cache",
       maxTurns: r.judge?.["max-turns"] ?? null,
+      chunkChars: r.judge?.["chunk-chars"] ?? DEFAULT_CHUNK_CHARS,
     },
     scripts: {
       dir: r.scripts?.dir ?? "{docDir}/moose-docevals",
@@ -523,6 +551,7 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       temperature: r.fill?.temperature ?? 0,
       cacheDir: r.fill?.["cache-dir"] ?? ".moose-docevals/cache/fill",
       maxTurns: r.fill?.["max-turns"] ?? null,
+      chunkChars: r.fill?.["chunk-chars"] ?? DEFAULT_CHUNK_CHARS,
     },
     evals: Object.fromEntries(
       Object.entries(r.evals ?? {}).map(([name, def]) => [
