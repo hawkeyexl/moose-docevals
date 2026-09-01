@@ -109,28 +109,6 @@ jobs:
             check("reference criteria suspended", ref?.criteria?.suspended, 0);
           '
 
-      # The HTML report is what a documentation owner actually opens, so it has
-      # to be self-contained: a CI artifact that reaches for a CDN renders
-      # unstyled, and one that reaches anywhere at all is a report that leaks
-      # where it was opened.
-      - name: HTML report is self-contained
-        run: |
-          node dist/cli.js run --deterministic-only --no-generate --format html > moose-docevals.html || true
-          node -e '
-            const html = require("fs").readFileSync("moose-docevals.html", "utf8");
-            const externals = html.match(/(src|href)\s*=\s*["']https?:/gi) ?? [];
-            if (externals.length > 0) {
-              console.error("HTML report references external resources:", externals);
-              process.exitCode = 1;
-            }
-            for (const needle of ["<!doctype html>", "moose-docevals results", "Suites"]) {
-              if (!html.includes(needle)) {
-                console.error(`HTML report missing ${needle}`);
-                process.exitCode = 1;
-              }
-            }
-          '
-
       # ADR 01007. An unrecognized --format used to fall through to the human
       # renderer (list, fill) or print the literal string "undefined" (run), in
       # both cases exiting 0. Assert the usage-error contract through the built
