@@ -157,6 +157,44 @@ describe("makeJudge", () => {
     expect(results[0]?.consensus?.runs.every((r) => r.cached)).toBe(true);
   });
 
+  // An error is an infrastructure failure, not a verdict about the page. The
+  // library's runEnsemble caches unconditionally, so without a guard here a
+  // transient failure — VRAM exhaustion on a local model, a rate limit, a
+  // dropped connection — is written to the cache and replayed forever. For the
+  // committed docs cache that is fatal: the fixtures would encode an outage.
+  it("does not cache an ensemble containing an errored run", async () => {
+    const root = tempRoot();
+    const provider1 = new MockProvider([
+      { error: "A context size of 24 is too large for the available VRAM" },
+    ]);
+    const judge1 = makeJudge({ provider: provider1, root });
+    const first = await judge1([makeTarget("Same body.")], config, {});
+    expect(first[0]?.outcome).toBe("needs-review");
+    // Not an exact count: the inference layer retries once when a response
+    // fails validation, so an errored ensemble costs more calls than runs.
+    expect(provider1.requests.length).toBeGreaterThanOrEqual(3);
+
+    // The transient failure is over. A second run must re-ask, not replay.
+    const provider2 = new MockProvider([mockVerdict("pass", 0.95)]);
+    const judge2 = makeJudge({ provider: provider2, root });
+    const results = await judge2([makeTarget("Same body.")], config, {});
+    expect(provider2.requests).toHaveLength(3);
+    expect(results[0]?.outcome).toBe("pass");
+  });
+
+  it("still caches an ensemble where every run produced a verdict", async () => {
+    const root = tempRoot();
+    const provider1 = new MockProvider([mockVerdict("fail", 0.95)]);
+    const judge1 = makeJudge({ provider: provider1, root });
+    await judge1([makeTarget("Clean body.")], config, {});
+
+    const provider2 = new MockProvider([mockVerdict("pass", 0.95)]);
+    const judge2 = makeJudge({ provider: provider2, root });
+    const results = await judge2([makeTarget("Clean body.")], config, {});
+    expect(provider2.requests).toHaveLength(0);
+    expect(results[0]?.outcome).toBe("fail");
+  });
+
   it("misses the cache when the body changes", async () => {
     const root = tempRoot();
     const provider = new MockProvider([mockVerdict("pass", 0.95)]);

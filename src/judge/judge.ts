@@ -11,12 +11,10 @@
  * resolution.
  */
 import {
-  JsonCache,
   computeConsensus,
   runEnsemble,
   zoneFor,
   type InferenceProvider,
-  type JudgeRun,
 } from "@hawkeyexl/inference";
 import verdictSchemaJson from "./verdict-schema.json" with { type: "json" };
 import type { EvalResult } from "../types.js";
@@ -24,7 +22,7 @@ import type { DocevalsConfig } from "../core/config.js";
 import type { JudgeFn, JudgeOptions } from "../core/engine.js";
 import type { GraderTarget } from "../graders/types.js";
 import { findReview, loadReviews } from "../core/reviews.js";
-import { cacheKey } from "./cache.js";
+import { cacheKey, VerdictCache } from "./cache.js";
 import { turnBudgetSkipReason } from "./budget.js";
 import { JUDGE_SYSTEM_PROMPT, buildUserContent } from "./prompt.js";
 import { resolve as resolvePath } from "node:path";
@@ -53,7 +51,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     const { provider, root } = deps;
     const runsPerEval = options.runs ?? config.judge.ensembleRuns;
     const temperature = config.judge.temperature;
-    const cache = new JsonCache<JudgeRun[]>(
+    const cache = new VerdictCache(
       resolvePath(root, config.judge.cacheDir),
       options.noCache !== true,
       "moose-docevals",
