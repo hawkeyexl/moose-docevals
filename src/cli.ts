@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
 import { DocevalsError } from "./types.js";
+import { EXECUTION_GRANTS } from "./core/config.js";
 import { runList, renderList } from "./commands/list.js";
 import { runRun } from "./commands/run.js";
 import { runGenerate } from "./commands/generate.js";
@@ -48,6 +49,25 @@ function fail(e: unknown): never {
     process.exit(2);
   }
   throw e;
+}
+
+/**
+ * Repeatable execution grant, validated on the way in.
+ *
+ * An unknown value is a usage error rather than a silent no-op (ADR 01007, the
+ * same rule `--format` follows): a mistyped grant that quietly granted nothing
+ * would skip every command eval and still exit 0, which reads as "the corpus
+ * is clean" rather than "you misspelled a flag".
+ */
+function collectGrant(value: string, previous: string[]): string[] {
+  if (!(EXECUTION_GRANTS as readonly string[]).includes(value)) {
+    fail(
+      new DocevalsError(
+        `--allow-execution must be one of ${EXECUTION_GRANTS.join(" | ")}, got "${value}"`,
+      ),
+    );
+  }
+  return [...previous, value];
 }
 
 function parseIntArg(name: string) {
@@ -148,7 +168,13 @@ program
   )
   .option("--deterministic-only", "Run only command/tool graders, skip the AI judge")
   .option("--ai-only", "Run only AI-judged evals, skip deterministic graders")
-  .option("--no-frontmatter-commands", "Skip command evals defined in page frontmatter")
+  .option(
+    "--allow-execution <kind...>",
+    "Grant content-authored execution: frontmatter-commands | page-embedded-steps (repeatable)",
+    collectGrant,
+    [],
+  )
+  .option("--no-execution", "Clear every execution grant for this run")
   .option("--no-generate", "Do not generate scripts for command evals missing a command")
   .option("--no-cache", "Bypass the judge response cache")
   .option("--fail-on-review", "Exit 1 when any eval lands in the human-review zone")
@@ -185,7 +211,8 @@ program
         format: opts.format as ReportFormat,
         deterministicOnly: opts.deterministicOnly as boolean | undefined,
         aiOnly: opts.aiOnly as boolean | undefined,
-        frontmatterCommands: opts.frontmatterCommands as boolean | undefined,
+        allowExecution: opts.allowExecution as string[] | undefined,
+        execution: opts.execution as boolean | undefined,
         generate: opts.generate as boolean | undefined,
         cache: opts.cache as boolean | undefined,
         failOnReview: opts.failOnReview as boolean | undefined,

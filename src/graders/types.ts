@@ -6,6 +6,7 @@
 import type { ExecFn } from "@hawkeyexl/inference";
 import type { Finding } from "../types.js";
 import type { DocevalsConfig } from "../core/config.js";
+import type { OptionCheck, Options } from "./options.js";
 import type { ResolvedEval, ResolvedPagePlan } from "../core/resolve.js";
 
 /** One (page, eval) pair a grader must grade. */
@@ -30,6 +31,16 @@ export interface GraderContext {
 export interface Grader {
   /** Registry kind, e.g. "command", "tool:markdownlint", "tool:freshness". */
   kind: string;
+  /**
+   * Reject option sets this grader cannot honour, before anything runs.
+   *
+   * The published vocabulary leaves `options` open on purpose, so this is the
+   * "validated by the grader at run time" half of that contract. Without it a
+   * misspelled key falls through to a default and the eval silently checks
+   * something its author never wrote. Returns a message, or undefined when the
+   * options are fine.
+   */
+  validateOptions?(options: Options): OptionCheck;
   /**
    * batch: one external invocation covers all targets;
    * per-file: one invocation per target;

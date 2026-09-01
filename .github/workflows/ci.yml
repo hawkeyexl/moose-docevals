@@ -91,6 +91,44 @@ jobs:
             const fm = r.evalResults.filter((x) => x.evalName === "frontmatter-valid");
             if (fm.length === 0) { console.error("no frontmatter-valid results"); process.exitCode = 1; }
             for (const x of fm) check(`${x.file} frontmatter-valid`, x.outcome, "pass");
+            // The deterministic rungs below the judge run over the real corpus.
+            const named = r.evalResults.filter((x) => x.evalName === "names-an-action");
+            if (named.length === 0) { console.error("no names-an-action results"); process.exitCode = 1; }
+            for (const x of named) {
+              check(`${x.file} names-an-action`, x.outcome, "pass");
+              // A secondary check carries its declared weight into the rate.
+              check(`${x.file} names-an-action weight`, x.weight, 0.5);
+            }
+            for (const x of r.evalResults.filter((x) => x.evalName === "ships-a-schema")) {
+              check(`${x.file} ships-a-schema`, x.outcome, "pass");
+            }
+            // A criterion is scored once per page, and its members do not also
+            // vote — goTo.mdx fails freshness, so exactly one criterion fails.
+            const ref = r.suites.find((s) => s.suite === "reference");
+            check("reference criteria failed", ref?.criteria?.failed, 1);
+            check("reference criteria suspended", ref?.criteria?.suspended, 0);
+          '
+
+      # The HTML report is what a documentation owner actually opens, so it has
+      # to be self-contained: a CI artifact that reaches for a CDN renders
+      # unstyled, and one that reaches anywhere at all is a report that leaks
+      # where it was opened.
+      - name: HTML report is self-contained
+        run: |
+          node dist/cli.js run --deterministic-only --no-generate --format html > moose-docevals.html || true
+          node -e '
+            const html = require("fs").readFileSync("moose-docevals.html", "utf8");
+            const externals = html.match(/(src|href)\s*=\s*["']https?:/gi) ?? [];
+            if (externals.length > 0) {
+              console.error("HTML report references external resources:", externals);
+              process.exitCode = 1;
+            }
+            for (const needle of ["<!doctype html>", "moose-docevals results", "Suites"]) {
+              if (!html.includes(needle)) {
+                console.error(`HTML report missing ${needle}`);
+                process.exitCode = 1;
+              }
+            }
           '
 
       # ADR 01007. An unrecognized --format used to fall through to the human

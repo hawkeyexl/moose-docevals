@@ -14,6 +14,13 @@
 import type { Finding } from "../../types.js";
 import { outputTail } from "../exec.js";
 import { groupTargetsByEval, type Grader, type GraderContext, type GraderTarget } from "../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalStringArray,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 const LINE =
   /^(.+?):(\d+)(?::(\d+))?\s+(?:(?:error|warning)\s+)?(MD\d+(?:\/[\w-]+)*)\s+(.*)$/;
@@ -109,6 +116,12 @@ async function gradeGroup(
 
 export const markdownlintGrader: Grader = {
   kind: "tool:markdownlint",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["command"]),
+      optionalStringArray(options, "command"),
+    );
+  },
   mode: "batch",
   async grade(ctx) {
     const findings: Finding[] = [];

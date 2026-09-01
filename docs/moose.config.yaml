@@ -25,6 +25,18 @@ docevals:
 
   provider:
     default: anthropic
+    # To generate the committed cache without an API key, switch the default to
+    # `llama-cpp` and install the optional native module:
+    #
+    #   npm i -D node-llama-cpp
+    #   npm run docs:refresh-cache
+    #
+    # Weights run in-process; nothing leaves the machine. Left commented out
+    # because CI has no node-llama-cpp, and naming a provider CI cannot build
+    # only makes its degradation message confusing.
+    # llama-cpp:
+    #   model: balanced
+    #   thought-tokens: 0
     anthropic:
       model: claude-sonnet-4-5
       api-key-env: ANTHROPIC_API_KEY
@@ -60,6 +72,16 @@ docevals:
     # One call per page; ~34 pages. Generous for the same reason as above.
     max-turns: 200
 
+  # The docs pages embed Doc Detective steps in their bodies, and verify-docs
+  # runs them — so that capability is granted here and nowhere else. It is not
+  # a substitute for the same-repo-pull-request restriction on the job itself:
+  # a grant says "this corpus is trusted to execute", and a fork's pages are
+  # not this corpus. See docs/src/content/docs/ci/untrusted-pull-requests.mdx.
+  #
+  # frontmatter-commands stays ungranted: no docs page declares one.
+  execution:
+    allow: [page-embedded-steps]
+
   scripts:
     dir: "{docDir}/moose-docevals"
     config-dir: moose-docevals-scripts
@@ -67,8 +89,6 @@ docevals:
     # comes from the tool:doc-detective grader running steps embedded in page
     # bodies, which this flag does NOT gate — the verify-docs job is restricted to
     # same-repo pull requests instead. See docs/src/content/docs/ci/
-    # untrusted-pull-requests.mdx (planned) and ADR 01004.
-    allow-frontmatter-commands: false
     timeout-ms: 60000
 
   evals:
@@ -104,10 +124,16 @@ docevals:
       severity: warning
 
     # --- LLM-graded. Defined and named, but NOT yet in the docs-page suite. ---
-    # The site is currently section-index stubs; judging placeholder prose would
-    # produce cache fixtures that assert nothing. These join the suite with the
-    # first real page, at which point `npm run docs:refresh-cache` generates the
-    # committed fixtures that keep verify-docs green without an API key.
+    # The original reason was that the site was section-index stubs, and judging
+    # placeholder prose produces cache fixtures that assert nothing. That reason
+    # has expired: the pages are real now.
+    #
+    # What remains is a corpus decision, not a credential one — `llama-cpp`
+    # generates the cache with no API key (see `provider` above). Turning these
+    # on means deciding what `docs-page-full` should target: `serves-one-journey`
+    # is a *capability* eval, and capability suites sit near 0.7, not the 1.0
+    # that suite currently declares. Judge quality is also worth calibrating
+    # first — `moose-docevals calibrate` exists for exactly that.
     no-future-promises:
       type: regression
       assertion: The page makes no claims about unreleased or future functionality.

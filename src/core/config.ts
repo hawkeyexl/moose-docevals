@@ -18,6 +18,14 @@ import type { EvalTarget } from "./target.js";
 
 export type ProviderName = "anthropic" | "openai" | "claude-cli";
 
+/** One capability the operator can grant to content-authored code. */
+export type ExecutionGrant = "frontmatter-commands" | "page-embedded-steps";
+
+export const EXECUTION_GRANTS: readonly ExecutionGrant[] = [
+  "frontmatter-commands",
+  "page-embedded-steps",
+] as const;
+
 /**
  * One eval definition, as the rest of the codebase sees it.
  *
@@ -169,9 +177,17 @@ export interface DocevalsConfig {
   scripts: {
     dir: string;
     configDir: string;
-    allowFrontmatterCommands: boolean;
     timeoutMs: number;
   };
+  /**
+   * What content-authored code this run may execute. Default deny.
+   *
+   * Two paths reach a shell from a page: a `command` eval declared in
+   * frontmatter, and `tool:doc-detective` running steps embedded in a page
+   * *body*. The old `scripts.allow-frontmatter-commands` boolean covered the
+   * first and defaulted to true; nothing covered the second at all.
+   */
+  execution: { allow: ExecutionGrant[] };
   fill: {
     confidenceThreshold: number;
     maxEvalsPerPage: number;
@@ -254,10 +270,10 @@ interface RawDocevalsConfig {
     "cache-dir"?: string;
     "max-turns"?: number | null;
   };
+  execution?: { allow?: ExecutionGrant[] };
   scripts?: {
     dir?: string;
     "config-dir"?: string;
-    "allow-frontmatter-commands"?: boolean;
     "timeout-ms"?: number;
   };
   fill?: {
@@ -383,6 +399,31 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
     );
   }
 
+  // The removed key would otherwise surface as "must NOT have additional
+  // properties" against `scripts`, which names the parent and leaves the
+  // reader to find the child — the same failure the camelCase check above
+  // exists to avoid. It also flipped default: it was `true`, and the grant is
+  // default-deny, so a silent migration would quietly stop running checks.
+  const ns = (raw as Record<string, unknown>)[NAMESPACE];
+  const scriptsSection =
+    ns && typeof ns === "object"
+      ? (ns as Record<string, unknown>).scripts
+      : undefined;
+  if (
+    scriptsSection &&
+    typeof scriptsSection === "object" &&
+    "allow-frontmatter-commands" in scriptsSection
+  ) {
+    throw new DocevalsError(
+      `Invalid config in ${configPath}: scripts.allow-frontmatter-commands has been replaced by ` +
+        `execution.allow.
+` +
+        `  Write \`execution: { allow: [frontmatter-commands] }\` to keep running them.
+` +
+        `The grant is default-deny and also covers page-embedded-steps, which nothing gated before.`,
+    );
+  }
+
   if (!validateConfig(raw)) {
     const details = (validateConfig.errors ?? [])
       .map((e) => {
@@ -473,9 +514,9 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
     scripts: {
       dir: r.scripts?.dir ?? "{docDir}/moose-docevals",
       configDir: r.scripts?.["config-dir"] ?? "moose-docevals-scripts",
-      allowFrontmatterCommands: r.scripts?.["allow-frontmatter-commands"] ?? true,
       timeoutMs: r.scripts?.["timeout-ms"] ?? 30000,
     },
+    execution: { allow: r.execution?.allow ?? [] },
     fill: {
       confidenceThreshold: r.fill?.["confidence-threshold"] ?? 0.7,
       maxEvalsPerPage: r.fill?.["max-evals-per-page"] ?? 3,

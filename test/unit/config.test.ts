@@ -27,7 +27,8 @@ describe("parseConfig", () => {
     expect(c.judge.falsePositiveAlert).toBe(0.15);
     expect(c.judge.cacheDir).toBe(".moose-docevals/cache");
     expect(c.judge.maxTurns).toBeNull();
-    expect(c.scripts.allowFrontmatterCommands).toBe(true);
+    // Default deny: nothing content-authored executes until an operator says so.
+    expect(c.execution.allow).toEqual([]);
     expect(c.scripts.dir).toBe("{docDir}/moose-docevals");
     expect(c.scripts.configDir).toBe("moose-docevals-scripts");
     expect(c.evals).toEqual({});

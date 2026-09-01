@@ -11,13 +11,17 @@ import { makeProvider } from "../judge/provider.js";
 import { makeGenerateScripts } from "../graders/scriptgen.js";
 import type { GenerateFn } from "../core/engine.js";
 import { DocevalsError } from "../types.js";
+import type { ExecutionGrant } from "../core/config.js";
 
 export interface RunCommandOptions {
   config?: string;
   format?: ReportFormat;
   deterministicOnly?: boolean;
   aiOnly?: boolean;
-  frontmatterCommands?: boolean;
+  /** Extra execution grants for this run. */
+  allowExecution?: string[];
+  /** `false` clears every grant for this run. */
+  execution?: boolean;
   generate?: boolean;
   cache?: boolean;
   failOnReview?: boolean;
@@ -81,7 +85,8 @@ export async function runRun(
     cwd: options.cwd,
     deterministicOnly: options.deterministicOnly,
     aiOnly: options.aiOnly,
-    frontmatterCommands: options.frontmatterCommands,
+    allowExecution: options.allowExecution as ExecutionGrant[] | undefined,
+    execution: options.execution,
     generate: options.generate,
     failOnReview: options.failOnReview,
     evalNames: options.evalNames,

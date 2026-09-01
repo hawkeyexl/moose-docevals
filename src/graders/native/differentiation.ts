@@ -10,6 +10,14 @@ import picomatch from "picomatch";
 import type { Finding } from "../../types.js";
 import { groupTargetsByEval, type Grader, type GraderTarget } from "../types.js";
 import { extractProse } from "./reading-level.js";
+import {
+  firstError,
+  knownKeys,
+  optionalNumber,
+  optionalString,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 interface DifferentiationOptions {
   scope?: string;
@@ -91,6 +99,13 @@ function gradeGroup(targets: GraderTarget[]): Finding[] {
 
 export const differentiationGrader: Grader = {
   kind: "tool:differentiation",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["scope", "max-similarity"]),
+      optionalString(options, "scope"),
+      optionalNumber(options, "max-similarity", { min: 0, max: 1 }),
+    );
+  },
   mode: "corpus",
   async grade(ctx) {
     const findings: Finding[] = [];

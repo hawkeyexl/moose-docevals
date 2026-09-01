@@ -69,6 +69,11 @@ function scaffold(frontmatter: string[]): string {
       "  version: 1",
       "  files:",
       '    include: ["docs/**/*.md"]',
+      // Generated scripts are `command` evals declared in page frontmatter, so
+      // running them at all needs the grant. Without it these tests would
+      // assert on a skip, not on generation.
+      "  execution:",
+      "    allow: [frontmatter-commands]",
       "",
     ].join("\n"),
   );

@@ -23,6 +23,13 @@ import {
   type GraderContext,
   type GraderTarget,
 } from "../types.js";
+import {
+  firstError,
+  knownKeys,
+  optionalStringArray,
+  type OptionCheck,
+  type Options,
+} from "../options.js";
 
 /** One entry of `vfile-reporter-json`'s output. Fields beyond these are ignored. */
 interface RemarkMessage {
@@ -153,6 +160,12 @@ async function gradeGroup(
 
 export const remarkGrader: Grader = {
   kind: "tool:remark",
+  validateOptions(options: Options): OptionCheck {
+    return firstError(
+      knownKeys(options, ["command"]),
+      optionalStringArray(options, "command"),
+    );
+  },
   mode: "batch",
   async grade(ctx) {
     const findings: Finding[] = [];
