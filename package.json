@@ -46,7 +46,7 @@
     "schemas:check": "node scripts/sync-published-schemas.mjs --check",
     "schemas:check-published": "node scripts/check-published-schemas.mjs",
     "docs:verify": "node dist/cli.js run \"docs/src/content/docs/**/*.{md,mdx}\" -c docs/moose.config.yaml",
-    "docs:refresh-cache": "node -e \"require('node:fs').rmSync('docs/.moose-docevals-cache',{recursive:true,force:true})\" && npm run docs:verify",
+    "docs:refresh-cache": "node scripts/refresh-docs-cache.mjs && npm run docs:verify",
     "commitlint": "commitlint --edit",
     "prepare": "husky",
     "prepublishOnly": "npm run build",
