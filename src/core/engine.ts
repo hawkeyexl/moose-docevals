@@ -105,6 +105,28 @@ export interface RunOptions {
   generateScripts?: GenerateFn;
 }
 
+/**
+ * Why this eval's `target` cannot be served, or `undefined` when it can.
+ *
+ * `body` is what every deterministic grader already reads, so naming it
+ * explicitly is a no-op rather than an error.
+ */
+function unsupportedTarget(
+  ev: ResolvedPagePlan["evals"][number],
+): string | undefined {
+  const target = ev.target;
+  if (target === undefined || target === "body") return undefined;
+  const grader = graderFor(ev.grader);
+  const named = typeof target === "string" ? target : target.path;
+  if (grader?.targets?.includes(typeof target === "string" ? target : "file")) {
+    return undefined;
+  }
+  return (
+    `grader ${ev.grader} cannot read target "${named}" — it grades the page ` +
+    `body. Use the ai grader for this target, or drop the target.`
+  );
+}
+
 function skippedResult(
   plan: ResolvedPagePlan,
   ev: ResolvedPagePlan["evals"][number],
@@ -637,6 +659,24 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
           message: `Eval "${ev.name}": assertion changed since its script was generated — run \`moose-docevals generate\` to regenerate`,
           level: "warning",
         });
+      }
+      // ADR 01033: a grader that cannot serve a requested target says so,
+      // rather than grading something else and reporting a verdict about
+      // bytes nobody asked about. An *error* and not a skip, because a skip
+      // keeps the run green and an eval that measured the wrong thing would
+      // then read as coverage.
+      const unsupported = unsupportedTarget(ev);
+      if (unsupported !== undefined) {
+        results.push({
+          evalName: ev.name,
+          type: ev.type,
+          grader: ev.grader,
+          file: plan.page.file,
+          outcome: "error",
+          skipReason: unsupported,
+          durationMs: 0,
+        });
+        continue;
       }
       deterministicTargets.push({ plan, eval: ev });
     }
