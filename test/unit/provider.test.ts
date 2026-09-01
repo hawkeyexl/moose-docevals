@@ -66,6 +66,21 @@ describe("providerSpecFor", () => {
       DocevalsError,
     );
   });
+
+  it("maps the llama-cpp section onto the library's llamaCpp options", () => {
+    const config = parseDocevalsConfig(
+      "version: 1\nprovider:\n  default: llama-cpp\n  llama-cpp:\n    model: qwen3.5-9b\n    thought-tokens: 64\n    max-tokens: 2048\n    models-directory: .tmp/models\n",
+      PATH,
+    );
+    const spec = providerSpecFor(config);
+    expect(spec.provider).toBe("llama-cpp");
+    expect(spec.model).toBe("qwen3.5-9b");
+    expect(spec.llamaCpp).toEqual({
+      thoughtTokens: 64,
+      maxTokens: 2048,
+      modelsDirectory: ".tmp/models",
+    });
+  });
 });
 
 describe("resolveProviderIdentity", () => {
@@ -80,12 +95,39 @@ describe("resolveProviderIdentity", () => {
 
   it("agrees with the library's resolver for every configured provider", () => {
     const config = parseDocevalsConfig("version: 1\n", PATH);
-    for (const name of ["anthropic", "openai", "claude-cli"] as const) {
+    for (const name of ["anthropic", "openai", "claude-cli", "llama-cpp"] as const) {
       const spec = providerSpecFor(config, { provider: name });
       expect(resolveProviderIdentity(config, { provider: name })).toEqual(
         resolveLibIdentity(spec),
       );
     }
+  });
+
+  // The library's llama-cpp selectors ("auto"/"fast"/"balanced"/"quality")
+  // cannot be resolved synchronously — picking a tier probes GPU memory. This
+  // function is on the judge cache-key path, so a selector default would make
+  // the key machine-dependent AND unresolvable. The default must be concrete.
+  it("defaults llama-cpp to a concrete model, never a selector", () => {
+    const config = parseDocevalsConfig(
+      "version: 1\nprovider:\n  default: llama-cpp\n",
+      PATH,
+    );
+    expect(resolveProviderIdentity(config)).toEqual({
+      provider: "llama-cpp",
+      model: "qwen3.5-4b",
+    });
+  });
+
+  // Without wrapping, the library's InferenceError escapes uncaught: cli.ts
+  // maps only DocevalsError to exit 2, so a selector in config would print a
+  // stack trace instead of a usage error.
+  it("reports a llama-cpp selector as a DocevalsError, not a stack trace", () => {
+    const config = parseDocevalsConfig(
+      "version: 1\nprovider:\n  default: llama-cpp\n  llama-cpp:\n    model: balanced\n",
+      PATH,
+    );
+    expect(() => resolveProviderIdentity(config)).toThrow(DocevalsError);
+    expect(() => resolveProviderIdentity(config)).toThrow(/selector/);
   });
 });
 

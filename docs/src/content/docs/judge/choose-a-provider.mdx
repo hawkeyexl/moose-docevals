@@ -1,9 +1,9 @@
 ---
 title: Choose a provider
-description: Three ways to reach a judge — including one that needs no API key and one that stays on your own infrastructure.
+description: Four ways to reach a judge — including one that needs no API key and one that never leaves your machine.
 ---
 
-Three providers. The differences that matter are where your page content goes and what credential CI
+Four providers. The differences that matter are where your page content goes and what credential CI
 needs.
 
 | Provider | Credential | Content goes to |
@@ -11,6 +11,7 @@ needs.
 | `anthropic` | `ANTHROPIC_API_KEY` | Anthropic's API |
 | `openai` | `OPENAI_API_KEY` | Whatever `base-url` points at — including your own server |
 | `claude-cli` | None — uses local CLI auth | Anthropic, via the local `claude` CLI |
+| `llama-cpp` | None | Nowhere. The model runs in-process on your machine. |
 
 ## `anthropic` (default)
 
@@ -70,6 +71,37 @@ Shells out to the local `claude` CLI and uses its existing auth. Useful when:
 
 It depends on the CLI being installed and authenticated on the machine, which makes it better for
 local work than for a fresh CI runner.
+
+## `llama-cpp` — nothing leaves the machine
+
+```yaml
+docevals:
+  provider:
+    default: llama-cpp
+    llama-cpp:
+      model: qwen3.5-4b
+```
+
+Runs the model in-process via llama.cpp. No key, no endpoint, and **no page content leaves the
+machine** — which is the answer when a security review asks where your documentation goes.
+
+The first run is the exception: it fetches the llama.cpp runtime and the model weights into a
+directory the inference library owns, outside your project. Every run after that is offline. Because
+of that first fetch, this provider belongs in local and self-hosted runs — a fresh CI runner should
+replay a committed cache instead.
+
+Two things behave differently here:
+
+- **The verdict shape is enforced by a grammar**, not by asking the model to return JSON. Generation
+  is constrained from the first token, so a small model cannot drift out of the schema.
+- **`model` must name a model, not a tier.** The library accepts selectors like `auto` and
+  `balanced`, but moose-docevals rejects them: choosing a tier probes GPU memory, so the resolved
+  model would differ from machine to machine — and the model is part of the cache key. A selector
+  would mean cached verdicts that replay only where they were made. You get an error naming the
+  selector, not a silent re-judge.
+
+Judged runs cost electricity rather than tokens, which is what makes re-judging a whole corpus after
+a prompt change a decision you can take casually.
 
 ## Pin the model. Always.
 

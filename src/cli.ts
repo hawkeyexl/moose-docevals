@@ -152,7 +152,7 @@ program
   .option("--no-generate", "Do not generate scripts for command evals missing a command")
   .option("--no-cache", "Bypass the judge response cache")
   .option("--fail-on-review", "Exit 1 when any eval lands in the human-review zone")
-  .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Judge model override")
   .option("--runs <n>", "Ensemble runs per eval", parseIntArg("--runs"))
   .option(
@@ -215,7 +215,7 @@ program
   )
   .argument("[globs...]", "File globs (default: config files.include)")
   .option("-c, --config <path>", "Path to moose.config.yaml")
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .action(
     async (
@@ -266,7 +266,7 @@ program
     parseIntArg("--max-turns"),
   )
   .option("--no-cache", "Bypass the fill proposal cache")
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
@@ -301,7 +301,7 @@ program
   .argument("[globs...]", "File globs (default: config files.include)")
   .option("-c, --config <path>", "Path to moose.config.yaml")
   .option("--write", "Apply promotions (write scripts and rewrite evals)")
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .action(
     async (
@@ -344,7 +344,7 @@ program
     "--seed",
     "Write golden candidates from recorded reviews and exit; judges nothing, needs no provider",
   )
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .option("--runs <n>", "Ensemble runs per case", parseIntArg("--runs"))
   .option(

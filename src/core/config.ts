@@ -13,7 +13,7 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import configSchema from "./config-schema.json" with { type: "json" };
 import { DocevalsError, type EvalType, type Severity } from "../types.js";
 
-export type ProviderName = "anthropic" | "openai" | "claude-cli";
+export type ProviderName = "anthropic" | "openai" | "claude-cli" | "llama-cpp";
 
 /**
  * One eval definition, as the rest of the codebase sees it.
@@ -117,6 +117,18 @@ export interface DocevalsConfig {
       apiKeyEnv: string;
     };
     "claude-cli": { model: string; command: string };
+    /**
+     * Local inference. `model` is deliberately a concrete name and never one of
+     * the library's selectors ("auto"/"fast"/"balanced"/"quality"): the model is
+     * judge cache-key material, and a selector both varies by machine and
+     * cannot be resolved synchronously — picking a tier probes GPU memory.
+     */
+    "llama-cpp": {
+      model: string;
+      modelsDirectory: string | null;
+      thoughtTokens: number;
+      maxTokens: number | null;
+    };
   };
   /** Findings baseline path, resolved against the config's directory (ADR 01017). */
   baseline: string | null;
@@ -205,6 +217,12 @@ interface RawDocevalsConfig {
     anthropic?: RawProviderSection;
     openai?: RawProviderSection;
     "claude-cli"?: RawProviderSection;
+    "llama-cpp"?: {
+      model?: string;
+      "models-directory"?: string;
+      "thought-tokens"?: number;
+      "max-tokens"?: number;
+    };
   };
   baseline?: string | null;
   judge?: {
@@ -399,6 +417,17 @@ export function parseConfig(text: string, configPath: string): DocevalsConfig {
       "claude-cli": {
         model: r.provider?.["claude-cli"]?.model ?? "claude-sonnet-4-5",
         command: r.provider?.["claude-cli"]?.command ?? "claude",
+      },
+      "llama-cpp": {
+        // The library's own default here is the selector "auto". We pin a
+        // concrete model instead, for the reason on the DocevalsConfig field.
+        model: r.provider?.["llama-cpp"]?.model ?? "qwen3.5-4b",
+        modelsDirectory: r.provider?.["llama-cpp"]?.["models-directory"] ?? null,
+        // Zero is the library's default and the deterministic choice for
+        // judging: a grammar constrains generation from token 0, so an
+        // unbudgeted model starts reasoning and gets cut off mid-thought.
+        thoughtTokens: r.provider?.["llama-cpp"]?.["thought-tokens"] ?? 0,
+        maxTokens: r.provider?.["llama-cpp"]?.["max-tokens"] ?? null,
       },
     },
     baseline: r.baseline ?? null,

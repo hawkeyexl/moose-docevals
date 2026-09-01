@@ -165,6 +165,62 @@ describe("parseConfig", () => {
     );
   });
 
+  // A concrete model, not the library's "auto" selector: the model is
+  // cache-key material and a selector cannot be resolved synchronously.
+  it("applies llama-cpp provider defaults for a minimal config", () => {
+    const c = parseConfig(moose("version: 1"), PATH);
+    expect(c.provider["llama-cpp"]).toEqual({
+      model: "qwen3.5-4b",
+      modelsDirectory: null,
+      thoughtTokens: 0,
+      maxTokens: null,
+    });
+  });
+
+  it("respects explicit llama-cpp values", () => {
+    const c = parseConfig(
+      moose(
+        "version: 1",
+        "provider:",
+        "  default: llama-cpp",
+        "  llama-cpp:",
+        "    model: qwen3.5-9b",
+        "    models-directory: .tmp/models",
+        "    thought-tokens: 64",
+        "    max-tokens: 2048",
+      ),
+      PATH,
+    );
+    expect(c.provider.default).toBe("llama-cpp");
+    expect(c.provider["llama-cpp"]).toEqual({
+      model: "qwen3.5-9b",
+      modelsDirectory: ".tmp/models",
+      thoughtTokens: 64,
+      maxTokens: 2048,
+    });
+  });
+
+  it("rejects unknown keys inside the llama-cpp section", () => {
+    expect(() =>
+      parseConfig(
+        moose("version: 1", "provider:", "  llama-cpp:", "    gpu-layers: 20"),
+        PATH,
+      ),
+    ).toThrow(/Invalid config/);
+  });
+
+  // Every key in a file is kebab-case (ADR 01010); parseConfig names the
+  // camelCase it found and the kebab it should be, because Ajv would only
+  // report the parent object.
+  it("names a camelCase llama-cpp key and the kebab it should be", () => {
+    expect(() =>
+      parseConfig(
+        moose("version: 1", "provider:", "  llama-cpp:", "    maxTokens: 2048"),
+        PATH,
+      ),
+    ).toThrow(/max-tokens/);
+  });
+
   it("rejects an out-of-range fill confidenceThreshold", () => {
     expect(() =>
       parseConfig(moose("version: 1", "fill:", "  confidence-threshold: 1.5"), PATH),

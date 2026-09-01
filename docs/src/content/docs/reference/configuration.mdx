@@ -86,7 +86,7 @@ corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file's
 
 | Key | Type | Default |
 |---|---|---|
-| `provider.default` | `anthropic` \| `openai` \| `claude-cli` | `anthropic` |
+| `provider.default` | `anthropic` \| `openai` \| `claude-cli` \| `llama-cpp` | `anthropic` |
 | `provider.anthropic.model` | string | `claude-sonnet-4-5` |
 | `provider.anthropic.api-key-env` | string | `ANTHROPIC_API_KEY` |
 | `provider.openai.base-url` | string | `https://api.openai.com/v1` |
@@ -94,6 +94,10 @@ corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/#the-ratchet); the file's
 | `provider.openai.api-key-env` | string | `OPENAI_API_KEY` |
 | `provider.claude-cli.model` | string | `claude-sonnet-4-5` |
 | `provider.claude-cli.command` | string | `claude` |
+| `provider.llama-cpp.model` | string | `qwen3.5-4b` |
+| `provider.llama-cpp.models-directory` | string | the library's own directory |
+| `provider.llama-cpp.thought-tokens` | integer | `0` |
+| `provider.llama-cpp.max-tokens` | integer | unset |
 
 Which of the three to pick, and what each one implies about where your pages go, is covered in
 [Choose a provider](/moose-docevals/judge/choose-a-provider/).

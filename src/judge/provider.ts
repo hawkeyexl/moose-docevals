@@ -46,6 +46,22 @@ export function providerSpecFor(
         model: options.model ?? config.provider["claude-cli"].model,
         command: config.provider["claude-cli"].command,
       };
+    case "llama-cpp": {
+      const local = config.provider["llama-cpp"];
+      return {
+        provider: "llama-cpp",
+        model: options.model ?? local.model,
+        // `runtime` is the library's test seam and is deliberately not exposed
+        // as config — it takes an object, not a value a YAML file can carry.
+        llamaCpp: {
+          thoughtTokens: local.thoughtTokens,
+          ...(local.maxTokens === null ? {} : { maxTokens: local.maxTokens }),
+          ...(local.modelsDirectory === null
+            ? {}
+            : { modelsDirectory: local.modelsDirectory }),
+        },
+      };
+    }
     default:
       throw new DocevalsError(`Unknown provider "${String(name)}"`);
   }
@@ -59,7 +75,18 @@ export function resolveProviderIdentity(
   config: DocevalsConfig,
   options: JudgeOptions = {},
 ): { provider: string; model: string } {
-  return resolveIdentity(providerSpecFor(config, options));
+  try {
+    return resolveIdentity(providerSpecFor(config, options));
+  } catch (e) {
+    // Same wrapping, and for the same reason, as makeProvider below: cli.ts
+    // maps only DocevalsError to exit 2. The live case is a llama-cpp
+    // selector ("auto"/"fast"/"balanced"/"quality"), which the library refuses
+    // to resolve synchronously because picking a tier probes GPU memory —
+    // unwrapped, a config typo would print a stack trace instead of a usage
+    // error. Both callers of this are on the cache-key path.
+    if (e instanceof DocevalsError) throw e;
+    throw new DocevalsError(e instanceof Error ? e.message : String(e));
+  }
 }
 
 export function makeProvider(

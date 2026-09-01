@@ -15,7 +15,7 @@ Commands that operate on pages take **positional globs**. With none given, the c
 |---|---|---|
 | `-c, --config <path>` | all except `init` | Path to `moose.config.yaml`. Without it, moose-docevals looks for that filename in the working directory; with no file at all, built-in defaults apply and there are no named evals or suites. |
 | `-f, --format <format>` | `list`, `run`, `fill` | Output format. `run` accepts `human`, `json`, `markdown`, `github`, `sarif`, `junit`; `list` and `fill` accept `human` and `json`. Anything else — including `run`'s `markdown` passed to `list` — is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
-| `--provider <name>` | `run`, `generate`, `fill`, `promote`, `calibrate` | `anthropic`, `openai`, or `claude-cli`. Overrides `provider.default`. |
+| `--provider <name>` | `run`, `generate`, `fill`, `promote`, `calibrate` | `anthropic`, `openai`, `claude-cli`, or `llama-cpp`. Overrides `provider.default`. |
 | `--model <model>` | same as above | Overrides the model for the selected provider. |
 
 Flags override config; they do not bypass it. An unset flag falls through to the resolved config

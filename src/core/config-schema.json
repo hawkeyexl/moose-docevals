@@ -37,7 +37,7 @@
         "provider": {
           "type": "object",
           "properties": {
-            "default": { "enum": ["anthropic", "openai", "claude-cli"] },
+            "default": { "enum": ["anthropic", "openai", "claude-cli", "llama-cpp"] },
             "anthropic": {
               "type": "object",
               "properties": {
@@ -60,6 +60,16 @@
               "properties": {
                 "model": { "type": "string" },
                 "command": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "llama-cpp": {
+              "type": "object",
+              "properties": {
+                "model": { "type": "string" },
+                "models-directory": { "type": "string" },
+                "thought-tokens": { "type": "integer", "minimum": 0 },
+                "max-tokens": { "type": "integer", "minimum": 1 }
               },
               "additionalProperties": false
             }
