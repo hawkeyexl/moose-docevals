@@ -95,6 +95,16 @@ export interface EvalResult {
    * the ~30 sites that construct a result would be thirty chances to forget.
    */
   weight?: number;
+  /**
+   * Set when the model that judged this eval also produced what it graded.
+   *
+   * `content` — the page declares `generated-by: <this model>`: the judge
+   * wrote the prose. `criterion` — `eval-provenance` records this model
+   * proposing this assertion: the judge wrote the question. Both bias a
+   * verdict without invalidating it, so this rides along with a real outcome
+   * rather than replacing it, and reaches every reporter instead of stderr.
+   */
+  selfPreference?: { axis: "content" | "criterion"; model: string };
   durationMs: number;
 }
 

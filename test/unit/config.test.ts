@@ -191,6 +191,43 @@ describe("parseConfig", () => {
     ).toThrow();
   });
 
+  it("defaults the local provider to a named tier, not auto", () => {
+    // A tier the library resolves against this machine, but a *named* one, so
+    // two contributors reading the config see the same intent.
+    const c = parseConfig(moose("version: 1"), PATH);
+    expect(c.provider["llama-cpp"]).toEqual({
+      model: "balanced",
+      modelsDir: null,
+      thoughtTokens: 0,
+    });
+  });
+
+  it("accepts llama-cpp as the default provider", () => {
+    const c = parseConfig(
+      moose(
+        "version: 1",
+        "provider:",
+        "  default: llama-cpp",
+        "  llama-cpp:",
+        "    model: quality",
+        "    thought-tokens: 256",
+      ),
+      PATH,
+    );
+    expect(c.provider.default).toBe("llama-cpp");
+    expect(c.provider["llama-cpp"].model).toBe("quality");
+    expect(c.provider["llama-cpp"].thoughtTokens).toBe(256);
+  });
+
+  it("rejects an unknown key inside the local provider section", () => {
+    expect(() =>
+      parseConfig(
+        moose("version: 1", "provider:", "  llama-cpp:", "    modle: quality"),
+        PATH,
+      ),
+    ).toThrow(/Invalid config/);
+  });
+
   it("rejects a suite referencing an undefined eval", () => {
     expect(() =>
       parseConfig(moose("version: 1", "suites:", "  ref:", "    evals: [ghost]"), PATH),
@@ -211,6 +248,7 @@ describe("parseConfig", () => {
       temperature: 0,
       cacheDir: ".moose-docevals/cache/fill",
       maxTurns: null,
+      chunkChars: 12000,
     });
   });
 
@@ -233,6 +271,7 @@ describe("parseConfig", () => {
       temperature: 0.5,
       cacheDir: ".cache/fill",
       maxTurns: 2,
+      chunkChars: 12000,
     });
   });
 

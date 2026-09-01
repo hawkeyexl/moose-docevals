@@ -17,6 +17,7 @@ export const REPORT_FORMATS = [
   "github",
   "sarif",
   "junit",
+  "html",
 ] as const;
 
 /** Formats the summary commands (`list`, `fill`) can emit. */

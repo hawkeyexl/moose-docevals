@@ -81,9 +81,9 @@ silently. Your array is the prefix of the argv, not the whole of it.
 ### It executes code from page bodies
 
 :::danger
-`scripts.allow-frontmatter-commands` does **not** gate this grader — that flag covers commands declared
-in *frontmatter*. Steps embedded in page *bodies* run regardless. On a fork pull request, an attacker
-controls both.
+This grader needs its own grant: `execution.allow: [page-embedded-steps]`. Granting
+`frontmatter-commands` does **not** grant it, because trusting a repo's frontmatter is not the same
+as trusting arbitrary steps written in its prose. On a fork pull request, an attacker controls both.
 
 The only complete control is gating the job itself to same-repo pull requests. See
 [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/).

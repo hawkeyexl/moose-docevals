@@ -178,9 +178,14 @@ program
   .option("--no-generate", "Do not generate scripts for command evals missing a command")
   .option("--no-cache", "Bypass the judge response cache")
   .option("--fail-on-review", "Exit 1 when any eval lands in the human-review zone")
-  .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Judge provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Judge model override")
   .option("--runs <n>", "Ensemble runs per eval", parseIntArg("--runs"))
+  .option(
+    "--chunk-chars <n>",
+    "Characters of page per judge call; longer pages are read in parts",
+    parseIntArg("--chunk-chars"),
+  )
   .option(
     "--eval <name>",
     "Run only this eval (repeatable); suite targets are not evaluated on a filtered run",
@@ -219,6 +224,7 @@ program
         provider: opts.provider as string | undefined,
         model: opts.model as string | undefined,
         runs: opts.runs as number | undefined,
+        chunkChars: opts.chunkChars as number | undefined,
         maxTurns: opts.maxTurns as number | undefined,
         evalNames: opts.eval as string[] | undefined,
         suite: opts.suite as string | undefined,
@@ -242,7 +248,7 @@ program
   )
   .argument("[globs...]", "File globs (default: config files.include)")
   .option("-c, --config <path>", "Path to moose.config.yaml")
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .action(
     async (
@@ -293,7 +299,12 @@ program
     parseIntArg("--max-turns"),
   )
   .option("--no-cache", "Bypass the fill proposal cache")
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option(
+    "--chunk-chars <n>",
+    "Characters of page per fill call; longer pages are proposed in parts",
+    parseIntArg("--chunk-chars"),
+  )
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .action(async (globs: string[], opts: Record<string, unknown>) => {
     try {
@@ -328,7 +339,7 @@ program
   .argument("[globs...]", "File globs (default: config files.include)")
   .option("-c, --config <path>", "Path to moose.config.yaml")
   .option("--write", "Apply promotions (write scripts and rewrite evals)")
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .action(
     async (
@@ -371,7 +382,7 @@ program
     "--seed",
     "Write golden candidates from recorded reviews and exit; judges nothing, needs no provider",
   )
-  .option("--provider <name>", "Provider: anthropic | openai | claude-cli")
+  .option("--provider <name>", "Provider: anthropic | openai | claude-cli | llama-cpp")
   .option("--model <model>", "Model override")
   .option("--runs <n>", "Ensemble runs per case", parseIntArg("--runs"))
   .option(
@@ -437,7 +448,11 @@ program
         // have been measured. A stale golden file whose pages were renamed
         // used to certify on whatever still resolved.
         process.exitCode =
-          report.meetsThreshold && report.unjudged === 0 ? 0 : 1;
+          report.meetsThreshold &&
+          report.unjudged === 0 &&
+          report.balanced
+            ? 0
+            : 1;
       } catch (e) {
         fail(e);
       }

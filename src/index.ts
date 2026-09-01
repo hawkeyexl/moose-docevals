@@ -65,7 +65,6 @@ export type {
 export {
   FILL_PROMPT_VERSION,
   FILL_SYSTEM_PROMPT,
-  MAX_BODY_CHARS,
   PROPOSAL_SCHEMA,
   buildFillUser,
   isValidProposal,

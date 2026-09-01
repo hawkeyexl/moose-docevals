@@ -520,3 +520,63 @@ describe("runCalibrate: coverage is separate from agreement", () => {
     expect(renderCalibration(report)).toMatch(/never reached a verdict/);
   });
 });
+
+describe("runCalibrate: a one-sided golden set cannot certify", () => {
+  // The measured form of the floor invariant "at least one should-NOT-fire
+  // case stays in the suite". Without an `expected: fail` case, a judge that
+  // answers "pass" unconditionally scores 100% agreement and zero false
+  // negatives — a perfect score for an instrument that detects nothing.
+  it("meets the threshold but is not balanced when every case expects pass", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      [
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "",
+      ].join("\n"),
+    );
+    const report = await runCalibrate({ cwd: root, judge: alwaysPass });
+
+    // Agreement is genuinely 100% — the verdict about the rate stays true.
+    expect(report.agreementRate).toBe(1);
+    expect(report.meetsThreshold).toBe(true);
+    expect(report.unjudged).toBe(0);
+    // ...and it still must not certify: nothing here could have disagreed.
+    expect(report.expectedPass).toBe(1);
+    expect(report.expectedFail).toBe(0);
+    expect(report.balanced).toBe(false);
+    expect(renderCalibration(report)).toMatch(/No `expected: fail` cases/);
+  });
+
+  it("is balanced once both classes are present", async () => {
+    const root = scaffold();
+    writeGolden(
+      root,
+      "cases.yaml",
+      [
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: pass",
+        "  reviewed: true",
+        "- file: docs/install.md",
+        "  eval: no-future-promises",
+        "  expected: fail",
+        "  reviewed: true",
+        "",
+      ].join("\n"),
+    );
+    const report = await runCalibrate({ cwd: root, judge: alwaysPass });
+
+    expect(report.expectedPass).toBe(1);
+    expect(report.expectedFail).toBe(1);
+    expect(report.balanced).toBe(true);
+    // The always-pass judge now visibly misses the fail case.
+    expect(report.falseNegatives).toBe(1);
+    expect(report.meetsThreshold).toBe(false);
+    expect(renderCalibration(report)).not.toMatch(/No `expected: fail` cases/);
+  });
+});

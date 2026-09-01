@@ -1,6 +1,6 @@
 ---
 title: Output and exit codes
-description: The human, json, markdown, github, sarif, and junit report shapes, and what each exit code means.
+description: The human, json, markdown, github, sarif, junit, and html report shapes, and what each exit code means.
 ---
 
 Verified against `src/reporters/` and `src/types.ts`, with samples captured from real runs against
@@ -30,7 +30,7 @@ actually ran, or from an `error`-level resolution problem.
 
 | Command | Accepted formats |
 |---|---|
-| `run` | `human`, `json`, `markdown`, `github`, `sarif`, `junit` |
+| `run` | `human`, `json`, `markdown`, `github`, `sarif`, `junit`, `html` |
 | `list` | `human`, `json` |
 | `fill` | `human`, `json` |
 
@@ -212,6 +212,25 @@ The suite table plus per-page findings, suitable for a PR comment or a job summa
 
 Workflow commands for inline annotations, followed by the markdown summary — so the same output
 both annotates the diff and works as `$GITHUB_STEP_SUMMARY`.
+
+## `--format html`
+
+One self-contained HTML file — no CDN, no external stylesheet, no web font, no script. It is the
+format for a person rather than a machine: which pages failed, what the judge actually quoted, and
+whether each suite met its target.
+
+```bash
+npx moose-docevals run --format html > moose-docevals.html
+```
+
+Self-containment is the point. The file is meant to survive being attached to a pull request,
+mailed, or opened from a CI artifact directory — all of which strip or block external requests, and
+any of which would otherwise render it unstyled. It follows the reader's `prefers-color-scheme`.
+
+It carries the judge's `observed` quotation alongside each verdict, because a verdict without the
+text it rests on is not reviewable; findings grouped by page; the weighted suite summary including
+criteria; baseline and review state; and the self-preference marker when the judging model also
+produced what it graded.
 
 ## `--format sarif`
 

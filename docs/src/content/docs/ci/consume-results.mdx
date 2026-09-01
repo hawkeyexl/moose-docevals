@@ -84,6 +84,16 @@ import { frontmatterSchema, frontmatterSchemaPath } from "moose-docevals";
 `frontmatterSchema` is the parsed schema object; `frontmatterSchemaPath` is its resolved path on
 disk, for handing to another validator.
 
+## For a person rather than a pipeline
+
+`--format json` is for scripts. When the audience is a human who wants to see what the judge
+actually said, `--format html` writes one self-contained file — no CDN, no external stylesheet —
+that survives being attached to a pull request or opened from an artifact directory:
+
+```bash
+npx moose-docevals run --format html > moose-docevals.html
+```
+
 ## Beware of parsing the human format
 
 `--format human` is for people, and its layout is not a contract. Colour depends on TTY detection,

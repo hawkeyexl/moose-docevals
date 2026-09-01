@@ -18,6 +18,7 @@ export function fillCacheKey(
   maxEvals: number,
   body: string,
   existingNames: string[],
+  chunkChars: number,
 ): string {
   return sha256(
     [
@@ -26,6 +27,11 @@ export function fillCacheKey(
       `fill-v${FILL_PROMPT_VERSION}`,
       `t${temperature}`,
       `n${maxEvals}`,
+      // The chunk budget decides how the page was split, and so which
+      // proposals came back. Without it, two runs at different budgets share
+      // a key and the second silently replays the first — and halve-and-retry
+      // makes that a real collision, not a hypothetical one.
+      `chunk${chunkChars}`,
       sha256(body),
       existingNames.join(","),
     ].join("|"),

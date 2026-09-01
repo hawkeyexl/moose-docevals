@@ -63,6 +63,18 @@ evals:
     severity: error          # this section is done; hold the line here
 ```
 
+## Severity is not weight
+
+They answer different questions and it is worth keeping them apart.
+
+- **`severity`** decides whether a failure *fails the run*. Only `error` does.
+- **`weight`** decides how much an outcome moves its **suite's pass rate**. It never changes the
+  eval's own pass/fail.
+
+A check lifted from a style rule is usually both: `severity: warning` so it does not break the
+build, and a `weight` below 1 so it does not swing the rate either. Reaching for `severity` alone
+to say "this matters less" overstates the claim — it says the failure does not count at all.
+
 ## Mapping a tool's own severities
 
 Tools have their own vocabulary. `severity-map` translates it:

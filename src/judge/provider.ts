@@ -7,6 +7,8 @@
  * config keys mean what, and which section a `--provider` flag selects.
  */
 import {
+  aliasForTier,
+  isLlamaSelector,
   makeProvider as makeInferenceProvider,
   resolveProviderIdentity as resolveIdentity,
   type InferenceProvider,
@@ -46,6 +48,39 @@ export function providerSpecFor(
         model: options.model ?? config.provider["claude-cli"].model,
         command: config.provider["claude-cli"].command,
       };
+    case "llama-cpp": {
+      // Local weights, in-process: no API key, and no network at judge time
+      // once they are downloaded. That is what lets someone without provider
+      // credentials regenerate the committed docs cache.
+      const local = config.provider["llama-cpp"];
+      const requested = options.model ?? local.model;
+      // A *tier* is resolved to its concrete model here, synchronously.
+      // `makeProvider` is sync all the way down, and the library refuses to
+      // resolve a selector on that path — picking one probes GPU memory, and
+      // returning the literal "balanced" as cache-key material would let a
+      // 2 GB and a 12 GB model share cached verdicts. `aliasForTier` is the
+      // static half of that mapping and is safe here; `auto` is the half that
+      // genuinely needs hardware, so it is refused by name rather than
+      // silently becoming something else.
+      if (requested === "auto") {
+        throw new DocevalsError(
+          'provider.llama-cpp.model: "auto" needs hardware detection, which this ' +
+            'code path cannot do. Name a tier (fast, balanced, quality) or a model.',
+        );
+      }
+      const model =
+        isLlamaSelector(requested) && requested !== "auto"
+          ? aliasForTier(requested)
+          : requested;
+      return {
+        provider: "llama-cpp",
+        model,
+        llamaCpp: {
+          thoughtTokens: local.thoughtTokens,
+          ...(local.modelsDir !== null ? { modelsDirectory: local.modelsDir } : {}),
+        },
+      };
+    }
     default:
       throw new DocevalsError(`Unknown provider "${String(name)}"`);
   }

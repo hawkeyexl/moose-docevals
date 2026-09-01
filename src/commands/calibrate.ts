@@ -88,6 +88,21 @@ export interface CalibrationReport {
    * a consumer reading this field alone gets a pass on a partial run.
    */
   meetsThreshold: boolean;
+  /** Judged cases a human marked `expected: pass`. */
+  expectedPass: number;
+  /** Judged cases a human marked `expected: fail`. */
+  expectedFail: number;
+  /**
+   * True when both classes are represented among the judged cases.
+   *
+   * A golden set of only-passes certifies a judge that always answers pass:
+   * agreement 100%, false negatives 0, threshold met. The measurement is
+   * vacuous, not good. Kept out of `meetsThreshold` for the same reason
+   * `unjudged` is (ADR 01018) — that stays a statement about agreement, and
+   * this is a statement about whether the set could have detected a
+   * disagreement at all. The CLI gates on all three.
+   */
+  balanced: boolean;
   fpAlert: boolean;
   /** Judged cases no human has confirmed. Counted, but reported. */
   unreviewed: number;
@@ -380,8 +395,9 @@ export async function runCalibrate(
   const expectedPass = judgedCases.filter((r) => r.expected === "pass");
   // False positive: the judge flags a failure a human verified as passing.
   const falsePositives = expectedPass.filter((r) => r.judged === "fail").length;
-  const falseNegatives = judgedCases.filter(
-    (r) => r.expected === "fail" && r.judged === "pass",
+  const expectedFailCases = judgedCases.filter((r) => r.expected === "fail");
+  const falseNegatives = expectedFailCases.filter(
+    (r) => r.judged === "pass",
   ).length;
   const agreementRate = judgedCases.length > 0 ? agreements / judgedCases.length : 0;
   const falsePositiveRate =
@@ -410,6 +426,9 @@ export async function runCalibrate(
     falsePositiveRate,
     falseNegatives,
     meetsThreshold: agreementRate >= AGREEMENT_THRESHOLD,
+    expectedPass: expectedPass.length,
+    expectedFail: expectedFailCases.length,
+    balanced: expectedPass.length > 0 && expectedFailCases.length > 0,
     fpAlert: falsePositiveRate > config.judge.falsePositiveAlert,
   };
 }
@@ -449,6 +468,18 @@ export function renderCalibration(report: CalibrationReport): string {
         `
 ${report.unjudged} of ${report.total} case(s) never reached a verdict, so the rate above ` +
           `is over a sample. A calibration measured on part of the set does not certify the judge.`,
+      ),
+    );
+  }
+  if (judged > 0 && !report.balanced) {
+    const missing = report.expectedFail === 0 ? "fail" : "pass";
+    const always = missing === "fail" ? "pass" : "fail";
+    lines.push(
+      pc.red(
+        `
+No \`expected: ${missing}\` cases among the ${judged} judged. A judge that answered ` +
+          `"${always}" every time would score 100% here, so this run cannot certify anything. ` +
+          `Add at least one case the judge should ${missing === "fail" ? "reject" : "accept"}.`,
       ),
     );
   }

@@ -26,10 +26,13 @@ import {
   isValidProposal,
   PROPOSAL_SCHEMA,
 } from "../fill/prompt.js";
+import { looksLikeOverflow, splitBody } from "../core/split.js";
 
 export interface FillOptions {
   config?: string;
   cwd?: string;
+  /** Characters of page per inference call; longer pages are split. */
+  chunkChars?: number;
   /** Report proposals without writing frontmatter. */
   dryRun?: boolean;
   /** Minimum confidence to write; overrides config `fill.confidenceThreshold`. */
@@ -116,6 +119,7 @@ export async function runFill(
   const maxTurns = options.maxTurns ?? config.fill.maxTurns;
   const temperature = config.fill.temperature;
   const maxEvals = config.fill.maxEvalsPerPage;
+  const chunkChars = options.chunkChars ?? config.fill.chunkChars;
   const cache = new FillCache(
     resolve(cwd, config.fill.cacheDir),
     !options.noCache,
@@ -186,6 +190,7 @@ export async function runFill(
       maxEvals,
       plan.page.body,
       existingNames,
+      chunkChars,
     );
 
     let raw = cache.get(key);
@@ -196,30 +201,82 @@ export async function runFill(
       if (maxTurns !== null && turns >= maxTurns) {
         return { ...base, status: "skipped-budget" };
       }
-      turns += 1;
-      try {
-        const response = await getProvider().completeJSON({
-          system: FILL_SYSTEM_PROMPT,
-          user: buildFillUser(plan.page.file, plan.page.body, existing, maxEvals),
-          schema: PROPOSAL_SCHEMA,
-          temperature,
-        });
-        if (!isValidProposal(response.json)) {
+      // A page longer than the budget is proposed against in parts rather
+      // than truncated. Each part is its own call; the results merge by eval
+      // id, keeping the highest confidence — docmeta's `mergeProposals`.
+      let budget = chunkChars;
+      let merged: Map<string, ProposedEval> | undefined;
+      let failure: string | undefined;
+      for (let attempt = 0; attempt < 2 && merged === undefined; attempt++) {
+        const chunks = splitBody(plan.page.body, budget);
+        const collected = new Map<string, ProposedEval>();
+        let overflowed = false;
+        let outOfTurns = false;
+        for (const [i, chunk] of chunks.entries()) {
+          if (maxTurns !== null && turns >= maxTurns) {
+            outOfTurns = true;
+            break;
+          }
+          turns += 1;
+          let response;
+          try {
+            response = await getProvider().completeJSON({
+              system: FILL_SYSTEM_PROMPT,
+              user: buildFillUser(
+                plan.page.file,
+                chunk,
+                existing,
+                maxEvals,
+                chunks.length > 1 ? { index: i, total: chunks.length } : undefined,
+              ),
+              schema: PROPOSAL_SCHEMA,
+              temperature,
+            });
+          } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            failure = message;
+            if (looksLikeOverflow(message)) overflowed = true;
+            break;
+          }
+          if (!isValidProposal(response.json)) {
+            failure = "provider returned a proposal that does not match the schema";
+            break;
+          }
+          for (const proposal of (response.json as { evals: ProposedEval[] }).evals) {
+            const held = collected.get(proposal.id);
+            if (held === undefined || proposal.confidence > held.confidence) {
+              collected.set(proposal.id, proposal);
+            }
+          }
+          if (i === chunks.length - 1) merged = collected;
+        }
+        if (outOfTurns) {
+          // Never a silent partial: a page read in part proposed from part of
+          // itself, and saying so is the difference between "nothing to add"
+          // and "we stopped early".
           return {
             ...base,
-            status: "error",
-            error: "provider returned a proposal that does not match the schema",
+            status: "skipped-budget",
+            ...(chunks.length > 1
+              ? { error: `--max-turns reached after ${String(turns)} of ${String(chunks.length)} part(s)` }
+              : {}),
           };
         }
-        raw = response.json as Record<string, unknown>;
-        cache.set(key, raw);
-      } catch (e) {
+        if (merged === undefined && overflowed && attempt === 0) {
+          budget = Math.max(1, Math.floor(budget / 2));
+          continue;
+        }
+        if (merged === undefined) break;
+      }
+      if (merged === undefined) {
         return {
           ...base,
           status: "error",
-          error: e instanceof Error ? e.message : String(e),
+          error: failure ?? "the provider returned no proposal",
         };
       }
+      raw = { evals: [...merged.values()] };
+      cache.set(key, raw);
     }
 
     // Drop duplicates (against the resolved plan and within the batch) before

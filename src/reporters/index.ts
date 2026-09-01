@@ -7,6 +7,7 @@ import { renderGithub } from "./github.js";
 import { parseFormat, REPORT_FORMATS, type ReportFormat } from "./format.js";
 import { renderSarif } from "./sarif.js";
 import { renderJunit } from "./junit.js";
+import { renderHtml } from "./html.js";
 
 export {
   REPORT_FORMATS,
@@ -39,5 +40,7 @@ export function render(report: EngineReport, format: ReportFormat): string {
       return renderJunit(report);
     case "github":
       return renderGithub(report);
+    case "html":
+      return renderHtml(report);
   }
 }
