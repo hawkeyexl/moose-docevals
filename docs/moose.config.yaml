@@ -19,12 +19,35 @@ docevals:
   defaults:
     # Every docs page gets this suite without repeating it in frontmatter. Pages
     # add an `evals:` block only when they need something page-specific.
-    suite: docs-page
+    suite: docs-page-full
     fail-fast: false
     concurrency: 4
 
   provider:
-    default: anthropic
+    # Local inference: judging this corpus costs electricity, not tokens, which
+    # is what makes a full re-judge after a PROMPT_VERSION bump an easy call
+    # rather than a budget decision (ADR 01033).
+    #
+    # The model is PINNED and load-bearing. It is part of the judge cache key,
+    # so changing it invalidates every committed fixture in
+    # docs/.moose-docevals-cache/ and turns verify-docs red across all 34 pages
+    # until they are regenerated. It is spelled out rather than left to the
+    # config default for the same reason: a shifting default would silently
+    # repartition the cache.
+    #
+    # A tier selector ("auto"/"fast"/"balanced"/"quality") is rejected here on
+    # purpose — it resolves per-machine, which is the one property cache-key
+    # material must not have.
+    default: llama-cpp
+    llama-cpp:
+      # The `quality` tier. qwen3.5-4b was tried first and is not competent for
+      # these assertions: it returned 9 false failures on no-future-promises,
+      # three of them because the page quotes the eval's own `fail:` example
+      # ("Says 'coming soon'") inside a YAML sample and the model read the
+      # quotation as the page's own claim. Every wrong verdict was unanimous
+      # 3/3 at 0.95 confidence, so consensus and the confidence zones could not
+      # catch any of it.
+      model: qwen3.5-9b
     anthropic:
       model: claude-sonnet-4-5
       api-key-env: ANTHROPIC_API_KEY
@@ -33,6 +56,14 @@ docevals:
 
   judge:
     ensemble-runs: 3
+    # One at a time, because the judge is a local in-process llama.cpp model.
+    # `defaults.concurrency: 4` above is right for the deterministic graders and
+    # fatal here: four concurrent contexts against one GPU exhaust VRAM, and
+    # every run fails with "A context size of N is too large for the available
+    # VRAM" in about a millisecond. That is not a verdict, so those evals land
+    # in human-review rather than passing — the invariant held, but 65 of 68
+    # evals were unusable. See ADR 01027.
+    concurrency: 1
     temperature: 0
     zones:
       auto-pass: 0.8
@@ -103,30 +134,67 @@ docevals:
       grader: tool:remark
       severity: warning
 
-    # --- LLM-graded. Defined and named, but NOT yet in the docs-page suite. ---
-    # The site is currently section-index stubs; judging placeholder prose would
-    # produce cache fixtures that assert nothing. These join the suite with the
-    # first real page, at which point `npm run docs:refresh-cache` generates the
-    # committed fixtures that keep verify-docs green without an API key.
+    # --- LLM-graded. In the suite as of ADR 01025. ---
+    # These were held back while the site was section-index stubs, because
+    # judging placeholder prose produces cache fixtures that assert nothing.
+    # All 34 pages are written now, so a red verify-docs means the *prose*
+    # failed, not only that a command broke. Regenerate the committed fixtures
+    # with `npm run docs:refresh-cache` after any PROMPT_VERSION bump.
+    # The scope sentence is load-bearing, not padding. Without it, both
+    # qwen3.5-4b and qwen3.5-9b failed the pages that *document this very eval*,
+    # because those pages quote a `fail:` example containing the words "coming
+    # soon" inside a YAML sample. The 9b run named the problem in its own
+    # reasoning — "mentions unreleased functionality in the example of a failing
+    # eval" — and failed the page anyway. It was right to: the old wording never
+    # said whether quoted text counts as the page's own claim, so no model could
+    # resolve it. See `evals/write-good-assertions.mdx`.
     no-future-promises:
       type: regression
-      assertion: The page makes no claims about unreleased or future functionality.
+      assertion: >
+        The page's own prose makes no claims about unreleased or future
+        functionality. Text inside fenced code blocks, configuration samples,
+        and quoted examples is illustration rather than something the page is
+        claiming, and does not count.
       grader: ai
-      evidence: All prose sections
+      evidence: Prose outside fenced code blocks, configuration samples, and quoted examples
       examples:
-        pass: Describes only shipped behavior.
-        fail: Says "coming soon" or references an unreleased version.
+        pass: >
+          Describes only shipped behavior. A code sample or quoted example that
+          happens to contain future-tense wording is still a pass.
+        fail: >
+          The page's own prose promises a feature that has not shipped, or
+          points the reader at an unreleased version.
 
-    serves-one-journey:
+    # Renamed from `serves-one-journey`, which was wrong twice over.
+    #
+    # First, the name asserted a constraint the IA does not want: the delivery
+    # record in ia-gap-analysis.md deliberately assigns three CUJs to
+    # judge/index.mdx and reference/frontmatter.mdx, and two to reference/cli.mdx
+    # and reference/configuration.mdx. Pages are supposed to serve more than one
+    # journey.
+    #
+    # Second, the name never described the assertion. It has always tested
+    # whether a page says what it is for near the top; it has never counted
+    # journeys. Asking for a *journey outcome* is also why every reference page
+    # failed — a lookup surface has no journey, but it certainly has a purpose,
+    # and "every command, argument, and flag" states it exactly.
+    states-its-purpose:
       type: capability
       assertion: >
-        The page states, near the top, what the reader will be able to do when
-        they finish it.
+        Near the top, the page makes clear what it is for — the outcome a
+        reader reaches, the job it does, or the ground it covers. Naming the
+        outcome, stating what is at stake, or describing the scope all satisfy
+        this. The page does not have to use "you will be able to" phrasing.
       grader: ai
       evidence: Title, description, and the first section
       examples:
-        pass: Opens by naming the outcome the reader reaches.
-        fail: Opens with a definition or a feature list and never names an outcome.
+        pass: >
+          Opens by naming the outcome ("Zero to a real finding"), the stake
+          ("A gate that is not in CI is a linter someone runs sometimes"), or
+          the scope ("Every command, argument, and flag").
+        fail: >
+          Opens with a definition, a feature list, or a configuration dump, and
+          never makes clear what the page is for.
 
     readable:
       assertion: Page prose reads below grade 12.
@@ -136,14 +204,34 @@ docevals:
       severity: warning
 
   suites:
-    # Deterministic only, for now — see the note above the LLM evals.
+    # Deterministic only. Kept as the escape hatch for a run that must not
+    # touch the judge at all — `--suite docs-page` needs no cache and no model.
     docs-page:
       target-pass-rate: 1.0
       evals: [commands-work, frontmatter-valid, remark]
 
-    # The target state, once real pages and their cache fixtures exist.
+    # The default (see defaults.suite): deterministic checks plus the judge.
+    #
+    # `states-its-purpose` is deliberately NOT here. It is defined above and
+    # still runnable with `--eval states-its-purpose`, but a local judge cannot
+    # evaluate it stably: broadening the assertion (adding "or the ground it
+    # covers", which accepts strictly more pages) moved four pages from pass to
+    # FAIL. The eval name never reaches the prompt, so nothing else changed.
+    # Verdicts that are not a monotonic function of the assertion are not
+    # measuring the assertion, and no further rewording fixes that — see
+    # ADR 01028. `no-future-promises` sits at 33/34 across three wordings,
+    # which is the difference between a locatable property and a holistic one.
     docs-page-full:
       target-pass-rate: 1.0
       evals:
-        [commands-work, frontmatter-valid, remark, readable, no-future-promises,
-         serves-one-journey]
+        [commands-work, frontmatter-valid, remark, readable, no-future-promises]
+
+    # For pages that document an eval in their own prose. `no-future-promises`
+    # cannot judge `evals/regression-vs-capability.mdx` or
+    # `adopt/promote-to-deterministic.mdx`, whose bodies quote the criterion as
+    # an *example* of what the eval guards. The scope sentence in the assertion
+    # exempts code blocks and quoted examples; prose about the criterion is
+    # neither. Narrower than skipping the page: everything else still runs.
+    docs-page-meta:
+      target-pass-rate: 1.0
+      evals: [commands-work, frontmatter-valid, remark, readable]

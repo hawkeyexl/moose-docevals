@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3349,
+      "outputTokens": 274
+    },
+    "durationMs": 3764,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'docevals' tool and its baseline feature. The prose describes current functionality such as 'Turn the check on at error today', 'A baseline is a committed file listing the findings your corpus has right now', and 'An ordinary run now reports what it forgives and fails only on the rest'. The page also mentions 'This is a legitimate first step, not giving up' and 'Severity still ratchets per page and per section while you work'. There are no claims about unreleased or future functionality in the prose outside of code blocks. The page describes existing features and how to use them, not features that will be added in the future.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality of the moose-docevals tool and how to use baselines. It does not make any claims about unreleased or future features. All descriptions refer to current capabilities like recording baselines, committing them, and gating on new findings. The text focuses on established workflows rather than promising features that haven't shipped yet."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3349,
+      "outputTokens": 274
+    },
+    "durationMs": 3703,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'docevals' tool and its baseline feature. The prose describes current functionality such as 'Turn the check on at error today', 'A baseline is a committed file listing the findings your corpus has right now', and 'An ordinary run now reports what it forgives and fails only on the rest'. The page also mentions 'This is a legitimate first step, not giving up' and 'Severity still ratchets per page and per section while you work'. There are no claims about unreleased or future functionality in the prose outside of code blocks. The page describes existing features and how to use them, not features that will be added in the future.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality of the moose-docevals tool and how to use baselines. It does not make any claims about unreleased or future features. All descriptions refer to current capabilities like recording baselines, committing them, and gating on new findings. The text focuses on established workflows rather than promising features that haven't shipped yet."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3349,
+      "outputTokens": 274
+    },
+    "durationMs": 3662,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'docevals' tool and its baseline feature. The prose describes current functionality such as 'Turn the check on at error today', 'A baseline is a committed file listing the findings your corpus has right now', and 'An ordinary run now reports what it forgives and fails only on the rest'. The page also mentions 'This is a legitimate first step, not giving up' and 'Severity still ratchets per page and per section while you work'. There are no claims about unreleased or future functionality in the prose outside of code blocks. The page describes existing features and how to use them, not features that will be added in the future.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality of the moose-docevals tool and how to use baselines. It does not make any claims about unreleased or future features. All descriptions refer to current capabilities like recording baselines, committing them, and gating on new findings. The text focuses on established workflows rather than promising features that haven't shipped yet."
+    }
+  }
+]

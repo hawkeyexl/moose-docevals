@@ -27,6 +27,8 @@ export interface RunCommandOptions {
   maxTurns?: number;
   evalNames?: string[];
   suite?: string;
+  /** Evaluate only pages that differ between this git ref and HEAD (ADR 01029). */
+  since?: string;
   baseline?: string | boolean;
   writeBaseline?: string | boolean;
   toolVersion?: string;
@@ -64,7 +66,22 @@ export async function runRun(
       }
     } catch (e) {
       if (options.aiOnly || !(e instanceof DocevalsError)) throw e;
-      if (!options.deterministicOnly || options.generate === true) {
+      // The warning is about the *judge*, and only the judge (ADR 01032).
+      //
+      // It used to read `|| options.generate === true`, meaning to fire when
+      // generation had been explicitly requested. Commander cannot express
+      // that: there is no `--generate` flag, so it defaults a `--no-generate`
+      // key to `true` and the clause held on every invocation that was not
+      // `--no-generate`. The only silent combination was the accidental
+      // `--deterministic-only --no-generate`, and the standard no-key CI run
+      // warned about the provider it had just been told to skip.
+      //
+      // Generation's own need for a provider is not knowable here — it depends
+      // on whether the corpus holds a command eval with no command — so it is
+      // reported by the engine, where it is, as an `error` result naming the
+      // eval and exiting 1. That is a louder signal than this line, not a
+      // quieter one.
+      if (!options.deterministicOnly) {
         console.warn(
           `moose-docevals: provider unavailable — ${e.message}. Running deterministic evals only.`,
         );
@@ -86,6 +103,7 @@ export async function runRun(
     failOnReview: options.failOnReview,
     evalNames: options.evalNames,
     suite: options.suite,
+    since: options.since,
     baseline: options.baseline,
     writeBaseline: options.writeBaseline,
     toolVersion: options.toolVersion,

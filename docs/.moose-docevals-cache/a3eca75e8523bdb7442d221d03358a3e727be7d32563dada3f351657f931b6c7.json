@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2103,
+      "outputTokens": 239
+    },
+    "durationMs": 7444,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks. The prose explains what different CI output messages mean (file and line errors, AI verdicts, needs-review, stale assertion-hash, exit code 2). It describes how to interpret and fix these messages. The page does not make any claims about unreleased or future functionality of the moose-docevals tool itself. All descriptions refer to existing, shipped behavior of the tool.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about how to interpret and resolve CI output from moose-docevals. It describes existing functionality (script-based checks, AI verdicts, needs-review status, stale scripts, exit codes) without promising any unreleased features or pointing to unreleased versions. The prose focuses entirely on explaining current behavior and troubleshooting steps. There are no claims about future functionality in the prose sections."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2103,
+      "outputTokens": 239
+    },
+    "durationMs": 2749,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks. The prose explains what different CI output messages mean (file and line errors, AI verdicts, needs-review, stale assertion-hash, exit code 2). It describes how to interpret and fix these messages. The page does not make any claims about unreleased or future functionality of the moose-docevals tool itself. All descriptions refer to existing, shipped behavior of the tool.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about how to interpret and resolve CI output from moose-docevals. It describes existing functionality (script-based checks, AI verdicts, needs-review status, stale scripts, exit codes) without promising any unreleased features or pointing to unreleased versions. The prose focuses entirely on explaining current behavior and troubleshooting steps. There are no claims about future functionality in the prose sections."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2103,
+      "outputTokens": 239
+    },
+    "durationMs": 2763,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks. The prose explains what different CI output messages mean (file and line errors, AI verdicts, needs-review, stale assertion-hash, exit code 2). It describes how to interpret and fix these messages. The page does not make any claims about unreleased or future functionality of the moose-docevals tool itself. All descriptions refer to existing, shipped behavior of the tool.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about how to interpret and resolve CI output from moose-docevals. It describes existing functionality (script-based checks, AI verdicts, needs-review status, stale scripts, exit codes) without promising any unreleased features or pointing to unreleased versions. The prose focuses entirely on explaining current behavior and troubleshooting steps. There are no claims about future functionality in the prose sections."
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2730,
+      "outputTokens": 271
+    },
+    "durationMs": 3094,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes various grader tools (command, tool:remark, tool:markdownlint, tool:vale, tool:docmeta, tool:doc-structure-lint, tool:doc-detective, tool:freshness, tool:reading-level, tool:differentiation, ai, human) and their configurations. The prose focuses on explaining how these tools work, their options, defaults, and behaviors. There is no mention of unreleased features, future functionality, or promises of features that have not shipped. The text describes existing, shipped functionality of the moose-docevals system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes the current, shipped functionality of the moose-docevals grader system. It details existing tools, their configurations, and behaviors without making any claims about unreleased or future features. The prose is purely descriptive of the current system state. There are no code blocks, configuration samples, or quoted examples that would need to be excluded from this evaluation - the entire page is prose describing the system."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2730,
+      "outputTokens": 271
+    },
+    "durationMs": 3093,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes various grader tools (command, tool:remark, tool:markdownlint, tool:vale, tool:docmeta, tool:doc-structure-lint, tool:doc-detective, tool:freshness, tool:reading-level, tool:differentiation, ai, human) and their configurations. The prose focuses on explaining how these tools work, their options, defaults, and behaviors. There is no mention of unreleased features, future functionality, or promises of features that have not shipped. The text describes existing, shipped functionality of the moose-docevals system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes the current, shipped functionality of the moose-docevals grader system. It details existing tools, their configurations, and behaviors without making any claims about unreleased or future features. The prose is purely descriptive of the current system state. There are no code blocks, configuration samples, or quoted examples that would need to be excluded from this evaluation - the entire page is prose describing the system."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2730,
+      "outputTokens": 271
+    },
+    "durationMs": 3087,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes various grader tools (command, tool:remark, tool:markdownlint, tool:vale, tool:docmeta, tool:doc-structure-lint, tool:doc-detective, tool:freshness, tool:reading-level, tool:differentiation, ai, human) and their configurations. The prose focuses on explaining how these tools work, their options, defaults, and behaviors. There is no mention of unreleased features, future functionality, or promises of features that have not shipped. The text describes existing, shipped functionality of the moose-docevals system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes the current, shipped functionality of the moose-docevals grader system. It details existing tools, their configurations, and behaviors without making any claims about unreleased or future features. The prose is purely descriptive of the current system state. There are no code blocks, configuration samples, or quoted examples that would need to be excluded from this evaluation - the entire page is prose describing the system."
+    }
+  }
+]

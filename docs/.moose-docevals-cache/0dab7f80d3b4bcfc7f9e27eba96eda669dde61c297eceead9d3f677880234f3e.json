@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1657,
+      "outputTokens": 347
+    },
+    "durationMs": 4798,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the `moose-docevals` documentation convention and how it works. It explains that the tool runs commands on every pull request to verify documentation. The prose describes shipped behavior (e.g., 'This page describes the convention **this site runs on**', 'The commands you see throughout these docs are executed on every pull request'). There are no claims about unreleased or future functionality in the prose. The page does mention '4.x keeps its results JSON out of stdout' which refers to a specific version, but this is describing existing behavior, not promising future functionality. The prose also mentions 'If your CLI is unpublished' which is a conditional scenario, not a claim about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes the current, shipped behavior of the `moose-docevals` documentation convention. It explains how the tool works, how to configure it, and how to verify it. There are no promises of future features or unreleased functionality. The mention of '4.x' refers to existing behavior, not a future release. The conditional 'If your CLI is unpublished' is a scenario description, not a claim about unreleased functionality. All claims in the prose are about current, operational behavior."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1657,
+      "outputTokens": 347
+    },
+    "durationMs": 4798,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the `moose-docevals` documentation convention and how it works. It explains that the tool runs commands on every pull request to verify documentation. The prose describes shipped behavior (e.g., 'This page describes the convention **this site runs on**', 'The commands you see throughout these docs are executed on every pull request'). There are no claims about unreleased or future functionality in the prose. The page does mention '4.x keeps its results JSON out of stdout' which refers to a specific version, but this is describing existing behavior, not promising future functionality. The prose also mentions 'If your CLI is unpublished' which is a conditional scenario, not a claim about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes the current, shipped behavior of the `moose-docevals` documentation convention. It explains how the tool works, how to configure it, and how to verify it. There are no promises of future features or unreleased functionality. The mention of '4.x' refers to existing behavior, not a future release. The conditional 'If your CLI is unpublished' is a scenario description, not a claim about unreleased functionality. All claims in the prose are about current, operational behavior."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1657,
+      "outputTokens": 347
+    },
+    "durationMs": 4793,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the `moose-docevals` documentation convention and how it works. It explains that the tool runs commands on every pull request to verify documentation. The prose describes shipped behavior (e.g., 'This page describes the convention **this site runs on**', 'The commands you see throughout these docs are executed on every pull request'). There are no claims about unreleased or future functionality in the prose. The page does mention '4.x keeps its results JSON out of stdout' which refers to a specific version, but this is describing existing behavior, not promising future functionality. The prose also mentions 'If your CLI is unpublished' which is a conditional scenario, not a claim about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes the current, shipped behavior of the `moose-docevals` documentation convention. It explains how the tool works, how to configure it, and how to verify it. There are no promises of future features or unreleased functionality. The mention of '4.x' refers to existing behavior, not a future release. The conditional 'If your CLI is unpublished' is a scenario description, not a claim about unreleased functionality. All claims in the prose are about current, operational behavior."
+    }
+  }
+]

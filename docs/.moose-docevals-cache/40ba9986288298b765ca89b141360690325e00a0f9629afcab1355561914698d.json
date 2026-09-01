@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1366,
+      "outputTokens": 382
+    },
+    "durationMs": 4161,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: 'Every quality check on a documentation page is an eval', 'Declare an assertion in a page's frontmatter', 'Run it', 'Exit 1', 'That's a docs regression, caught the way a test would catch a code one'. The page also lists goals and features like 'Stand up a first eval gate on my repo', 'Understand the model before I commit to it', 'Write evals my team can maintain', 'Cover a corpus I can't annotate by hand', 'Run the gate in CI safely and cheaply', 'Convince myself the judge is trustworthy', 'Unblock a pull request that just went red', 'Look up a flag, key, or grader'. All of these describe current, shipped capabilities. The page also includes a code block with 'npm i -D moose-docevals' and 'npx moose-docevals init', which are configuration samples. The prose does not promise unreleased features or point to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose consistently describes existing, shipped functionality without making claims about unreleased or future features. The code blocks and configuration samples (like the npm install command) are clearly presented as examples or instructions, not as claims about future functionality. The page focuses on current capabilities like running evals, checking freshness, and generating scripts, all of which are described as present features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1366,
+      "outputTokens": 382
+    },
+    "durationMs": 5351,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: 'Every quality check on a documentation page is an eval', 'Declare an assertion in a page's frontmatter', 'Run it', 'Exit 1', 'That's a docs regression, caught the way a test would catch a code one'. The page also lists goals and features like 'Stand up a first eval gate on my repo', 'Understand the model before I commit to it', 'Write evals my team can maintain', 'Cover a corpus I can't annotate by hand', 'Run the gate in CI safely and cheaply', 'Convince myself the judge is trustworthy', 'Unblock a pull request that just went red', 'Look up a flag, key, or grader'. All of these describe current, shipped capabilities. The page also includes a code block with 'npm i -D moose-docevals' and 'npx moose-docevals init', which are configuration samples. The prose does not promise unreleased features or point to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose consistently describes existing, shipped functionality without making claims about unreleased or future features. The code blocks and configuration samples (like the npm install command) are clearly presented as examples or instructions, not as claims about future functionality. The page focuses on current capabilities like running evals, checking freshness, and generating scripts, all of which are described as present features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1366,
+      "outputTokens": 382
+    },
+    "durationMs": 4345,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: 'Every quality check on a documentation page is an eval', 'Declare an assertion in a page's frontmatter', 'Run it', 'Exit 1', 'That's a docs regression, caught the way a test would catch a code one'. The page also lists goals and features like 'Stand up a first eval gate on my repo', 'Understand the model before I commit to it', 'Write evals my team can maintain', 'Cover a corpus I can't annotate by hand', 'Run the gate in CI safely and cheaply', 'Convince myself the judge is trustworthy', 'Unblock a pull request that just went red', 'Look up a flag, key, or grader'. All of these describe current, shipped capabilities. The page also includes a code block with 'npm i -D moose-docevals' and 'npx moose-docevals init', which are configuration samples. The prose does not promise unreleased features or point to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose consistently describes existing, shipped functionality without making claims about unreleased or future features. The code blocks and configuration samples (like the npm install command) are clearly presented as examples or instructions, not as claims about future functionality. The page focuses on current capabilities like running evals, checking freshness, and generating scripts, all of which are described as present features."
+    }
+  }
+]

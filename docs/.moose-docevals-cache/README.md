@@ -7,20 +7,26 @@ default `.moose-docevals/cache`, which the repo-root `.gitignore` excludes. Comm
 lets the `verify-docs` CI job replay LLM verdicts for the docs site **with no `ANTHROPIC_API_KEY`** —
 the same guarantee the deterministic graders already give, extended to the judged evals.
 
-## Current state: empty
+## What is in here
 
-The site is currently section-index stubs, and the `docs-page` suite contains only deterministic
-evals. Judging placeholder prose would produce fixtures that assert nothing, so there are none yet.
+One fixture per judged eval — currently 33, one for each page carrying
+`no-future-promises`. `defaults.suite` is `docs-page-full`, so the judge runs as part of the gate
+rather than alongside it.
 
-The LLM evals (`no-future-promises`, `serves-one-journey`) are defined in the config and collected in
-a `docs-page-full` suite. **When the first real page lands**, switch `defaults.suite` to
-`docs-page-full` and run:
+**`states-its-purpose` is defined but deliberately not in the suite.** Broadening its assertion so it
+accepted strictly more pages moved four pages from pass to fail; verdicts that are not a monotonic
+function of the assertion are not measuring the assertion, so it is kept out and run by hand with
+`--eval states-its-purpose`. See ADR `01028-a-local-judge-gates-locatable-properties-only.md` — this
+section previously claimed the opposite.
 
-```bash
-npm run docs:refresh-cache
-```
+The 34th page, `evals/regression-vs-capability.mdx`, takes the narrower `docs-page-meta` suite via
+`eval-suite:` frontmatter: its prose contains "no promises about unreleased features" as an *example*
+of what a regression eval guards, which the judge reads as the page making that claim.
 
-with a provider configured, then commit what appears here.
+`npm run docs:check-cache` asserts every judged eval has a fixture here, and CI runs it **before**
+`docs:verify`. That ordering matters: a missing fixture is a cache miss, and a miss does not fail the
+run on its own — it reaches for a provider, errors, and lands in `needs-review`, which is excluded
+from the pass rate.
 
 ## Regenerating
 

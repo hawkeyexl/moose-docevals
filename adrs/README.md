@@ -12,8 +12,14 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 
 ## Index
 
+Numbering starts at `01000`. The `00001`–`00999` range holds decisions that predate the ADR rule, backfilled from [CLAUDE.md](../CLAUDE.md#design-decisions) — see [the note below](#the-backfilled-range).
+
 | ADR | Title | Status |
 |---|---|---|
+| [00001](00001-one-unified-concept-the-eval.md) | One unified concept: the eval, with the grader as the only axis of difference | accepted |
+| [00002](00002-generated-scripts-are-files-not-inline-code.md) | Generated check scripts are files referenced as commands, never inline in frontmatter | accepted |
+| [00003](00003-type-defaults-to-regression.md) | `type` defaults to `regression`, not `capability` | accepted |
+| [00004](00004-level-1-orchestrates-rather-than-reimplements.md) | Deterministic checks orchestrate existing tools rather than reimplementing them | accepted |
 | [01000](01000-publish-the-frontmatter-schema-from-this-repo.md) | Publish the frontmatter schema from this repo | superseded by [01009](01009-implement-the-docmeta-evals-vocabulary.md) |
 | [01001](01001-fill-proposes-llm-evals-with-confidence-gating.md) | `fill` proposes llm-graded evals with a confidence gate | superseded by [01011](01011-fill-writes-a-durable-provenance-trail.md) |
 | [01002](01002-take-inference-from-the-shared-library.md) | Take the inference layer from `@hawkeyexl/inference` | accepted |
@@ -39,15 +45,20 @@ Every **behavior change** in moose-docevals ships with an ADR here. The ADR reco
 | [01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md) | A grader that reached no verdict fails the eval, at any severity | accepted |
 | [01023](01023-the-diagnostic-invariant-is-enforced-by-enumeration.md) | The diagnostic invariant is enforced by enumeration, not by inspection | accepted |
 | [01024](01024-remark-lints-mdx-where-markdownlint-cannot.md) | remark lints this repo's MDX; markdownlint stays for Markdown | accepted |
+| [01025](01025-the-docs-corpus-is-judged-by-a-pinned-local-model.md) | The docs corpus is judged, not only executed, by a pinned local model | accepted |
 | [01026](01026-an-errored-ensemble-is-never-cached.md) | An ensemble containing an errored run is never cached | accepted |
 | [01027](01027-judge-concurrency-is-separate-from-corpus-concurrency.md) | Judge concurrency is configured separately from corpus concurrency | accepted |
+| [01028](01028-a-local-judge-gates-locatable-properties-only.md) | A local judge gates locatable properties, not holistic ones | accepted |
+| [01029](01029-since-scopes-a-run-and-exempts-corpus-graders.md) | `--since <ref>` scopes a run to changed pages, and exempts corpus graders | accepted |
+| [01030](01030-a-run-that-resolved-no-evals-is-a-usage-error.md) | A run that resolved no evals is a usage error; a run that graded none of them is a warning | accepted |
+| [01031](01031-grader-isolation-is-per-eval-group-not-per-kind.md) | Grader isolation is per eval group, and the engine owns the partition | accepted |
+| [01032](01032-the-missing-provider-warning-is-about-the-judge.md) | The missing-provider warning is about the judge; generation reports its own need | accepted |
 | [01033](01033-judge-locally-with-a-pinned-llama-cpp-model.md) | Judge locally: take `llama-cpp` from the inference layer, pinned to a concrete model | accepted |
 
-## To backfill
+## The backfilled range
 
-These decisions predate the ADR rule and are currently recorded only in [CLAUDE.md](../CLAUDE.md#design-decisions). They should each become an ADR:
+`00001`–`00004` record the four decisions that predated the ADR rule. They were written on 2026-08-31 from the bullets in [CLAUDE.md](../CLAUDE.md#design-decisions), so their `date:` is when the *record* was written, not when the decision was taken — each says so at the top.
 
-- One unified concept: the eval (rejecting the runners/evals split).
-- Generated check scripts are files referenced as commands, never inline in frontmatter.
-- `type` defaults to `regression` rather than `capability`.
-- Level 1 orchestrates existing tools rather than reimplementing them.
+They are backfills, not reconstructions of a debate nobody had: the options and consequences are the ones visible in the shipped code, which is the honest limit of what a backfill can claim. Treat them as accepted decisions with an unusually thin provenance, and supersede them the same way as any other.
+
+The rest of `00005`–`00999` stays reserved. If another pre-rule decision surfaces, it goes here rather than at the end of the `01xxx` sequence.

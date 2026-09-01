@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1710,
+      "outputTokens": 301
+    },
+    "durationMs": 3603,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'eval' concept, the 'grader hierarchy', 'How a verdict is reached', 'Verdicts are binary; pass rates are not', and 'The pipeline'. None of this prose makes claims about unreleased or future functionality. The page includes fenced code blocks (YAML and text diagrams) and quoted examples (e.g., 'One concept, one preference order, one kind of verdict'), but the prose itself only describes current, shipped behavior of the moose-docevals system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing functionality of the moose-docevals documentation evaluation system. It explains concepts like 'evals', 'graders', 'verdicts', and the evaluation pipeline without making any promises about unreleased features or pointing to unreleased versions. The fenced code blocks (YAML examples) and quoted text are illustrative examples of the system's configuration and output, not claims about future functionality. The prose is entirely focused on describing how the current system works."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1710,
+      "outputTokens": 301
+    },
+    "durationMs": 3573,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'eval' concept, the 'grader hierarchy', 'How a verdict is reached', 'Verdicts are binary; pass rates are not', and 'The pipeline'. None of this prose makes claims about unreleased or future functionality. The page includes fenced code blocks (YAML and text diagrams) and quoted examples (e.g., 'One concept, one preference order, one kind of verdict'), but the prose itself only describes current, shipped behavior of the moose-docevals system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing functionality of the moose-docevals documentation evaluation system. It explains concepts like 'evals', 'graders', 'verdicts', and the evaluation pipeline without making any promises about unreleased features or pointing to unreleased versions. The fenced code blocks (YAML examples) and quoted text are illustrative examples of the system's configuration and output, not claims about future functionality. The prose is entirely focused on describing how the current system works."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1710,
+      "outputTokens": 301
+    },
+    "durationMs": 3536,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'eval' concept, the 'grader hierarchy', 'How a verdict is reached', 'Verdicts are binary; pass rates are not', and 'The pipeline'. None of this prose makes claims about unreleased or future functionality. The page includes fenced code blocks (YAML and text diagrams) and quoted examples (e.g., 'One concept, one preference order, one kind of verdict'), but the prose itself only describes current, shipped behavior of the moose-docevals system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing functionality of the moose-docevals documentation evaluation system. It explains concepts like 'evals', 'graders', 'verdicts', and the evaluation pipeline without making any promises about unreleased features or pointing to unreleased versions. The fenced code blocks (YAML examples) and quoted text are illustrative examples of the system's configuration and output, not claims about future functionality. The prose is entirely focused on describing how the current system works."
+    }
+  }
+]
