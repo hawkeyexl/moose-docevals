@@ -120,6 +120,9 @@ jobs:
       # script to the shell. That is a syntax error, not a failed assertion,
       # so the step fails identically whatever the report contains.
       - name: HTML report is self-contained
+        # Explicit, as every other multi-line step here is: the default `run:`
+        # shell on windows-latest is PowerShell, which has no heredoc.
+        shell: bash
         run: |
           node dist/cli.js run --deterministic-only --no-generate --format html > moose-docevals.html || true
           cat > check-html.mjs <<'CHECK'
