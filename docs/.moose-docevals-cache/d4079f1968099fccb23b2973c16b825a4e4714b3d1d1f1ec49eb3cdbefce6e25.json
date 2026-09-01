@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1584,
+      "outputTokens": 262
+    },
+    "durationMs": 3357,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains the following prose: 'Requires Node.js 24+.' This is a requirement for the tool, not a claim about unreleased functionality. The page also mentions 'no-future-promises' and 'fresh-enough' as eval names, which are part of the tool's functionality, not unreleased features. The page describes existing functionality like 'init', 'run', 'list', and 'human review' without promising unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality and requirements. The mention of 'no-future-promises' is a name of an existing eval, not a claim about unreleased functionality. The requirement 'Requires Node.js 24+' is a current requirement, not a promise of future functionality. No prose in the page makes claims about unreleased or future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1584,
+      "outputTokens": 262
+    },
+    "durationMs": 3385,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains the following prose: 'Requires Node.js 24+.' This is a requirement for the tool, not a claim about unreleased functionality. The page also mentions 'no-future-promises' and 'fresh-enough' as eval names, which are part of the tool's functionality, not unreleased features. The page describes existing functionality like 'init', 'run', 'list', and 'human review' without promising unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality and requirements. The mention of 'no-future-promises' is a name of an existing eval, not a claim about unreleased functionality. The requirement 'Requires Node.js 24+' is a current requirement, not a promise of future functionality. No prose in the page makes claims about unreleased or future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1584,
+      "outputTokens": 262
+    },
+    "durationMs": 3237,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains the following prose: 'Requires Node.js 24+.' This is a requirement for the tool, not a claim about unreleased functionality. The page also mentions 'no-future-promises' and 'fresh-enough' as eval names, which are part of the tool's functionality, not unreleased features. The page describes existing functionality like 'init', 'run', 'list', and 'human review' without promising unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality and requirements. The mention of 'no-future-promises' is a name of an existing eval, not a claim about unreleased functionality. The requirement 'Requires Node.js 24+' is a current requirement, not a promise of future functionality. No prose in the page makes claims about unreleased or future features."
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2742,
+      "outputTokens": 244
+    },
+    "durationMs": 3023,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a code sample in the 'evals' section that includes an example definition: 'assertion: The page makes no claims about unreleased or future functionality.' This is part of a configuration example, not prose making the claim itself. The prose describes the configuration schema and behavior of the tool, not making claims about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The assertion states that the page's own prose should not make claims about unreleased or future functionality. The page does contain a code sample in the 'evals' section that includes an example definition with the text 'The page makes no claims about unreleased or future functionality.' However, this is within a fenced code block showing a configuration example, which the assertion explicitly states 'does not count' as a claim. The prose itself describes the tool's configuration schema and behavior without making claims about unreleased functionality. Therefore, the assertion is satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2742,
+      "outputTokens": 244
+    },
+    "durationMs": 2990,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a code sample in the 'evals' section that includes an example definition: 'assertion: The page makes no claims about unreleased or future functionality.' This is part of a configuration example, not prose making the claim itself. The prose describes the configuration schema and behavior of the tool, not making claims about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The assertion states that the page's own prose should not make claims about unreleased or future functionality. The page does contain a code sample in the 'evals' section that includes an example definition with the text 'The page makes no claims about unreleased or future functionality.' However, this is within a fenced code block showing a configuration example, which the assertion explicitly states 'does not count' as a claim. The prose itself describes the tool's configuration schema and behavior without making claims about unreleased functionality. Therefore, the assertion is satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2742,
+      "outputTokens": 244
+    },
+    "durationMs": 2981,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a code sample in the 'evals' section that includes an example definition: 'assertion: The page makes no claims about unreleased or future functionality.' This is part of a configuration example, not prose making the claim itself. The prose describes the configuration schema and behavior of the tool, not making claims about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The assertion states that the page's own prose should not make claims about unreleased or future functionality. The page does contain a code sample in the 'evals' section that includes an example definition with the text 'The page makes no claims about unreleased or future functionality.' However, this is within a fenced code block showing a configuration example, which the assertion explicitly states 'does not count' as a claim. The prose itself describes the tool's configuration schema and behavior without making claims about unreleased functionality. Therefore, the assertion is satisfied."
+    }
+  }
+]

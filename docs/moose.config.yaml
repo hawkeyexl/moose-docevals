@@ -152,7 +152,7 @@ docevals:
         and quoted examples is illustration rather than something the page is
         claiming, and does not count.
       grader: ai
-      evidence: Prose outside fenced code blocks and quoted examples
+      evidence: Prose outside fenced code blocks, configuration samples, and quoted examples
       examples:
         pass: >
           Describes only shipped behavior. A code sample or quoted example that

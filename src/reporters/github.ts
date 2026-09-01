@@ -49,6 +49,21 @@ export function renderGithub(report: EngineReport): string {
       .join(",");
     lines.push(`::${level} ${props}::${escapeData(p.message)}`);
   }
+  // The scope, as an annotation rather than only in the step summary: a
+  // collapsed log still shows notices, and "nothing was evaluated" is the one
+  // sentence that distinguishes a scoped clean run from a corpus that passed
+  // (ADR 01029).
+  const sc = report.since;
+  if (sc) {
+    lines.push(
+      `::notice title=moose-docevals::${escapeData(
+        sc.pagesSelected === 0
+          ? `No pages changed since ${sc.ref} — nothing was evaluated.`
+          : `Scoped to ${sc.pagesSelected} of ${sc.pagesTotal} page(s) changed since ${sc.ref}. ` +
+              `Corpus-wide graders still saw every page.`,
+      )}`,
+    );
+  }
   lines.push("", renderMarkdown(report));
   return lines.join("\n");
 }

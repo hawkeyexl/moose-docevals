@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3126,
+      "outputTokens": 274
+    },
+    "durationMs": 3220,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the tool's behavior, file paths, and configuration options. It mentions specific versions like '0.1.0' in the JSON example and dates like '2026-08-03' in the YAML example. However, these are presented as examples of existing functionality, not promises of future features. The prose describes current capabilities such as caching, baseline recording, golden set calibration, and review management. There are no statements promising unreleased features or pointing to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality of the moose-docevals tool. While it includes version numbers (0.1.0) and dates (2026-08-03) in code examples, these are illustrative examples of current behavior, not claims about unreleased features. The prose consistently describes shipped behavior - caching mechanisms, baseline recording, golden set management, and review workflows. No promises of future functionality or references to unreleased versions are found in the prose outside of code blocks."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3126,
+      "outputTokens": 274
+    },
+    "durationMs": 3160,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the tool's behavior, file paths, and configuration options. It mentions specific versions like '0.1.0' in the JSON example and dates like '2026-08-03' in the YAML example. However, these are presented as examples of existing functionality, not promises of future features. The prose describes current capabilities such as caching, baseline recording, golden set calibration, and review management. There are no statements promising unreleased features or pointing to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality of the moose-docevals tool. While it includes version numbers (0.1.0) and dates (2026-08-03) in code examples, these are illustrative examples of current behavior, not claims about unreleased features. The prose consistently describes shipped behavior - caching mechanisms, baseline recording, golden set management, and review workflows. No promises of future functionality or references to unreleased versions are found in the prose outside of code blocks."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3126,
+      "outputTokens": 274
+    },
+    "durationMs": 3153,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the tool's behavior, file paths, and configuration options. It mentions specific versions like '0.1.0' in the JSON example and dates like '2026-08-03' in the YAML example. However, these are presented as examples of existing functionality, not promises of future features. The prose describes current capabilities such as caching, baseline recording, golden set calibration, and review management. There are no statements promising unreleased features or pointing to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality of the moose-docevals tool. While it includes version numbers (0.1.0) and dates (2026-08-03) in code examples, these are illustrative examples of current behavior, not claims about unreleased features. The prose consistently describes shipped behavior - caching mechanisms, baseline recording, golden set management, and review workflows. No promises of future functionality or references to unreleased versions are found in the prose outside of code blocks."
+    }
+  }
+]

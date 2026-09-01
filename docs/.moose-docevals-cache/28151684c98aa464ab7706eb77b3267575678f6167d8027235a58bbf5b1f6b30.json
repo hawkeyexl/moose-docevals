@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1754,
+      "outputTokens": 290
+    },
+    "durationMs": 4103,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The prose describes existing functionality: 'Deterministic graders are free, fast, and arguable in a pull request. Prefer them.' It lists 'three native checks' that 'exist natively'. It describes 'Arbitrary command evals' as 'Any executable'. It explains 'Plain-language checks moose-docevals writes for you' as a feature where 'moose-docevals run' or 'moose-docevals generate' writes scripts. All descriptions refer to shipped or currently available behavior. No prose promises unreleased features or points to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose consistently describes existing, shipped functionality. It mentions 'three native checks exist natively', 'Arbitrary command evals' as a current feature, and 'Plain-language checks moose-docevals writes for you' as an implemented capability. There are no claims about future features, unreleased functionality, or upcoming versions in the prose outside of code blocks and configuration samples."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1754,
+      "outputTokens": 290
+    },
+    "durationMs": 4021,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The prose describes existing functionality: 'Deterministic graders are free, fast, and arguable in a pull request. Prefer them.' It lists 'three native checks' that 'exist natively'. It describes 'Arbitrary command evals' as 'Any executable'. It explains 'Plain-language checks moose-docevals writes for you' as a feature where 'moose-docevals run' or 'moose-docevals generate' writes scripts. All descriptions refer to shipped or currently available behavior. No prose promises unreleased features or points to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose consistently describes existing, shipped functionality. It mentions 'three native checks exist natively', 'Arbitrary command evals' as a current feature, and 'Plain-language checks moose-docevals writes for you' as an implemented capability. There are no claims about future features, unreleased functionality, or upcoming versions in the prose outside of code blocks and configuration samples."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1754,
+      "outputTokens": 290
+    },
+    "durationMs": 3653,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The prose describes existing functionality: 'Deterministic graders are free, fast, and arguable in a pull request. Prefer them.' It lists 'three native checks' that 'exist natively'. It describes 'Arbitrary command evals' as 'Any executable'. It explains 'Plain-language checks moose-docevals writes for you' as a feature where 'moose-docevals run' or 'moose-docevals generate' writes scripts. All descriptions refer to shipped or currently available behavior. No prose promises unreleased features or points to unreleased versions.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose consistently describes existing, shipped functionality. It mentions 'three native checks exist natively', 'Arbitrary command evals' as a current feature, and 'Plain-language checks moose-docevals writes for you' as an implemented capability. There are no claims about future features, unreleased functionality, or upcoming versions in the prose outside of code blocks and configuration samples."
+    }
+  }
+]

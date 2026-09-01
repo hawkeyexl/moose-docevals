@@ -26,9 +26,10 @@ import {
   type Baseline,
   type FingerprintContext,
 } from "./baseline.js";
+import { changedFilesSince, changedKey } from "./since.js";
 import { graderFor } from "../graders/registry.js";
 import { realExec } from "../graders/exec.js";
-import type { ExecFn, GraderTarget } from "../graders/types.js";
+import { groupTargetsByEval, type ExecFn, type GraderTarget } from "../graders/types.js";
 import { sha256 } from "../judge/cache.js";
 import { isTurnBudgetSkip } from "../judge/budget.js";
 import { resolve } from "node:path";
@@ -45,6 +46,18 @@ export interface EngineReport extends RunReport {
   problems: RunProblem[];
   /** Present only when a baseline was read or written (ADR 01017). */
   baseline?: BaselineOutcome["summary"];
+  /**
+   * Present only under `--since` (ADR 01029). `pagesTotal` is the whole
+   * discovered corpus — `pages` above stays that number too — and
+   * `pagesSelected` is the count of pages that **changed since the ref**.
+   *
+   * It is deliberately not "pages this run evaluated", which would be a
+   * different and larger number: corpus-wide graders keep every page in scope,
+   * so an unchanged page can still be graded. Consumers reading this from
+   * `--format json` should treat it as the size of the change set, matching
+   * what the reporters print.
+   */
+  since?: { ref: string; pagesSelected: number; pagesTotal: number };
 }
 
 export interface JudgeOptions {
@@ -83,6 +96,11 @@ export interface RunOptions {
   evalNames?: string[];
   /** Run only evals belonging to this suite. */
   suite?: string;
+  /**
+   * Evaluate only pages that differ between this ref and HEAD. Unlike
+   * `evalNames`, an empty match is *not* a usage error (ADR 01029).
+   */
+  since?: string;
   /**
    * Baseline in four states, like docmeta's: `undefined` leaves the config in
    * charge, a string names a file, `true` means "use the resolved path even if
@@ -382,6 +400,50 @@ export function applySelection(
 }
 
 /**
+ * Narrow each plan to the pages that changed, in place, leaving corpus graders
+ * alone (ADR 01029).
+ *
+ * **The corpus exemption is the subtle half.** `GraderContext` carries
+ * `targets`, not a page list, so `tool:differentiation` builds its comparison
+ * population out of whatever it is handed. `gradeGroup` returns `[]` below two
+ * targets, and an eval with no findings is recorded as a **pass** — so
+ * narrowing a corpus grader's input does not narrow the check, it silently
+ * converts it into a pass. Corpus evals therefore survive on unchanged pages,
+ * which costs no subprocess and no tokens because the only corpus grader is
+ * native. The visible consequence is that a scoped run can report a finding on
+ * a page nobody touched; the message already names the other page.
+ *
+ * An empty result is **not** a usage error, which is where this parts company
+ * with `applySelection`. "No page changed" is a correct answer to a correct
+ * question; "`--eval` matched nothing" is a typo.
+ */
+export function applySinceScope(
+  plans: ResolvedPagePlan[],
+  changed: Set<string>,
+): { pagesSelected: number } {
+  let pagesSelected = 0;
+  for (const plan of plans) {
+    if (changed.has(changedKey(plan.page.absPath))) {
+      pagesSelected += 1;
+      continue;
+    }
+    plan.evals = plan.evals.filter((ev) => {
+      const grader = graderFor(ev.grader);
+      if (grader) return grader.mode === "corpus";
+      // `graderFor` returns undefined for `ai` and `human` — which is exactly
+      // what scoping should drop, since not paying the judge is the point — and
+      // *also* for an unrecognised `tool:` kind. Dropping those too would hide a
+      // misconfiguration on every page the branch did not touch: the grading
+      // loop is what reports an unknown kind, so an eval removed here never
+      // errors. A typo would surface on a changed page and vanish on an
+      // unchanged one, which is the least predictable behaviour available.
+      return ev.grader !== "ai" && ev.grader !== "human";
+    });
+  }
+  return { pagesSelected };
+}
+
+/**
  * Per-suite aggregates. Reads the suite `stampSuites` recorded on each result
  * rather than rebuilding the plan-to-suite map a second time — two copies of
  * one derivation are two things to keep in agreement.
@@ -439,21 +501,77 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   // fingerprint the filter excluded. Deciding it here costs nothing; deciding
   // it after `resolveBaseline` meant the generation pass had already written
   // scripts and rewritten frontmatter, and the judge had already been paid.
+  //
+  // `--since` is refused here for the same reason and, being *before* the git
+  // call below, a usage error never spawns a subprocess.
   if (
     options.writeBaseline !== undefined &&
     options.writeBaseline !== false &&
     ((options.evalNames?.some((n) => n.trim() !== "") ?? false) ||
-      options.suite !== undefined)
+      options.suite !== undefined ||
+      options.since !== undefined)
   ) {
     throw new DocevalsError(
       "--write-baseline records the whole corpus, so it cannot be combined with " +
-        "--eval or --suite: the re-record would drop every finding the filter " +
-        "excluded. Re-run without the filter to record.",
+        "--eval, --suite or --since: the re-record would drop every finding the " +
+        "narrowing excluded. Re-run without it to record.",
     );
   }
 
+  // Before `resolvePages`, so an unresolvable ref fails the run without paying
+  // for resolution — but applied after `applySelection` below, because
+  // `PageFile.absPath` only exists post-discovery and resolution problems must
+  // surface for every page, scoped or not (ADR 01018's driver).
+  // Blank and option-shaped refs are rejected inside `changedFilesSince`, at
+  // the seam, so a library caller gets the same guard the CLI does.
+  const sinceRef = options.since;
+  const changed =
+    sinceRef === undefined ? null : await changedFilesSince(sinceRef, cwd, exec);
+
   const plans = resolvePages(pages, config);
+  // A run that resolved no evals at all checked nothing, and exited 0 saying
+  // so in about seventeen bytes. The identical condition reached through
+  // `--eval no-such-eval` is already exit 2 with a careful message
+  // (ADR 01018); reaching it through configuration must not be silence
+  // (ADR 01030).
+  //
+  // Read off the *resolved* plan, deliberately before every narrowing:
+  // `applySelection` owns its own empty-match error and names what was asked
+  // for, and `--since` deliberately answers "no page changed" with exit 0 and
+  // a sentence (ADR 01029). The plan being empty is a different claim from a
+  // scope being empty.
+  //
+  // Suppressed when resolution errored, because then there *is* something to
+  // report: the run exits 1 naming the bad key, which is a better diagnosis
+  // than telling the reader to configure a suite they may already have.
+  //
+  // And read over the pages the author did **not** skip. A page carrying
+  // `eval-skip: true` and no suite resolves *zero* evals rather than evals
+  // that are then skipped, so counting over every page turned a deliberate,
+  // documented skip into a usage error — `test/fixtures/pages/index.mdx` is
+  // exactly that page, and `docs/src/content/docs/evals/index.mdx` runs it
+  // expecting exit 0. "Nothing is configured to check the pages you asked
+  // about" is the claim; a skipped page is not one of those pages.
+  const unskipped = plans.filter((p) => !p.skip);
+  if (
+    unskipped.length > 0 &&
+    unskipped.every((p) => p.evals.length === 0) &&
+    !plans.some((p) => p.problems.some((pr) => pr.level === "error"))
+  ) {
+    throw new DocevalsError(
+      `No evals resolved for any of the ${unskipped.length} page(s) this run would check. ` +
+        `Nothing would have been checked, so this run would have reported ` +
+        `success without checking anything.\n` +
+        `Point \`defaults.suite\` at a suite in ${config.configPath}, or give ` +
+        `the pages an \`eval-suite\` or \`evals\` frontmatter key. Run ` +
+        `\`moose-docevals list\` to see the resolved plan.`,
+    );
+  }
   const filtered = applySelection(plans, config, options);
+  const scope =
+    changed === null || sinceRef === undefined
+      ? null
+      : { ref: sinceRef, ...applySinceScope(plans, changed) };
   const judgeOptions = options.judgeOptions ?? {};
 
   const problems: RunProblem[] = plans.flatMap((p) =>
@@ -598,7 +716,6 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     byKind.set(t.eval.grader, list);
   }
 
-  const allFindings: Finding[] = [];
   for (const [kind, targets] of byKind) {
     const grader = graderFor(kind);
     if (!grader) {
@@ -615,56 +732,73 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       }
       continue;
     }
-    const start = Date.now();
-    // A grader is effectively third-party code: tool adapters shell out, and
-    // `runValidate` raises on a schema path it cannot read — which
-    // `options.schemas` being hand-written makes the likeliest route in.
-    // Letting that rejection escape drops every remaining eval on every
-    // remaining page with no result and no exit-code signal that anything was
-    // skipped. Error its own targets and carry on, the way a failed script
-    // generation already does above.
-    let findings: Finding[];
-    try {
-      findings = await grader.grade({ targets, config, root: cwd, exec });
-    } catch (e) {
-      const reason = e instanceof Error ? e.message : String(e);
-      for (const target of targets) {
+    // One invocation per eval *configuration*, not one per grader kind — the
+    // engine drives the same partition the batch adapters use internally, so
+    // the try/catch below can only ever reach one eval's targets (ADR 01031).
+    //
+    // The bug this closes: batch graders loop `groupTargetsByEval` *inside*
+    // `grade()`, so a throw on the second group unwound the whole function and
+    // discarded the first group's already-computed findings. One broken eval
+    // erased every sibling eval of the same kind, and every one of them
+    // reported the broken eval's message.
+    //
+    // `groupTargetsByEval` is a pure partition and idempotent, so the adapters
+    // keep calling it too: each stays correct when invoked directly, and the
+    // isolation boundary is not something a new adapter has to remember.
+    for (const group of groupTargetsByEval(targets)) {
+      const start = Date.now();
+      // A grader is effectively third-party code: tool adapters shell out, and
+      // `runValidate` raises on a schema path it cannot read — which
+      // `options.schemas` being hand-written makes the likeliest route in.
+      // Letting that rejection escape drops every remaining eval on every
+      // remaining page with no result and no exit-code signal that anything
+      // was skipped. Error its own targets and carry on, the way a failed
+      // script generation already does above.
+      let findings: Finding[];
+      try {
+        findings = await grader.grade({ targets: group, config, root: cwd, exec });
+      } catch (e) {
+        const reason = e instanceof Error ? e.message : String(e);
+        for (const target of group) {
+          results.push({
+            evalName: target.eval.name,
+            type: target.eval.type,
+            grader: target.eval.grader,
+            file: target.plan.page.file,
+            outcome: "error",
+            // Names the eval, not just the kind. With one catch per kind the
+            // message described whichever eval happened to throw while sitting
+            // on every eval's result, so the name in the result and the name
+            // in the message disagreed.
+            skipReason: `grader ${kind} failed for eval "${target.eval.name}": ${reason}`,
+            durationMs: Date.now() - start,
+          });
+        }
+        continue;
+      }
+      const durationMs = Date.now() - start;
+      const grouped = groupFindings(findings);
+      for (const t of group) {
+        const key = resultKey(t.plan.page.file, t.eval.name);
+        const own = grouped.get(key) ?? [];
+        // A diagnostic finding fails the eval regardless of severity: it means
+        // the grader could not reach a verdict, and "no verdict" must never
+        // read as "pass". Enforced here rather than per-adapter, so a new
+        // adapter gets it by default instead of having to remember (ADR 01022).
+        const hasError = own.some(
+          (f) => f.severity === "error" || f.diagnostic === true,
+        );
         results.push({
-          evalName: target.eval.name,
-          suite: target.eval.suite,
-          type: target.eval.type,
-          grader: target.eval.grader,
-          file: target.plan.page.file,
-          outcome: "error",
-          skipReason: `grader ${kind} failed: ${reason}`,
-          durationMs: Date.now() - start,
+          evalName: t.eval.name,
+          type: t.eval.type,
+          grader: t.eval.grader,
+          file: t.plan.page.file,
+          outcome: hasError ? "fail" : "pass",
+          findings: own.length > 0 ? own : undefined,
+          generated: generatedThisRun.has(key) ? true : undefined,
+          durationMs: Math.round(durationMs / group.length),
         });
       }
-      continue;
-    }
-    const durationMs = Date.now() - start;
-    allFindings.push(...findings);
-    const grouped = groupFindings(findings);
-    for (const t of targets) {
-      const key = resultKey(t.plan.page.file, t.eval.name);
-      const own = grouped.get(key) ?? [];
-      // A diagnostic finding fails the eval regardless of severity: it means
-      // the grader could not reach a verdict, and "no verdict" must never read
-      // as "pass". Enforced here rather than per-adapter, so a new adapter
-      // gets it by default instead of having to remember (ADR 01022).
-      const hasError = own.some(
-        (f) => f.severity === "error" || f.diagnostic === true,
-      );
-      results.push({
-        evalName: t.eval.name,
-        type: t.eval.type,
-        grader: t.eval.grader,
-        file: t.plan.page.file,
-        outcome: hasError ? "fail" : "pass",
-        findings: own.length > 0 ? own : undefined,
-        generated: generatedThisRun.has(key) ? true : undefined,
-        durationMs: Math.round(durationMs / targets.length),
-      });
     }
   }
 
@@ -711,6 +845,45 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     });
   }
 
+  // Nothing reached a verdict. Deliberately a warning and not an error:
+  // `eval-skip` is a feature, `--deterministic-only` is a standing CI
+  // invocation, and a scoped run over a clean tree is a correct answer
+  // (ADR 01029). What was missing is anyone saying that the run therefore
+  // established nothing — the same omission the turn-budget warning above
+  // exists to fill (ADR 01019, ADR 01030).
+  //
+  // No exception for `--since`, which narrates its own empty scope a few lines
+  // later in every reporter. Two lines, one explaining the other, is a better
+  // trade than a carve-out: a carve-out is how this class of bug returns.
+  //
+  // `needs-review` is excluded on purpose: a human-graded eval is work the run
+  // produced, not silence, and the reporters already point at `review`.
+  //
+  // Anchored on the config rather than a page: no single page is at fault, and
+  // the config is the run-level file a reader can act on.
+  if (!results.some((r) => r.outcome !== "skipped")) {
+    problems.push({
+      file: config.configPath,
+      message:
+        `This run graded nothing — no eval reached a verdict, so it established ` +
+        `nothing about the corpus. ` +
+        (results.length > 0
+          ? `All ${results.length} resolved eval(s) were skipped; check the skip ` +
+            `reasons above — a page-level \`eval-skip\`, a grader-class flag, or ` +
+            `a missing provider.`
+          : // With zero results the cause is not always the same, and naming the
+            // wrong one sends the reader to the wrong file. An error-level
+            // resolution problem makes the plan loop skip that page entirely and
+            // also suppresses the empty-plan throw above, so "skipped or scoped
+            // out" would contradict the errors printed right beside it.
+            problems.some((p) => p.level === "error")
+            ? `Every discovered page was dropped by an error-level resolution ` +
+              `problem — fix those first; they are listed above.`
+            : `Every discovered page was skipped or scoped out of the run.`),
+      level: "warning",
+    });
+  }
+
   const baselineOutcome = resolveBaseline(results, config, options, cwd, problems);
   // Copy before clearing: when no baseline applies, `resolveBaseline` hands
   // back the very array it was given, and emptying it first would leave the
@@ -720,7 +893,17 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   results.push(...baselinedResults);
 
   stampSuites(results, plans);
-  const suites = summarizeSuites(results, config, filtered);
+  // A scoped run measured part of the corpus, which is the same claim-from-a-
+  // sample problem `--eval` has — so it reuses ADR 01018's mechanism rather
+  // than growing a second, differently-behaved one.
+  // `partial` means coverage was actually lost, not that a narrowing flag was
+  // present. Deriving it from the flag disabled suite-target enforcement on a
+  // `--since` run that happened to touch every page — and since ADR 01029
+  // intends `--since` as the CI invocation, that turned the aggregate gate off
+  // permanently for anyone who adopted it. `pagesSelected` is already the exact
+  // count, so the predicate is free.
+  const scopeLostCoverage = scope !== null && scope.pagesSelected < plans.length;
+  const suites = summarizeSuites(results, config, filtered || scopeLostCoverage);
   const judged = results.filter((r) => r.consensus != null);
   const totalTokens = judged.reduce(
     (n, r) =>
@@ -755,5 +938,8 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     exitCode: hasFailure ? 1 : 0,
     problems,
     ...(baselineOutcome.summary ? { baseline: baselineOutcome.summary } : {}),
+    ...(scope
+      ? { since: { ...scope, pagesTotal: plans.length } }
+      : {}),
   };
 }

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1035,
+      "outputTokens": 249
+    },
+    "durationMs": 3063,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing existing documentation structure and navigation. It states: 'This shelf supports navigation; it does not drive it. If you are trying to accomplish something rather than look something up, start from a section in the sidebar — the journey pages explain the path and link here for detail.' It also lists existing documentation pages like CLI, Configuration, Frontmatter, Graders, Output and exit codes, Files and state, and Glossary. There is no mention of unreleased or future functionality in the prose.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing documentation structure and navigation. It does not make any claims about unreleased or future functionality. The text focuses on guiding users to existing documentation sections rather than promising features that haven't shipped."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1035,
+      "outputTokens": 249
+    },
+    "durationMs": 3095,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing existing documentation structure and navigation. It states: 'This shelf supports navigation; it does not drive it. If you are trying to accomplish something rather than look something up, start from a section in the sidebar — the journey pages explain the path and link here for detail.' It also lists existing documentation pages like CLI, Configuration, Frontmatter, Graders, Output and exit codes, Files and state, and Glossary. There is no mention of unreleased or future functionality in the prose.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing documentation structure and navigation. It does not make any claims about unreleased or future functionality. The text focuses on guiding users to existing documentation sections rather than promising features that haven't shipped."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1035,
+      "outputTokens": 249
+    },
+    "durationMs": 3074,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing existing documentation structure and navigation. It states: 'This shelf supports navigation; it does not drive it. If you are trying to accomplish something rather than look something up, start from a section in the sidebar — the journey pages explain the path and link here for detail.' It also lists existing documentation pages like CLI, Configuration, Frontmatter, Graders, Output and exit codes, Files and state, and Glossary. There is no mention of unreleased or future functionality in the prose.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing documentation structure and navigation. It does not make any claims about unreleased or future functionality. The text focuses on guiding users to existing documentation sections rather than promising features that haven't shipped."
+    }
+  }
+]
