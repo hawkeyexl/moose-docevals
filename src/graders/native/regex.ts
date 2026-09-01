@@ -43,6 +43,10 @@ function lineAt(text: string, index: number): number {
 
 export const regexGrader: Grader = {
   kind: "tool:regex",
+  // It calls `readTarget` directly, so it serves the whole vocabulary — the
+  // one deterministic grader that does. Declaring it here is what exempts it
+  // from the engine's body-only guard (ADR 01033).
+  targets: ["body", "raw", "frontmatter", "file"] as const,
   validateOptions(options: Options): OptionCheck {
     const match = options.match;
     return firstError(

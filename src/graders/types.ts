@@ -42,6 +42,16 @@ export interface Grader {
    */
   validateOptions?(options: Options): OptionCheck;
   /**
+   * Targets other than `body` this grader can actually read.
+   *
+   * Declared by the grader rather than listed in the engine, so adding a
+   * grader that reads `target` is a change in one file. Absent means "body
+   * only", which is every grader that predates `target` — and the engine
+   * turns any other request into an error rather than letting the grader
+   * quietly measure the whole page (ADR 01033).
+   */
+  targets?: readonly string[];
+  /**
    * batch: one external invocation covers all targets;
    * per-file: one invocation per target;
    * corpus: needs every page at once (cross-page checks).
