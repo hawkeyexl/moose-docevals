@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1425,
+      "outputTokens": 357
+    },
+    "durationMs": 3771,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose sections such as 'Why did this fail when I only changed one sentence?', 'The check passed yesterday and fails today, with no change from me', 'Can I skip the check for my page?', 'Why does the message have no line number?', 'What does needs-review mean and how do I clear it?', 'I ran it locally and got a different result', 'It asked for an API key. Do I need one?', 'The build is red but every eval says pass', 'What is the difference between warning and error?', 'Exit code 1 vs 2?', 'The generated script looks wrong', and 'Who owns this check?'. None of these prose sections make claims about unreleased or future functionality. The page describes existing behavior of the moose-docevals tool, including caching, skipping, review processes, and exit codes. Fenced code blocks and quoted examples (e.g., YAML snippets, console output) are present but are clearly illustrative examples, not claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes current, shipped functionality of the moose-docevals tool. There are no claims about unreleased features, future functionality, or unreleased versions. The page discusses existing behaviors like caching, skipping checks, review processes, and exit codes. All code blocks and examples are clearly illustrative and do not contain claims about unreleased features. The assertion is fully satisfied by the page content."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1425,
+      "outputTokens": 357
+    },
+    "durationMs": 3828,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose sections such as 'Why did this fail when I only changed one sentence?', 'The check passed yesterday and fails today, with no change from me', 'Can I skip the check for my page?', 'Why does the message have no line number?', 'What does needs-review mean and how do I clear it?', 'I ran it locally and got a different result', 'It asked for an API key. Do I need one?', 'The build is red but every eval says pass', 'What is the difference between warning and error?', 'Exit code 1 vs 2?', 'The generated script looks wrong', and 'Who owns this check?'. None of these prose sections make claims about unreleased or future functionality. The page describes existing behavior of the moose-docevals tool, including caching, skipping, review processes, and exit codes. Fenced code blocks and quoted examples (e.g., YAML snippets, console output) are present but are clearly illustrative examples, not claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes current, shipped functionality of the moose-docevals tool. There are no claims about unreleased features, future functionality, or unreleased versions. The page discusses existing behaviors like caching, skipping checks, review processes, and exit codes. All code blocks and examples are clearly illustrative and do not contain claims about unreleased features. The assertion is fully satisfied by the page content."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1425,
+      "outputTokens": 357
+    },
+    "durationMs": 3812,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose sections such as 'Why did this fail when I only changed one sentence?', 'The check passed yesterday and fails today, with no change from me', 'Can I skip the check for my page?', 'Why does the message have no line number?', 'What does needs-review mean and how do I clear it?', 'I ran it locally and got a different result', 'It asked for an API key. Do I need one?', 'The build is red but every eval says pass', 'What is the difference between warning and error?', 'Exit code 1 vs 2?', 'The generated script looks wrong', and 'Who owns this check?'. None of these prose sections make claims about unreleased or future functionality. The page describes existing behavior of the moose-docevals tool, including caching, skipping, review processes, and exit codes. Fenced code blocks and quoted examples (e.g., YAML snippets, console output) are present but are clearly illustrative examples, not claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes current, shipped functionality of the moose-docevals tool. There are no claims about unreleased features, future functionality, or unreleased versions. The page discusses existing behaviors like caching, skipping checks, review processes, and exit codes. All code blocks and examples are clearly illustrative and do not contain claims about unreleased features. The assertion is fully satisfied by the page content."
+    }
+  }
+]

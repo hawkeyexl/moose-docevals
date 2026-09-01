@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1345,
+      "outputTokens": 279
+    },
+    "durationMs": 4060,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a table under the heading 'What should stay an ai eval' which lists 'Makes no claims about unreleased functionality' as a criterion that 'Requires knowing what sounds like a promise'. This is a meta-discussion about the tool's evaluation criteria, not a claim about unreleased functionality made by the page itself. The page describes the tool's behavior and how to use it, without promising any unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page is documentation about the moose-docevals tool itself. It describes how the tool works, how to use it, and what criteria it uses for evaluation. The mention of 'Makes no claims about unreleased functionality' in the table is a description of an evaluation criterion that the tool checks for in other documentation, not a claim made by this page about its own unreleased features. The page's prose describes shipped behavior and tool functionality without promising any unreleased features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1345,
+      "outputTokens": 279
+    },
+    "durationMs": 4084,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a table under the heading 'What should stay an ai eval' which lists 'Makes no claims about unreleased functionality' as a criterion that 'Requires knowing what sounds like a promise'. This is a meta-discussion about the tool's evaluation criteria, not a claim about unreleased functionality made by the page itself. The page describes the tool's behavior and how to use it, without promising any unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page is documentation about the moose-docevals tool itself. It describes how the tool works, how to use it, and what criteria it uses for evaluation. The mention of 'Makes no claims about unreleased functionality' in the table is a description of an evaluation criterion that the tool checks for in other documentation, not a claim made by this page about its own unreleased features. The page's prose describes shipped behavior and tool functionality without promising any unreleased features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1345,
+      "outputTokens": 279
+    },
+    "durationMs": 4128,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a table under the heading 'What should stay an ai eval' which lists 'Makes no claims about unreleased functionality' as a criterion that 'Requires knowing what sounds like a promise'. This is a meta-discussion about the tool's evaluation criteria, not a claim about unreleased functionality made by the page itself. The page describes the tool's behavior and how to use it, without promising any unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page is documentation about the moose-docevals tool itself. It describes how the tool works, how to use it, and what criteria it uses for evaluation. The mention of 'Makes no claims about unreleased functionality' in the table is a description of an evaluation criterion that the tool checks for in other documentation, not a claim made by this page about its own unreleased features. The page's prose describes shipped behavior and tool functionality without promising any unreleased features."
+    }
+  }
+]

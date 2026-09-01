@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1456,
+      "outputTokens": 268
+    },
+    "durationMs": 3338,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing deterministic graders, severity levels (error, warning, info), the ratchet mechanism for adopting checks, and how findings are structured. The prose discusses shipped behavior and mechanisms for managing documentation quality checks. There are no claims about unreleased or future functionality in the prose. The fenced code blocks contain YAML and JSON examples illustrating configuration and output formats, which are clearly illustrative examples.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality of the moose-docevals system. It explains how severity levels work, how the ratchet mechanism functions, and how findings are structured. There are no promises of future features or unreleased functionality in the prose. The code blocks (YAML and JSON) are clearly illustrative examples of configuration and output formats, which the assertion explicitly states should not count toward the evaluation."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1456,
+      "outputTokens": 268
+    },
+    "durationMs": 3347,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing deterministic graders, severity levels (error, warning, info), the ratchet mechanism for adopting checks, and how findings are structured. The prose discusses shipped behavior and mechanisms for managing documentation quality checks. There are no claims about unreleased or future functionality in the prose. The fenced code blocks contain YAML and JSON examples illustrating configuration and output formats, which are clearly illustrative examples.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality of the moose-docevals system. It explains how severity levels work, how the ratchet mechanism functions, and how findings are structured. There are no promises of future features or unreleased functionality in the prose. The code blocks (YAML and JSON) are clearly illustrative examples of configuration and output formats, which the assertion explicitly states should not count toward the evaluation."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1456,
+      "outputTokens": 268
+    },
+    "durationMs": 3337,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing deterministic graders, severity levels (error, warning, info), the ratchet mechanism for adopting checks, and how findings are structured. The prose discusses shipped behavior and mechanisms for managing documentation quality checks. There are no claims about unreleased or future functionality in the prose. The fenced code blocks contain YAML and JSON examples illustrating configuration and output formats, which are clearly illustrative examples.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality of the moose-docevals system. It explains how severity levels work, how the ratchet mechanism functions, and how findings are structured. There are no promises of future features or unreleased functionality in the prose. The code blocks (YAML and JSON) are clearly illustrative examples of configuration and output formats, which the assertion explicitly states should not count toward the evaluation."
+    }
+  }
+]

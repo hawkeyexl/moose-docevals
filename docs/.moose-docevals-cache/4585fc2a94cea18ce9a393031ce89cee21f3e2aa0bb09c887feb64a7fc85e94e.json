@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2171,
+      "outputTokens": 222
+    },
+    "durationMs": 2931,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes moose-docevals graders and their behavior. It includes tables describing grader kinds, options, and behaviors. The prose discusses how graders work, what they check, and their configuration. There is no mention of unreleased features, future functionality, or upcoming capabilities in the prose sections. The content focuses entirely on current, shipped functionality of the moose-docevals tool.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes existing, shipped functionality of the moose-docevals tool. All prose sections discuss current grader types, their configurations, and behaviors. There are no claims about unreleased features, future functionality, or upcoming capabilities. The content is purely descriptive of the current state of the tool without any forward-looking statements about features that have not yet been released."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2171,
+      "outputTokens": 222
+    },
+    "durationMs": 3113,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes moose-docevals graders and their behavior. It includes tables describing grader kinds, options, and behaviors. The prose discusses how graders work, what they check, and their configuration. There is no mention of unreleased features, future functionality, or upcoming capabilities in the prose sections. The content focuses entirely on current, shipped functionality of the moose-docevals tool.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes existing, shipped functionality of the moose-docevals tool. All prose sections discuss current grader types, their configurations, and behaviors. There are no claims about unreleased features, future functionality, or upcoming capabilities. The content is purely descriptive of the current state of the tool without any forward-looking statements about features that have not yet been released."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2171,
+      "outputTokens": 222
+    },
+    "durationMs": 3165,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes moose-docevals graders and their behavior. It includes tables describing grader kinds, options, and behaviors. The prose discusses how graders work, what they check, and their configuration. There is no mention of unreleased features, future functionality, or upcoming capabilities in the prose sections. The content focuses entirely on current, shipped functionality of the moose-docevals tool.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes existing, shipped functionality of the moose-docevals tool. All prose sections discuss current grader types, their configurations, and behaviors. There are no claims about unreleased features, future functionality, or upcoming capabilities. The content is purely descriptive of the current state of the tool without any forward-looking statements about features that have not yet been released."
+    }
+  }
+]

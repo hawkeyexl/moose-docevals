@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2292,
+      "outputTokens": 252
+    },
+    "durationMs": 3031,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped behavior: 'Model calls are per-invocation', 'Two mechanisms keep the steady state of a docs pull request near zero', 'A cache hit spends nothing', 'The tool used to take a dollar ceiling, --max-cost. It was removed', 'Nothing reports a dollar amount now', 'The run you regret is the one you did not bound'. All descriptions refer to current functionality. There are no claims about unreleased or future features in the prose. The only future-tense wording appears in code samples (e.g., 'npx moose-docevals run --max-turns 60') and quoted examples, which are illustrations.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped behavior and past decisions (e.g., removal of dollar ceiling). No unreleased or future functionality is claimed in the prose. All examples and code blocks are clearly illustrative and do not constitute claims about future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2292,
+      "outputTokens": 252
+    },
+    "durationMs": 2994,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped behavior: 'Model calls are per-invocation', 'Two mechanisms keep the steady state of a docs pull request near zero', 'A cache hit spends nothing', 'The tool used to take a dollar ceiling, --max-cost. It was removed', 'Nothing reports a dollar amount now', 'The run you regret is the one you did not bound'. All descriptions refer to current functionality. There are no claims about unreleased or future features in the prose. The only future-tense wording appears in code samples (e.g., 'npx moose-docevals run --max-turns 60') and quoted examples, which are illustrations.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped behavior and past decisions (e.g., removal of dollar ceiling). No unreleased or future functionality is claimed in the prose. All examples and code blocks are clearly illustrative and do not constitute claims about future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2292,
+      "outputTokens": 252
+    },
+    "durationMs": 2961,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped behavior: 'Model calls are per-invocation', 'Two mechanisms keep the steady state of a docs pull request near zero', 'A cache hit spends nothing', 'The tool used to take a dollar ceiling, --max-cost. It was removed', 'Nothing reports a dollar amount now', 'The run you regret is the one you did not bound'. All descriptions refer to current functionality. There are no claims about unreleased or future features in the prose. The only future-tense wording appears in code samples (e.g., 'npx moose-docevals run --max-turns 60') and quoted examples, which are illustrations.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes shipped behavior and past decisions (e.g., removal of dollar ceiling). No unreleased or future functionality is claimed in the prose. All examples and code blocks are clearly illustrative and do not constitute claims about future features."
+    }
+  }
+]

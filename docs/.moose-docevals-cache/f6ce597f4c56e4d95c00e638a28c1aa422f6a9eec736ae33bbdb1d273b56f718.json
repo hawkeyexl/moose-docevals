@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1999,
+      "outputTokens": 237
+    },
+    "durationMs": 2793,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks (freshness/stale, AI verdicts, needs-review, stale generated script, exit 2). It explains how to interpret CI output, run checks locally, and resolve issues. There is no prose in the page that claims unreleased or future functionality of the moose-docevals tool itself. All examples and code blocks are illustrative of how the tool works, not claims about future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about the moose-docevals tool. It describes existing functionality (checking freshness, AI verdicts, etc.) and provides examples of how to use the tool. There are no claims about unreleased features or future functionality in the prose. The examples and code blocks are clearly illustrative of how the tool operates, not promises of future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1999,
+      "outputTokens": 237
+    },
+    "durationMs": 2777,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks (freshness/stale, AI verdicts, needs-review, stale generated script, exit 2). It explains how to interpret CI output, run checks locally, and resolve issues. There is no prose in the page that claims unreleased or future functionality of the moose-docevals tool itself. All examples and code blocks are illustrative of how the tool works, not claims about future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about the moose-docevals tool. It describes existing functionality (checking freshness, AI verdicts, etc.) and provides examples of how to use the tool. There are no claims about unreleased features or future functionality in the prose. The examples and code blocks are clearly illustrative of how the tool operates, not promises of future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1999,
+      "outputTokens": 237
+    },
+    "durationMs": 2840,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks (freshness/stale, AI verdicts, needs-review, stale generated script, exit 2). It explains how to interpret CI output, run checks locally, and resolve issues. There is no prose in the page that claims unreleased or future functionality of the moose-docevals tool itself. All examples and code blocks are illustrative of how the tool works, not claims about future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about the moose-docevals tool. It describes existing functionality (checking freshness, AI verdicts, etc.) and provides examples of how to use the tool. There are no claims about unreleased features or future functionality in the prose. The examples and code blocks are clearly illustrative of how the tool operates, not promises of future features."
+    }
+  }
+]

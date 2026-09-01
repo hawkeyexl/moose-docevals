@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3638,
+      "outputTokens": 312
+    },
+    "durationMs": 4250,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes only shipped behavior. For example, it states: 'Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by the inline tests at the foot of this page.' It details specific commands like `moose-docevals run`, `list`, `generate`, `fill`, `promote`, `calibrate`, `init`, and `review`, with flags and effects that are presented as currently implemented. There are no mentions of unreleased features, future functionality, or upcoming changes in the prose. The only non-prose content is fenced code blocks showing command-line examples and a table of exit codes, which are illustrative.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality. It explicitly states that flags are 'verified against `src/cli.ts`' and that exit codes are 'exercised by the inline tests', indicating current implementation. There are no claims about unreleased or future features in the prose. The fenced code blocks and tables are purely illustrative examples of usage, not claims of future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3638,
+      "outputTokens": 312
+    },
+    "durationMs": 4324,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes only shipped behavior. For example, it states: 'Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by the inline tests at the foot of this page.' It details specific commands like `moose-docevals run`, `list`, `generate`, `fill`, `promote`, `calibrate`, `init`, and `review`, with flags and effects that are presented as currently implemented. There are no mentions of unreleased features, future functionality, or upcoming changes in the prose. The only non-prose content is fenced code blocks showing command-line examples and a table of exit codes, which are illustrative.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality. It explicitly states that flags are 'verified against `src/cli.ts`' and that exit codes are 'exercised by the inline tests', indicating current implementation. There are no claims about unreleased or future features in the prose. The fenced code blocks and tables are purely illustrative examples of usage, not claims of future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3638,
+      "outputTokens": 312
+    },
+    "durationMs": 4378,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes only shipped behavior. For example, it states: 'Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by the inline tests at the foot of this page.' It details specific commands like `moose-docevals run`, `list`, `generate`, `fill`, `promote`, `calibrate`, `init`, and `review`, with flags and effects that are presented as currently implemented. There are no mentions of unreleased features, future functionality, or upcoming changes in the prose. The only non-prose content is fenced code blocks showing command-line examples and a table of exit codes, which are illustrative.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes existing, shipped functionality. It explicitly states that flags are 'verified against `src/cli.ts`' and that exit codes are 'exercised by the inline tests', indicating current implementation. There are no claims about unreleased or future features in the prose. The fenced code blocks and tables are purely illustrative examples of usage, not claims of future functionality."
+    }
+  }
+]

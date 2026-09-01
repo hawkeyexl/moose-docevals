@@ -12,7 +12,7 @@ the same guarantee the deterministic graders already give, extended to the judge
 The site is currently section-index stubs, and the `docs-page` suite contains only deterministic
 evals. Judging placeholder prose would produce fixtures that assert nothing, so there are none yet.
 
-The LLM evals (`no-future-promises`, `serves-one-journey`) are defined in the config and collected in
+The LLM evals (`no-future-promises`, `states-its-purpose`) are defined in the config and collected in
 a `docs-page-full` suite. **When the first real page lands**, switch `defaults.suite` to
 `docs-page-full` and run:
 

@@ -90,6 +90,52 @@ the first time it is inconvenient.
 at `severity: warning` and ratchet up — *keep the assertion honest and lower the severity*, never the
 reverse. See [Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 
+**Not saying whether quoted text counts.** A judge reads the whole page, including code blocks,
+configuration samples, and quoted examples. If the assertion does not say whether those are the
+page's own claims, it has no way to decide — and it will decide against you.
+
+This bites hardest on pages that document their own evals. An assertion of "the page makes no claims
+about unreleased functionality" will fail a page whose YAML sample happens to contain the words
+`coming soon`, because that is what the words say. Larger models do not rescue you: given exactly
+that case, a 9B model correctly identified the text as *"the example of a failing eval"* in its own
+reasoning and failed the page anyway. It was right to. The assertion never told it otherwise.
+
+Say what counts:
+
+```yaml
+assertion: >
+  The page's own prose makes no claims about unreleased or future
+  functionality. Text inside fenced code blocks, configuration samples,
+  and quoted examples is illustration rather than something the page is
+  claiming, and does not count.
+evidence: Prose outside fenced code blocks and quoted examples
+```
+
+**An assertion no page passes.** If an eval fails your entire corpus, suspect the eval before the
+corpus. It is usually demanding a house style rather than the property you care about — a check for
+"states what the reader will be able to do" will fail a page that opens *"Zero to a real finding"*,
+which names an outcome perfectly well in the wrong grammatical mood. Widen the assertion to the
+property, and let the examples carry the range of acceptable voices.
+
+**Asking for a holistic judgment instead of a locatable one.** This is the one that does not respond
+to rewording, so it is worth learning to recognise.
+
+A *locatable* assertion is settled by specific text: "the page's prose promises something unshipped"
+can be answered by pointing at a sentence. A *holistic* one — "the page makes clear what it is for" —
+asks about the page as a whole, and nothing in it settles the answer. Judges are far less stable on
+the second kind, and the instability is invisible unless you go looking.
+
+The test is **monotonicity**. Broaden your assertion so it accepts strictly more pages, and re-run.
+Verdicts should only move from fail to pass. If any page moves the other way, the verdicts are not a
+function of your assertion, and rewording it again will not help — pick a locatable property instead,
+or move the check to a `human` grader.
+
+This is not hypothetical. Broadening one assertion on this site's own corpus — adding a third
+accepted form, taking nothing away — moved four pages from pass to fail. The eval name is not sent
+to the judge, temperature was 0, and the ensemble was three runs. A larger model did not fix it: 4B
+and 9B disagreed on only 5 of 68 verdicts, and the larger one scored *worse* on the holistic eval.
+That check is no longer part of the gate.
+
 ## Regression or capability?
 
 It changes how strictly to phrase the assertion.

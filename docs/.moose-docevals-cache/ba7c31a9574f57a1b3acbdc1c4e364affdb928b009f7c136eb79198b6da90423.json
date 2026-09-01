@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 255
+    },
+    "durationMs": 3234,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped functionality: 'A gate that is not in CI is a linter someone runs sometimes', 'This page is the GitHub Actions recipe', 'Three things are doing real work here', 'The cache step is not an optimisation', 'No secret, no cost, no model in the critical path'. All descriptions refer to current, operational behavior. There are no promises of future features or unreleased functionality in the prose outside code blocks.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes current, shipped functionality. It explains how the CI gate works, what the cache step does, how exit codes are interpreted, and how to verify the gate. There are no claims about unreleased features, future functionality, or upcoming changes. The page focuses entirely on existing behavior and operational details."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 255
+    },
+    "durationMs": 3227,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped functionality: 'A gate that is not in CI is a linter someone runs sometimes', 'This page is the GitHub Actions recipe', 'Three things are doing real work here', 'The cache step is not an optimisation', 'No secret, no cost, no model in the critical path'. All descriptions refer to current, operational behavior. There are no promises of future features or unreleased functionality in the prose outside code blocks.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes current, shipped functionality. It explains how the CI gate works, what the cache step does, how exit codes are interpreted, and how to verify the gate. There are no claims about unreleased features, future functionality, or upcoming changes. The page focuses entirely on existing behavior and operational details."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 255
+    },
+    "durationMs": 3207,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped functionality: 'A gate that is not in CI is a linter someone runs sometimes', 'This page is the GitHub Actions recipe', 'Three things are doing real work here', 'The cache step is not an optimisation', 'No secret, no cost, no model in the critical path'. All descriptions refer to current, operational behavior. There are no promises of future features or unreleased functionality in the prose outside code blocks.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes current, shipped functionality. It explains how the CI gate works, what the cache step does, how exit codes are interpreted, and how to verify the gate. There are no claims about unreleased features, future functionality, or upcoming changes. The page focuses entirely on existing behavior and operational details."
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1625,
+      "outputTokens": 226
+    },
+    "durationMs": 2709,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks showing YAML frontmatter examples, bash commands, and console output. The prose describes how to declare evals in frontmatter, referencing named evals, inline evals, and suite assignments. There is no prose that claims unreleased or future functionality. The page describes current behavior of moose-docevals (e.g., 'A bare string is an assertion, judged by AI at error severity', 'Page entries win on name collision').",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of moose-docevals. All examples are in fenced code blocks (YAML frontmatter, bash commands, console output) which the assertion explicitly excludes from consideration. The prose makes no promises about unreleased features or future functionality - it describes how the tool currently works."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1625,
+      "outputTokens": 226
+    },
+    "durationMs": 2719,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks showing YAML frontmatter examples, bash commands, and console output. The prose describes how to declare evals in frontmatter, referencing named evals, inline evals, and suite assignments. There is no prose that claims unreleased or future functionality. The page describes current behavior of moose-docevals (e.g., 'A bare string is an assertion, judged by AI at error severity', 'Page entries win on name collision').",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of moose-docevals. All examples are in fenced code blocks (YAML frontmatter, bash commands, console output) which the assertion explicitly excludes from consideration. The prose makes no promises about unreleased features or future functionality - it describes how the tool currently works."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1625,
+      "outputTokens": 226
+    },
+    "durationMs": 2730,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks showing YAML frontmatter examples, bash commands, and console output. The prose describes how to declare evals in frontmatter, referencing named evals, inline evals, and suite assignments. There is no prose that claims unreleased or future functionality. The page describes current behavior of moose-docevals (e.g., 'A bare string is an assertion, judged by AI at error severity', 'Page entries win on name collision').",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of moose-docevals. All examples are in fenced code blocks (YAML frontmatter, bash commands, console output) which the assertion explicitly excludes from consideration. The prose makes no promises about unreleased features or future functionality - it describes how the tool currently works."
+    }
+  }
+]

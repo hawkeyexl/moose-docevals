@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1473,
+      "outputTokens": 298
+    },
+    "durationMs": 3834,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing mechanics and behaviors: 'Temperature 0', 'Pinned models', 'Structured verdicts', 'Content-addressed caching', 'ensemble runs', 'Consensus aggregates', 'Confidence zones', 'Binary verdicts', 'calibrate', 'Human review', etc. All described features are presented as current, shipped functionality. There are no mentions of unreleased features, future versions, or upcoming capabilities in the prose. The page contains no fenced code blocks or quoted examples that would need to be excluded from consideration.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes current, shipped functionality (Temperature 0, Pinned models, ensemble runs, confidence zones, etc.) without any claims about unreleased or future features. The prose consistently presents these as existing capabilities. There are no mentions of 'upcoming', 'planned', 'future', 'beta', or similar language indicating unreleased functionality. The page contains no fenced code blocks or quoted examples that would need to be excluded per the assertion criteria."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1473,
+      "outputTokens": 298
+    },
+    "durationMs": 3805,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing mechanics and behaviors: 'Temperature 0', 'Pinned models', 'Structured verdicts', 'Content-addressed caching', 'ensemble runs', 'Consensus aggregates', 'Confidence zones', 'Binary verdicts', 'calibrate', 'Human review', etc. All described features are presented as current, shipped functionality. There are no mentions of unreleased features, future versions, or upcoming capabilities in the prose. The page contains no fenced code blocks or quoted examples that would need to be excluded from consideration.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes current, shipped functionality (Temperature 0, Pinned models, ensemble runs, confidence zones, etc.) without any claims about unreleased or future features. The prose consistently presents these as existing capabilities. There are no mentions of 'upcoming', 'planned', 'future', 'beta', or similar language indicating unreleased functionality. The page contains no fenced code blocks or quoted examples that would need to be excluded per the assertion criteria."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1473,
+      "outputTokens": 298
+    },
+    "durationMs": 3856,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing mechanics and behaviors: 'Temperature 0', 'Pinned models', 'Structured verdicts', 'Content-addressed caching', 'ensemble runs', 'Consensus aggregates', 'Confidence zones', 'Binary verdicts', 'calibrate', 'Human review', etc. All described features are presented as current, shipped functionality. There are no mentions of unreleased features, future versions, or upcoming capabilities in the prose. The page contains no fenced code blocks or quoted examples that would need to be excluded from consideration.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes current, shipped functionality (Temperature 0, Pinned models, ensemble runs, confidence zones, etc.) without any claims about unreleased or future features. The prose consistently presents these as existing capabilities. There are no mentions of 'upcoming', 'planned', 'future', 'beta', or similar language indicating unreleased functionality. The page contains no fenced code blocks or quoted examples that would need to be excluded per the assertion criteria."
+    }
+  }
+]

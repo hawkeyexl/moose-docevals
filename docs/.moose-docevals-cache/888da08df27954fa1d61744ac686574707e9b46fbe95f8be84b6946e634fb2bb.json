@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3122,
+      "outputTokens": 321
+    },
+    "durationMs": 4331,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the tool's behavior, including sections on 'Generated check scripts', 'Findings baseline', 'Judge cache', '.moose-docevals/reviews.yaml', and '.moose-docevals/golden/*.yaml'. The prose describes existing functionality such as 'Written parallel to the doc, not into frontmatter, so they show up in pull requests and can be edited by hand', 'Content-addressed. The key is composed in src/judge/cache.ts from, among other things', and 'Human-verified cases for calibration'. There are no mentions of unreleased features, future functionality, or upcoming versions in the prose. The code blocks and configuration samples (e.g., the YAML examples, JSON examples, bash commands) are clearly marked as examples and do not contain claims about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes shipped, existing functionality of the moose-docevals tool. All mentions of versions (e.g., 'version: 1', 'generatedWith: 0.1.0') refer to current, implemented features. There are no assertions about unreleased or future functionality in the prose. The code blocks and configuration samples, as permitted by the assertion, are treated as illustrations and do not affect the verdict."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3122,
+      "outputTokens": 321
+    },
+    "durationMs": 4339,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the tool's behavior, including sections on 'Generated check scripts', 'Findings baseline', 'Judge cache', '.moose-docevals/reviews.yaml', and '.moose-docevals/golden/*.yaml'. The prose describes existing functionality such as 'Written parallel to the doc, not into frontmatter, so they show up in pull requests and can be edited by hand', 'Content-addressed. The key is composed in src/judge/cache.ts from, among other things', and 'Human-verified cases for calibration'. There are no mentions of unreleased features, future functionality, or upcoming versions in the prose. The code blocks and configuration samples (e.g., the YAML examples, JSON examples, bash commands) are clearly marked as examples and do not contain claims about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes shipped, existing functionality of the moose-docevals tool. All mentions of versions (e.g., 'version: 1', 'generatedWith: 0.1.0') refer to current, implemented features. There are no assertions about unreleased or future functionality in the prose. The code blocks and configuration samples, as permitted by the assertion, are treated as illustrations and do not affect the verdict."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3122,
+      "outputTokens": 321
+    },
+    "durationMs": 4319,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the tool's behavior, including sections on 'Generated check scripts', 'Findings baseline', 'Judge cache', '.moose-docevals/reviews.yaml', and '.moose-docevals/golden/*.yaml'. The prose describes existing functionality such as 'Written parallel to the doc, not into frontmatter, so they show up in pull requests and can be edited by hand', 'Content-addressed. The key is composed in src/judge/cache.ts from, among other things', and 'Human-verified cases for calibration'. There are no mentions of unreleased features, future functionality, or upcoming versions in the prose. The code blocks and configuration samples (e.g., the YAML examples, JSON examples, bash commands) are clearly marked as examples and do not contain claims about unreleased functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes shipped, existing functionality of the moose-docevals tool. All mentions of versions (e.g., 'version: 1', 'generatedWith: 0.1.0') refer to current, implemented features. There are no assertions about unreleased or future functionality in the prose. The code blocks and configuration samples, as permitted by the assertion, are treated as illustrations and do not affect the verdict."
+    }
+  }
+]

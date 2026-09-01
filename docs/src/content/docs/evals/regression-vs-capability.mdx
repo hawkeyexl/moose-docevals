@@ -1,6 +1,11 @@
 ---
 title: Regression vs capability
 description: Which type an eval should be, and why the default is regression.
+# This page's prose contains "no promises about unreleased features" as an
+# example of what a regression eval guards, which the `no-future-promises`
+# judge reads as the page making that claim. Documenting an eval in prose puts
+# a page outside what that eval can judge, so it runs everything else instead.
+eval-suite: docs-page-meta
 ---
 
 Every eval has a `type`. It changes how strictly to phrase the assertion, what target pass rate the

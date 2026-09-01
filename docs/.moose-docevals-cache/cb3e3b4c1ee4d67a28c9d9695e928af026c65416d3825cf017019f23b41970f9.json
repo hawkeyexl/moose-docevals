@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1377,
+      "outputTokens": 208
+    },
+    "durationMs": 3164,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content provided is a glossary of terms related to 'moose-docevals' (e.g., Assertion, Capability suite, Confidence zone, etc.). It does not contain any prose describing software functionality, nor does it make claims about unreleased or future features. It is purely a definition list.",
+      "match": "pass",
+      "confidence": 1,
+      "reasoning": "The page content is a glossary of technical terms. It contains no prose describing functionality, shipped or otherwise. Therefore, it trivially satisfies the assertion that the page's prose makes no claims about unreleased or future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1377,
+      "outputTokens": 208
+    },
+    "durationMs": 3192,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content provided is a glossary of terms related to 'moose-docevals' (e.g., Assertion, Capability suite, Confidence zone, etc.). It does not contain any prose describing software functionality, nor does it make claims about unreleased or future features. It is purely a definition list.",
+      "match": "pass",
+      "confidence": 1,
+      "reasoning": "The page content is a glossary of technical terms. It contains no prose describing functionality, shipped or otherwise. Therefore, it trivially satisfies the assertion that the page's prose makes no claims about unreleased or future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1377,
+      "outputTokens": 208
+    },
+    "durationMs": 3103,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content provided is a glossary of terms related to 'moose-docevals' (e.g., Assertion, Capability suite, Confidence zone, etc.). It does not contain any prose describing software functionality, nor does it make claims about unreleased or future features. It is purely a definition list.",
+      "match": "pass",
+      "confidence": 1,
+      "reasoning": "The page content is a glossary of technical terms. It contains no prose describing functionality, shipped or otherwise. Therefore, it trivially satisfies the assertion that the page's prose makes no claims about unreleased or future functionality."
+    }
+  }
+]

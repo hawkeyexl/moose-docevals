@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1456,
+      "outputTokens": 251
+    },
+    "durationMs": 3241,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing security mechanisms and configurations. It references specific flags like `--no-frontmatter-commands`, `--deterministic-only`, and configuration options like `scripts.allow-frontmatter-commands`. It describes current GitHub Actions behavior (secrets availability on forks). It provides a checklist of current best practices. No prose claims that any feature is unreleased or will be added in the future.",
+      "match": "pass",
+      "confidence": 0.99,
+      "reasoning": "The page's prose exclusively describes shipped behavior and current security configurations. It explains how existing flags work, how GitHub Actions handles secrets, and provides a checklist of current best practices. There are no claims about unreleased features, future functionality, or upcoming changes. The code blocks and configuration samples are purely illustrative examples of how to implement the described security measures."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1456,
+      "outputTokens": 251
+    },
+    "durationMs": 3237,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing security mechanisms and configurations. It references specific flags like `--no-frontmatter-commands`, `--deterministic-only`, and configuration options like `scripts.allow-frontmatter-commands`. It describes current GitHub Actions behavior (secrets availability on forks). It provides a checklist of current best practices. No prose claims that any feature is unreleased or will be added in the future.",
+      "match": "pass",
+      "confidence": 0.99,
+      "reasoning": "The page's prose exclusively describes shipped behavior and current security configurations. It explains how existing flags work, how GitHub Actions handles secrets, and provides a checklist of current best practices. There are no claims about unreleased features, future functionality, or upcoming changes. The code blocks and configuration samples are purely illustrative examples of how to implement the described security measures."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1456,
+      "outputTokens": 251
+    },
+    "durationMs": 3211,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing security mechanisms and configurations. It references specific flags like `--no-frontmatter-commands`, `--deterministic-only`, and configuration options like `scripts.allow-frontmatter-commands`. It describes current GitHub Actions behavior (secrets availability on forks). It provides a checklist of current best practices. No prose claims that any feature is unreleased or will be added in the future.",
+      "match": "pass",
+      "confidence": 0.99,
+      "reasoning": "The page's prose exclusively describes shipped behavior and current security configurations. It explains how existing flags work, how GitHub Actions handles secrets, and provides a checklist of current best practices. There are no claims about unreleased features, future functionality, or upcoming changes. The code blocks and configuration samples are purely illustrative examples of how to implement the described security measures."
+    }
+  }
+]

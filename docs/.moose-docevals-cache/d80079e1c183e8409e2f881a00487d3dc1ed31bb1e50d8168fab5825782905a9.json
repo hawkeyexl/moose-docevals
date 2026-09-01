@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1360,
+      "outputTokens": 311
+    },
+    "durationMs": 3991,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: 'Every quality check on a documentation page is an eval', 'Declare an assertion in a page's frontmatter', 'Run it', 'Exit 1', 'That's a docs regression, caught the way a test would catch a code one'. The page also lists features like 'freshness, reading level, and cross-page differentiation' and describes how the tool works ('orchestrates; it doesn't reimplement', 'The judge is the last resort', 'The judge has safeguards'). All described features appear to be currently implemented and shipped, with no mention of unreleased or future functionality in the prose outside code blocks.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of the moose-docevals tool. There are no claims about unreleased features, future functionality, or upcoming versions. The text describes how the tool currently works, its requirements, and its capabilities. Code blocks and examples (like the YAML frontmatter and bash commands) are clearly marked as examples and do not contain claims about unreleased features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1360,
+      "outputTokens": 311
+    },
+    "durationMs": 3778,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: 'Every quality check on a documentation page is an eval', 'Declare an assertion in a page's frontmatter', 'Run it', 'Exit 1', 'That's a docs regression, caught the way a test would catch a code one'. The page also lists features like 'freshness, reading level, and cross-page differentiation' and describes how the tool works ('orchestrates; it doesn't reimplement', 'The judge is the last resort', 'The judge has safeguards'). All described features appear to be currently implemented and shipped, with no mention of unreleased or future functionality in the prose outside code blocks.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of the moose-docevals tool. There are no claims about unreleased features, future functionality, or upcoming versions. The text describes how the tool currently works, its requirements, and its capabilities. Code blocks and examples (like the YAML frontmatter and bash commands) are clearly marked as examples and do not contain claims about unreleased features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1360,
+      "outputTokens": 311
+    },
+    "durationMs": 3768,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing functionality: 'Every quality check on a documentation page is an eval', 'Declare an assertion in a page's frontmatter', 'Run it', 'Exit 1', 'That's a docs regression, caught the way a test would catch a code one'. The page also lists features like 'freshness, reading level, and cross-page differentiation' and describes how the tool works ('orchestrates; it doesn't reimplement', 'The judge is the last resort', 'The judge has safeguards'). All described features appear to be currently implemented and shipped, with no mention of unreleased or future functionality in the prose outside code blocks.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of the moose-docevals tool. There are no claims about unreleased features, future functionality, or upcoming versions. The text describes how the tool currently works, its requirements, and its capabilities. Code blocks and examples (like the YAML frontmatter and bash commands) are clearly marked as examples and do not contain claims about unreleased features."
+    }
+  }
+]
