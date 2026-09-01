@@ -48,6 +48,14 @@ Three reasons for the name:
 A grader that cannot serve a requested target says so as an options error rather than quietly
 grading something else.
 
+**Today that means every deterministic grader.** `target` is consumed by the judge; no `tool:*`
+or `command` grader reads it yet. Rather than let the promise above be aspirational, each grader
+declares the targets it can read (`Grader.targets`, absent meaning body-only) and the engine turns
+any other request into an **error** — naming the grader and the target — before dispatch. An error
+and not a skip: a skip keeps the run green, and an eval that silently measured the whole page
+would then read as coverage it never provided. When a deterministic grader learns to read a
+target, it says so in one field and the guard stops applying to it.
+
 ### Consequences
 
 - Good, because `tool:regex` (ADR 01029) and the judge share one vocabulary for the same idea.

@@ -123,6 +123,21 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
       const runsPerEval = runsFor(ev);
       const judgeProvider = providerFor(ev);
 
+      // Self-preference: the model that wrote the page is the model grading
+      // it. Compared against the model that judged *this eval*, not the run's
+      // default — an eval naming its own provider or model is exactly the
+      // case a run-wide comparison would miss. Per page rather than
+      // deduplicated by model name, so a corpus with several affected pages
+      // names each one instead of only the first.
+      const by = plan.generatedBy;
+      if (by !== undefined && by === judgeProvider.modelName()) {
+        console.warn(
+          `moose-docevals: ${plan.page.file} declares generated-by: ${by}, ` +
+            `which is also the model judging it. Self-judging favors the ` +
+            `author — run this eval with a different model.`,
+        );
+      }
+
       // Read what the eval asked to be graded. A target that cannot be served
       // errors here rather than falling back to the page body: a verdict about
       // the wrong bytes is worse than no verdict (ADR 01022).
