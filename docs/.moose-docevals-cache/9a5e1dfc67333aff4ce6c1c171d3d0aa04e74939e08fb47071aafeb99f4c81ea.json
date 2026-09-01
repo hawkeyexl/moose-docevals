@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2082,
+      "outputTokens": 273
+    },
+    "durationMs": 9775,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks (freshness/stale, AI verdicts, needs-review, stale generated script, Exit 2, etc.). It explains how to interpret CI output, how to run checks locally, and how to resolve issues. The prose focuses entirely on the tool's current functionality and usage. There are no claims about unreleased or future features in the prose. The page does contain code blocks and examples (like YAML configuration snippets and bash commands), but these are clearly illustrative examples of the tool's operation, not claims about future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about the moose-docevals tool. It describes existing functionality (various eval types, how to run them, how to interpret results) without making any claims about unreleased or future features. The prose is entirely focused on current, shipped behavior. Any code blocks or examples present are clearly illustrative examples of the tool's usage, not claims about future functionality. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2082,
+      "outputTokens": 273
+    },
+    "durationMs": 3198,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks (freshness/stale, AI verdicts, needs-review, stale generated script, Exit 2, etc.). It explains how to interpret CI output, how to run checks locally, and how to resolve issues. The prose focuses entirely on the tool's current functionality and usage. There are no claims about unreleased or future features in the prose. The page does contain code blocks and examples (like YAML configuration snippets and bash commands), but these are clearly illustrative examples of the tool's operation, not claims about future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about the moose-docevals tool. It describes existing functionality (various eval types, how to run them, how to interpret results) without making any claims about unreleased or future features. The prose is entirely focused on current, shipped behavior. Any code blocks or examples present are clearly illustrative examples of the tool's usage, not claims about future functionality. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2082,
+      "outputTokens": 273
+    },
+    "durationMs": 3139,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks (freshness/stale, AI verdicts, needs-review, stale generated script, Exit 2, etc.). It explains how to interpret CI output, how to run checks locally, and how to resolve issues. The prose focuses entirely on the tool's current functionality and usage. There are no claims about unreleased or future features in the prose. The page does contain code blocks and examples (like YAML configuration snippets and bash commands), but these are clearly illustrative examples of the tool's operation, not claims about future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely instructional documentation about the moose-docevals tool. It describes existing functionality (various eval types, how to run them, how to interpret results) without making any claims about unreleased or future features. The prose is entirely focused on current, shipped behavior. Any code blocks or examples present are clearly illustrative examples of the tool's usage, not claims about future functionality. The assertion is fully satisfied."
+    }
+  }
+]

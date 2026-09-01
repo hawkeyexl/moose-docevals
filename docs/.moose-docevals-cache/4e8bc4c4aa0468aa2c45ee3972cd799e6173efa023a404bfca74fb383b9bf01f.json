@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3765,
+      "outputTokens": 295
+    },
+    "durationMs": 3884,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing exit codes, command formats, and JSON output structures. It includes code samples (e.g., JSON output examples, console output examples) and tables describing exit codes and formats. The prose describes current, shipped behavior such as 'The default', 'One object, for programmatic consumers', and 'A SARIF 2.1.0 log'. There are no mentions of unreleased features, future functionality, or upcoming changes in the prose sections. The code blocks and examples are clearly marked as examples or samples.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality (exit codes, command formats, JSON structures, SARIF 2.1.0). There are no claims about unreleased or future features in the prose. The code blocks and examples (JSON samples, console output) are clearly illustrative and do not contain any future-tense claims about unreleased functionality. The page consistently describes current behavior without promising features that haven't shipped."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3765,
+      "outputTokens": 295
+    },
+    "durationMs": 3897,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing exit codes, command formats, and JSON output structures. It includes code samples (e.g., JSON output examples, console output examples) and tables describing exit codes and formats. The prose describes current, shipped behavior such as 'The default', 'One object, for programmatic consumers', and 'A SARIF 2.1.0 log'. There are no mentions of unreleased features, future functionality, or upcoming changes in the prose sections. The code blocks and examples are clearly marked as examples or samples.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality (exit codes, command formats, JSON structures, SARIF 2.1.0). There are no claims about unreleased or future features in the prose. The code blocks and examples (JSON samples, console output) are clearly illustrative and do not contain any future-tense claims about unreleased functionality. The page consistently describes current behavior without promising features that haven't shipped."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3765,
+      "outputTokens": 295
+    },
+    "durationMs": 3757,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing exit codes, command formats, and JSON output structures. It includes code samples (e.g., JSON output examples, console output examples) and tables describing exit codes and formats. The prose describes current, shipped behavior such as 'The default', 'One object, for programmatic consumers', and 'A SARIF 2.1.0 log'. There are no mentions of unreleased features, future functionality, or upcoming changes in the prose sections. The code blocks and examples are clearly marked as examples or samples.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality (exit codes, command formats, JSON structures, SARIF 2.1.0). There are no claims about unreleased or future features in the prose. The code blocks and examples (JSON samples, console output) are clearly illustrative and do not contain any future-tense claims about unreleased functionality. The page consistently describes current behavior without promising features that haven't shipped."
+    }
+  }
+]

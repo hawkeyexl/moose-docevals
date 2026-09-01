@@ -50,6 +50,9 @@ Numbering starts at `01000`. The `00001`–`00999` range holds decisions that pr
 | [01027](01027-judge-concurrency-is-separate-from-corpus-concurrency.md) | Judge concurrency is configured separately from corpus concurrency | accepted |
 | [01028](01028-a-local-judge-gates-locatable-properties-only.md) | A local judge gates locatable properties, not holistic ones | accepted |
 | [01029](01029-since-scopes-a-run-and-exempts-corpus-graders.md) | `--since <ref>` scopes a run to changed pages, and exempts corpus graders | accepted |
+| [01030](01030-a-run-that-resolved-no-evals-is-a-usage-error.md) | A run that resolved no evals is a usage error; a run that graded none of them is a warning | accepted |
+| [01031](01031-grader-isolation-is-per-eval-group-not-per-kind.md) | Grader isolation is per eval group, and the engine owns the partition | accepted |
+| [01032](01032-the-missing-provider-warning-is-about-the-judge.md) | The missing-provider warning is about the judge; generation reports its own need | accepted |
 
 ## The backfilled range
 

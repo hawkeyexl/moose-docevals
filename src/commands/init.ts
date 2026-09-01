@@ -17,8 +17,12 @@ docevals:
       - "**/node_modules/**"
 
   defaults:
-    # Suite applied to pages without an eval-suite frontmatter key.
-    suite: null
+    # Suite applied to pages without an eval-suite frontmatter key. Naming the
+    # suite defined at the bottom of this file is what makes a fresh corpus
+    # check anything at all: with "null", a page carrying no eval frontmatter
+    # resolves zero evals, and a run over zero evals is a usage error rather
+    # than a green build (ADR 01030).
+    suite: default
     fail-fast: false
     concurrency: 4
 

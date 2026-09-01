@@ -29,7 +29,7 @@ import {
 import { changedFilesSince, changedKey } from "./since.js";
 import { graderFor } from "../graders/registry.js";
 import { realExec } from "../graders/exec.js";
-import type { ExecFn, GraderTarget } from "../graders/types.js";
+import { groupTargetsByEval, type ExecFn, type GraderTarget } from "../graders/types.js";
 import { sha256 } from "../judge/cache.js";
 import { isTurnBudgetSkip } from "../judge/budget.js";
 import { resolve } from "node:path";
@@ -512,6 +512,44 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     sinceRef === undefined ? null : await changedFilesSince(sinceRef, cwd, exec);
 
   const plans = resolvePages(pages, config);
+  // A run that resolved no evals at all checked nothing, and exited 0 saying
+  // so in about seventeen bytes. The identical condition reached through
+  // `--eval no-such-eval` is already exit 2 with a careful message
+  // (ADR 01018); reaching it through configuration must not be silence
+  // (ADR 01030).
+  //
+  // Read off the *resolved* plan, deliberately before every narrowing:
+  // `applySelection` owns its own empty-match error and names what was asked
+  // for, and `--since` deliberately answers "no page changed" with exit 0 and
+  // a sentence (ADR 01029). The plan being empty is a different claim from a
+  // scope being empty.
+  //
+  // Suppressed when resolution errored, because then there *is* something to
+  // report: the run exits 1 naming the bad key, which is a better diagnosis
+  // than telling the reader to configure a suite they may already have.
+  //
+  // And read over the pages the author did **not** skip. A page carrying
+  // `eval-skip: true` and no suite resolves *zero* evals rather than evals
+  // that are then skipped, so counting over every page turned a deliberate,
+  // documented skip into a usage error — `test/fixtures/pages/index.mdx` is
+  // exactly that page, and `docs/src/content/docs/evals/index.mdx` runs it
+  // expecting exit 0. "Nothing is configured to check the pages you asked
+  // about" is the claim; a skipped page is not one of those pages.
+  const unskipped = plans.filter((p) => !p.skip);
+  if (
+    unskipped.length > 0 &&
+    unskipped.every((p) => p.evals.length === 0) &&
+    !plans.some((p) => p.problems.some((pr) => pr.level === "error"))
+  ) {
+    throw new DocevalsError(
+      `No evals resolved for any of the ${unskipped.length} page(s) this run would check. ` +
+        `Nothing would have been checked, so this run would have reported ` +
+        `success without checking anything.\n` +
+        `Point \`defaults.suite\` at a suite in ${config.configPath}, or give ` +
+        `the pages an \`eval-suite\` or \`evals\` frontmatter key. Run ` +
+        `\`moose-docevals list\` to see the resolved plan.`,
+    );
+  }
   const filtered = applySelection(plans, config, options);
   const scope =
     changed === null || sinceRef === undefined
@@ -678,56 +716,75 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       }
       continue;
     }
-    const start = Date.now();
-    // A grader is effectively third-party code: tool adapters shell out, and
-    // `runValidate` raises on a schema path it cannot read — which
-    // `options.schemas` being hand-written makes the likeliest route in.
-    // Letting that rejection escape drops every remaining eval on every
-    // remaining page with no result and no exit-code signal that anything was
-    // skipped. Error its own targets and carry on, the way a failed script
-    // generation already does above.
-    let findings: Finding[];
-    try {
-      findings = await grader.grade({ targets, config, root: cwd, exec });
-    } catch (e) {
-      const reason = e instanceof Error ? e.message : String(e);
-      for (const target of targets) {
+    // One invocation per eval *configuration*, not one per grader kind — the
+    // engine drives the same partition the batch adapters use internally, so
+    // the try/catch below can only ever reach one eval's targets (ADR 01031).
+    //
+    // The bug this closes: batch graders loop `groupTargetsByEval` *inside*
+    // `grade()`, so a throw on the second group unwound the whole function and
+    // discarded the first group's already-computed findings. One broken eval
+    // erased every sibling eval of the same kind, and every one of them
+    // reported the broken eval's message.
+    //
+    // `groupTargetsByEval` is a pure partition and idempotent, so the adapters
+    // keep calling it too: each stays correct when invoked directly, and the
+    // isolation boundary is not something a new adapter has to remember.
+    for (const group of groupTargetsByEval(targets)) {
+      const start = Date.now();
+      // A grader is effectively third-party code: tool adapters shell out, and
+      // `runValidate` raises on a schema path it cannot read — which
+      // `options.schemas` being hand-written makes the likeliest route in.
+      // Letting that rejection escape drops every remaining eval on every
+      // remaining page with no result and no exit-code signal that anything
+      // was skipped. Error its own targets and carry on, the way a failed
+      // script generation already does above.
+      let findings: Finding[];
+      try {
+        findings = await grader.grade({ targets: group, config, root: cwd, exec });
+      } catch (e) {
+        const reason = e instanceof Error ? e.message : String(e);
+        for (const target of group) {
+          results.push({
+            evalName: target.eval.name,
+            suite: target.eval.suite,
+            type: target.eval.type,
+            grader: target.eval.grader,
+            file: target.plan.page.file,
+            outcome: "error",
+            // Names the eval, not just the kind. With one catch per kind the
+            // message described whichever eval happened to throw while sitting
+            // on every eval's result, so the name in the result and the name
+            // in the message disagreed.
+            skipReason: `grader ${kind} failed for eval "${target.eval.name}": ${reason}`,
+            durationMs: Date.now() - start,
+          });
+        }
+        continue;
+      }
+      const durationMs = Date.now() - start;
+      allFindings.push(...findings);
+      const grouped = groupFindings(findings);
+      for (const t of group) {
+        const key = resultKey(t.plan.page.file, t.eval.name);
+        const own = grouped.get(key) ?? [];
+        // A diagnostic finding fails the eval regardless of severity: it means
+        // the grader could not reach a verdict, and "no verdict" must never
+        // read as "pass". Enforced here rather than per-adapter, so a new
+        // adapter gets it by default instead of having to remember (ADR 01022).
+        const hasError = own.some(
+          (f) => f.severity === "error" || f.diagnostic === true,
+        );
         results.push({
-          evalName: target.eval.name,
-          suite: target.eval.suite,
-          type: target.eval.type,
-          grader: target.eval.grader,
-          file: target.plan.page.file,
-          outcome: "error",
-          skipReason: `grader ${kind} failed: ${reason}`,
-          durationMs: Date.now() - start,
+          evalName: t.eval.name,
+          type: t.eval.type,
+          grader: t.eval.grader,
+          file: t.plan.page.file,
+          outcome: hasError ? "fail" : "pass",
+          findings: own.length > 0 ? own : undefined,
+          generated: generatedThisRun.has(key) ? true : undefined,
+          durationMs: Math.round(durationMs / group.length),
         });
       }
-      continue;
-    }
-    const durationMs = Date.now() - start;
-    allFindings.push(...findings);
-    const grouped = groupFindings(findings);
-    for (const t of targets) {
-      const key = resultKey(t.plan.page.file, t.eval.name);
-      const own = grouped.get(key) ?? [];
-      // A diagnostic finding fails the eval regardless of severity: it means
-      // the grader could not reach a verdict, and "no verdict" must never read
-      // as "pass". Enforced here rather than per-adapter, so a new adapter
-      // gets it by default instead of having to remember (ADR 01022).
-      const hasError = own.some(
-        (f) => f.severity === "error" || f.diagnostic === true,
-      );
-      results.push({
-        evalName: t.eval.name,
-        type: t.eval.type,
-        grader: t.eval.grader,
-        file: t.plan.page.file,
-        outcome: hasError ? "fail" : "pass",
-        findings: own.length > 0 ? own : undefined,
-        generated: generatedThisRun.has(key) ? true : undefined,
-        durationMs: Math.round(durationMs / targets.length),
-      });
     }
   }
 
@@ -770,6 +827,37 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       message:
         `${budgetSkipped.length} eval(s) were not judged: the turn budget ran out. ` +
         `This run covered less than it was asked to — raise --max-turns or narrow the run.`,
+      level: "warning",
+    });
+  }
+
+  // Nothing reached a verdict. Deliberately a warning and not an error:
+  // `eval-skip` is a feature, `--deterministic-only` is a standing CI
+  // invocation, and a scoped run over a clean tree is a correct answer
+  // (ADR 01029). What was missing is anyone saying that the run therefore
+  // established nothing — the same omission the turn-budget warning above
+  // exists to fill (ADR 01019, ADR 01030).
+  //
+  // No exception for `--since`, which narrates its own empty scope a few lines
+  // later in every reporter. Two lines, one explaining the other, is a better
+  // trade than a carve-out: a carve-out is how this class of bug returns.
+  //
+  // `needs-review` is excluded on purpose: a human-graded eval is work the run
+  // produced, not silence, and the reporters already point at `review`.
+  //
+  // Anchored on the config rather than a page: no single page is at fault, and
+  // the config is the run-level file a reader can act on.
+  if (!results.some((r) => r.outcome !== "skipped")) {
+    problems.push({
+      file: config.configPath,
+      message:
+        `This run graded nothing — no eval reached a verdict, so it established ` +
+        `nothing about the corpus. ` +
+        (results.length === 0
+          ? `Every discovered page was skipped or scoped out of the run.`
+          : `All ${results.length} resolved eval(s) were skipped; check the skip ` +
+            `reasons above — a page-level \`eval-skip\`, a grader-class flag, or ` +
+            `a missing provider.`),
       level: "warning",
     });
   }
