@@ -441,15 +441,28 @@ function summarizeSuites(
     let critSuspended = 0;
     /** "<file> <evalName>" of members a *scored* criterion speaks for. */
     const absorbed = new Set<string>();
+    // Indexed once for the whole suite. The loop below is criterion x page x
+    // member, and a `filter`/`find` inside it rescans every result each time —
+    // quadratic in a corpus's result count, on the one code path that runs
+    // after everything else has finished.
+    const byKey = new Map<string, EvalResult>();
+    const filesByEval = new Map<string, Set<string>>();
+    for (const r of rs) {
+      byKey.set(resultKey(r.file, r.evalName), r);
+      const files = filesByEval.get(r.evalName) ?? new Set<string>();
+      files.add(r.file);
+      filesByEval.set(r.evalName, files);
+    }
     for (const critName of suiteCriteria) {
       const def = config.criteria[critName];
       if (!def) continue;
-      const pages = new Set(
-        rs.filter((r) => def.evals.includes(r.evalName)).map((r) => r.file),
-      );
+      const pages = new Set<string>();
+      for (const name of def.evals) {
+        for (const file of filesByEval.get(name) ?? []) pages.add(file);
+      }
       for (const file of pages) {
         const members = def.evals.map((name) =>
-          rs.find((r) => r.file === file && r.evalName === name),
+          byKey.get(resultKey(file, name)),
         );
         // Every member must have been graded for the group to mean anything.
         // A missing or ungraded member suspends it rather than failing it.
@@ -622,7 +635,18 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         results.push(skippedResult(plan, ev, "deterministic evals skipped (--ai-only)"));
         continue;
       }
-      if (ev.grader === "command" && ev.source === "page" && !allowFrontmatterCommands) {
+      // Page-authored argv, whatever grader carries it. `command` evals name
+      // it in `command`; every `tool:*` adapter also accepts an
+      // `options.command` override and hands it to the same `exec`. Gating
+      // only the grader left a second spelling of "run this" that reached a
+      // shell ungated, which made default-deny decorative — a page that cannot
+      // say `grader: command` could say `grader: tool:vale` with the same argv.
+      // Config-authored argv is the operator's own and is not content, so the
+      // gate is on `source === "page"` rather than on the key's presence.
+      const pageAuthoredArgv =
+        ev.source === "page" &&
+        (ev.grader === "command" || Array.isArray(ev.options?.command));
+      if (pageAuthoredArgv && !allowFrontmatterCommands) {
         results.push(
           skippedResult(
             plan,
