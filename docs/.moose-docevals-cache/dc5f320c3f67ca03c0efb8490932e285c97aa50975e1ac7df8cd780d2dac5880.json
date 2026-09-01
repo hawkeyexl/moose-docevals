@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 256
+    },
+    "durationMs": 3569,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing deterministic graders, severity levels (error, warning, info), the ratchet mechanism for adopting checks, and how findings are structured. The prose discusses existing functionality like 'Adding an honest check to an existing corpus fails a lot of pages at once' and 'Severity is the right lever for a finding class you never intend to gate on'. There are no claims about unreleased or future functionality in the prose. The fenced code blocks contain YAML and JSON examples illustrating configuration and output formats, which are clearly illustrative examples rather than claims about future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes current, shipped functionality of the moose-docevals system. It explains how severity works, how the ratchet mechanism operates, and how findings are structured. There are no promises of unreleased features or references to future versions. The code blocks and configuration samples are clearly illustrative examples of how to use the system, not claims about future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 256
+    },
+    "durationMs": 3495,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing deterministic graders, severity levels (error, warning, info), the ratchet mechanism for adopting checks, and how findings are structured. The prose discusses existing functionality like 'Adding an honest check to an existing corpus fails a lot of pages at once' and 'Severity is the right lever for a finding class you never intend to gate on'. There are no claims about unreleased or future functionality in the prose. The fenced code blocks contain YAML and JSON examples illustrating configuration and output formats, which are clearly illustrative examples rather than claims about future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes current, shipped functionality of the moose-docevals system. It explains how severity works, how the ratchet mechanism operates, and how findings are structured. There are no promises of unreleased features or references to future versions. The code blocks and configuration samples are clearly illustrative examples of how to use the system, not claims about future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 256
+    },
+    "durationMs": 3415,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing deterministic graders, severity levels (error, warning, info), the ratchet mechanism for adopting checks, and how findings are structured. The prose discusses existing functionality like 'Adding an honest check to an existing corpus fails a lot of pages at once' and 'Severity is the right lever for a finding class you never intend to gate on'. There are no claims about unreleased or future functionality in the prose. The fenced code blocks contain YAML and JSON examples illustrating configuration and output formats, which are clearly illustrative examples rather than claims about future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes current, shipped functionality of the moose-docevals system. It explains how severity works, how the ratchet mechanism operates, and how findings are structured. There are no promises of unreleased features or references to future versions. The code blocks and configuration samples are clearly illustrative examples of how to use the system, not claims about future functionality."
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1759,
+      "outputTokens": 302
+    },
+    "durationMs": 3508,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'human-review zone' and its purpose, explaining how the tool works, and providing instructions on how to use it. The prose describes existing functionality (e.g., 'Reviews land in .moose-docevals/reviews.yaml', 'Verdict is pass or fail', 'The queue is visible without holding anyone up'). There are no claims about unreleased or future features in the prose. The page includes fenced code blocks (bash and yaml) and a table, which are configuration samples and examples as specified in the assertion.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes only shipped behavior and existing functionality of the moose-docevals tool. It explains how the review zone works, how to record verdicts, how verdicts persist, and how to tune the tool. There are no promises of future features or unreleased functionality in the prose. The fenced code blocks (bash commands and YAML examples) and the table are clearly illustrative examples, not claims about future functionality. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1759,
+      "outputTokens": 302
+    },
+    "durationMs": 3541,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'human-review zone' and its purpose, explaining how the tool works, and providing instructions on how to use it. The prose describes existing functionality (e.g., 'Reviews land in .moose-docevals/reviews.yaml', 'Verdict is pass or fail', 'The queue is visible without holding anyone up'). There are no claims about unreleased or future features in the prose. The page includes fenced code blocks (bash and yaml) and a table, which are configuration samples and examples as specified in the assertion.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes only shipped behavior and existing functionality of the moose-docevals tool. It explains how the review zone works, how to record verdicts, how verdicts persist, and how to tune the tool. There are no promises of future features or unreleased functionality in the prose. The fenced code blocks (bash commands and YAML examples) and the table are clearly illustrative examples, not claims about future functionality. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1759,
+      "outputTokens": 302
+    },
+    "durationMs": 3584,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'human-review zone' and its purpose, explaining how the tool works, and providing instructions on how to use it. The prose describes existing functionality (e.g., 'Reviews land in .moose-docevals/reviews.yaml', 'Verdict is pass or fail', 'The queue is visible without holding anyone up'). There are no claims about unreleased or future features in the prose. The page includes fenced code blocks (bash and yaml) and a table, which are configuration samples and examples as specified in the assertion.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes only shipped behavior and existing functionality of the moose-docevals tool. It explains how the review zone works, how to record verdicts, how verdicts persist, and how to tune the tool. There are no promises of future features or unreleased functionality in the prose. The fenced code blocks (bash commands and YAML examples) and the table are clearly illustrative examples, not claims about future functionality. The assertion is fully satisfied."
+    }
+  }
+]

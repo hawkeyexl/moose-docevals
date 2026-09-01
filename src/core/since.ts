@@ -16,6 +16,7 @@
  */
 import { resolve } from "node:path";
 import { DocevalsError } from "../types.js";
+import { outputTail } from "../graders/exec.js";
 import type { ExecFn, ExecResult } from "../graders/types.js";
 
 /** git can be slow on a cold index, but not this slow. */
@@ -26,17 +27,24 @@ const GIT_TIMEOUT_MS = 30_000;
  *
  * Lowercased on win32, and that is load-bearing rather than defensive: git
  * reports the case recorded in its index, fast-glob reports the case on disk,
- * and the two sources can also disagree about the drive letter. On a
- * case-insensitive filesystem none of those differences is a different file,
- * but every one of them is a different string.
+ * and the two sources can also disagree about the drive letter. None of those
+ * differences is a different file on Windows, but every one of them is a
+ * different string.
+ *
+ * Keyed on the platform rather than on case-insensitivity in general, because
+ * the latter cannot be detected reliably — a case-insensitive APFS or a
+ * case-sensitive Windows volume both exist. This is the Windows-specific
+ * behaviour the code actually implements, not a claim about every such
+ * filesystem.
  */
 export function changedKey(absPath: string): string {
   const abs = resolve(absPath);
   return process.platform === "win32" ? abs.toLowerCase() : abs;
 }
 
+/** `outputTail` caps at 400 chars; git stderr on a broken repo is unbounded. */
 function stderrOf(result: ExecResult): string {
-  return result.stderr.trim() || result.stdout.trim() || "(no output)";
+  return outputTail(result) || "(no output)";
 }
 
 /**
@@ -79,6 +87,28 @@ export async function changedFilesSince(
   root: string,
   exec: ExecFn,
 ): Promise<Set<string>> {
+  // A ref that parses as a git option is not a ref. `--output=x` sends the diff
+  // to a file and leaves stdout empty, so the changed set comes back empty and
+  // the run exits 0 having scoped everything out — the silent green this flag
+  // must never produce. `--` does not help: the left side of `A...B` is parsed
+  // before any separator, so the shape has to be rejected outright.
+  if (ref.startsWith("-")) {
+    throw new DocevalsError(
+      `--since "${ref}" is not a ref: a value starting with "-" is read by git as ` +
+        `an option, which would silently produce an empty diff.`,
+    );
+  }
+  // Git reads an omitted left side of `A...B` as HEAD, so a blank ref diffs
+  // HEAD against HEAD — exit 0, empty diff, every eval scoped out, exit 0. The
+  // blank arrives by accident: `--since "${{ github.base_ref }}"` renders empty
+  // on a push event, and an unset shell variable expands to nothing.
+  if (ref.trim() === "") {
+    throw new DocevalsError(
+      `--since was given an empty ref. Git would read that as HEAD and scope the ` +
+        `run to nothing, which exits 0 having checked nothing. If this came from a ` +
+        `CI expression, the variable is unset on this event.`,
+    );
+  }
   const top = await git(exec, ["git", "rev-parse", "--show-toplevel"], root);
   if (top.code !== 0) {
     throw new DocevalsError(

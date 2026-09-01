@@ -20,7 +20,9 @@ npx moose-docevals init
 ```
 
 `init` writes a starter `moose.config.yaml`: a `files.include` glob, a pinned judge model, and a
-few named evals to start from — including `no-future-promises` and `fresh-enough`.
+few named evals to start from — including `no-future-promises` and `fresh-enough`. They are grouped
+into a suite that `defaults.suite` applies to **every** page, so the next step finds something
+without your having to touch a single page's frontmatter first.
 
 ## 2. Get a finding without spending anything
 

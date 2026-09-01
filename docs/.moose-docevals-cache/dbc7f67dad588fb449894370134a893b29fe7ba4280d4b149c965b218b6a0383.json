@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2232,
+      "outputTokens": 209
+    },
+    "durationMs": 3191,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing behavior: exit codes (0, 1, 2), baseline suppression, `--fail-on-review` flag, inline annotations, suite targets, and filtered runs. No prose claims unreleased or future functionality. All code blocks and examples (YAML, console output, text annotations) are presented as illustrations of current behavior.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes shipped functionality (exit codes, baselines, annotations, filtering). No prose promises future features or unreleased versions. All code/configuration examples are clearly illustrative of current behavior."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2232,
+      "outputTokens": 209
+    },
+    "durationMs": 3239,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing behavior: exit codes (0, 1, 2), baseline suppression, `--fail-on-review` flag, inline annotations, suite targets, and filtered runs. No prose claims unreleased or future functionality. All code blocks and examples (YAML, console output, text annotations) are presented as illustrations of current behavior.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes shipped functionality (exit codes, baselines, annotations, filtering). No prose promises future features or unreleased versions. All code/configuration examples are clearly illustrative of current behavior."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2232,
+      "outputTokens": 209
+    },
+    "durationMs": 3293,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing behavior: exit codes (0, 1, 2), baseline suppression, `--fail-on-review` flag, inline annotations, suite targets, and filtered runs. No prose claims unreleased or future functionality. All code blocks and examples (YAML, console output, text annotations) are presented as illustrations of current behavior.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes shipped functionality (exit codes, baselines, annotations, filtering). No prose promises future features or unreleased versions. All code/configuration examples are clearly illustrative of current behavior."
+    }
+  }
+]

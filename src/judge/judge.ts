@@ -61,7 +61,21 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     let turnsSpent = 0;
 
     const results: EvalResult[] = [];
-    const concurrency = config.judge.concurrency;
+    // `makeJudge` is a published export taking a caller-supplied config, so a
+    // JS consumer can hand us one shaped for a version before `judge.concurrency`
+    // existed. The type says that cannot happen; at a package boundary it can.
+    // Unguarded it is `Math.min(undefined, n)` -> NaN -> `Array.from({length:
+    // NaN})` -> zero workers, and every AI eval vanishes from the results —
+    // not skipped, not errored, absent — with the run exiting 0.
+    //
+    // Tested with `Number.isFinite` rather than `??` because the value is typed
+    // non-optional: `??` is dead code to the compiler and the lint rejects it,
+    // while the runtime hazard is real. This says what is actually being
+    // checked.
+    const configured = config.judge.concurrency;
+    const concurrency = Number.isFinite(configured)
+      ? configured
+      : config.defaults.concurrency;
     let index = 0;
 
     // Safeguard layer 1: a model judging its own output shows self-preference

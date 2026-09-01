@@ -1,6 +1,12 @@
 ---
 title: Promote to deterministic
 description: Find ai evals that could be code, and convert them.
+# Line 73 quotes the `no-future-promises` criterion verbatim, in a table of
+# checks that need interpretation. The judge reads the quotation as the page
+# making the claim. Same situation as evals/regression-vs-capability.mdx: a page
+# that documents an eval in its own prose sits outside what that eval can judge,
+# so it runs everything else instead. Second instance of this — see ADR 01025.
+eval-suite: docs-page-meta
 ---
 
 The grader hierarchy is a claim about preference, and preferences decay without a mechanism. `ai` is

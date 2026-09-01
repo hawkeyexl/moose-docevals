@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2175,
+      "outputTokens": 216
+    },
+    "durationMs": 2535,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes moose-docevals grader types (command, tool:markdownlint, tool:vale, tool:docmeta, tool:doc-structure-lint, tool:doc-detective, tool:freshness, tool:reading-level, tool:differentiation, ai, human) and their configurations. It contains no prose making claims about unreleased or future functionality. All text describes existing, shipped behavior of the grader system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes the current functionality of the moose-docevals grader system. There are no claims about unreleased features, future functionality, or unreleased versions. The text describes existing grader types, their options, defaults, and behaviors. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2175,
+      "outputTokens": 216
+    },
+    "durationMs": 2525,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes moose-docevals grader types (command, tool:markdownlint, tool:vale, tool:docmeta, tool:doc-structure-lint, tool:doc-detective, tool:freshness, tool:reading-level, tool:differentiation, ai, human) and their configurations. It contains no prose making claims about unreleased or future functionality. All text describes existing, shipped behavior of the grader system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes the current functionality of the moose-docevals grader system. There are no claims about unreleased features, future functionality, or unreleased versions. The text describes existing grader types, their options, defaults, and behaviors. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2175,
+      "outputTokens": 216
+    },
+    "durationMs": 2529,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes moose-docevals grader types (command, tool:markdownlint, tool:vale, tool:docmeta, tool:doc-structure-lint, tool:doc-detective, tool:freshness, tool:reading-level, tool:differentiation, ai, human) and their configurations. It contains no prose making claims about unreleased or future functionality. All text describes existing, shipped behavior of the grader system.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content exclusively describes the current functionality of the moose-docevals grader system. There are no claims about unreleased features, future functionality, or unreleased versions. The text describes existing grader types, their options, defaults, and behaviors. The assertion is fully satisfied."
+    }
+  }
+]

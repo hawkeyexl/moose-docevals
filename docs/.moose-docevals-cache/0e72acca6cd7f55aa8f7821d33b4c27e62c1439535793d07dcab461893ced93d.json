@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 4432,
+      "outputTokens": 313
+    },
+    "durationMs": 5380,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes only shipped behavior. For example, it states: 'Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by the inline tests at the foot of this page.' It details specific flags and their effects (e.g., '--deterministic-only', '--ai-only', '--since <ref>'), and references existing documentation sections like '[Output and exit codes](/moose-docevals/reference/output-and-exit-codes/)'. There are no mentions of unreleased features, future functionality, or upcoming versions in the prose. The code blocks and examples (e.g., the console output for `--since origin/main`) are presented as illustrations of current behavior.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page strictly describes existing, shipped functionality. It explicitly states that flags are 'verified against `src/cli.ts`' and that exit codes are 'exercised by the inline tests', indicating current, tested behavior. There are no assertions about unreleased or future features in the prose. The code blocks and examples are clearly illustrative of the documented behavior."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 4432,
+      "outputTokens": 313
+    },
+    "durationMs": 5145,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes only shipped behavior. For example, it states: 'Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by the inline tests at the foot of this page.' It details specific flags and their effects (e.g., '--deterministic-only', '--ai-only', '--since <ref>'), and references existing documentation sections like '[Output and exit codes](/moose-docevals/reference/output-and-exit-codes/)'. There are no mentions of unreleased features, future functionality, or upcoming versions in the prose. The code blocks and examples (e.g., the console output for `--since origin/main`) are presented as illustrations of current behavior.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page strictly describes existing, shipped functionality. It explicitly states that flags are 'verified against `src/cli.ts`' and that exit codes are 'exercised by the inline tests', indicating current, tested behavior. There are no assertions about unreleased or future features in the prose. The code blocks and examples are clearly illustrative of the documented behavior."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 4432,
+      "outputTokens": 313
+    },
+    "durationMs": 4821,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes only shipped behavior. For example, it states: 'Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by the inline tests at the foot of this page.' It details specific flags and their effects (e.g., '--deterministic-only', '--ai-only', '--since <ref>'), and references existing documentation sections like '[Output and exit codes](/moose-docevals/reference/output-and-exit-codes/)'. There are no mentions of unreleased features, future functionality, or upcoming versions in the prose. The code blocks and examples (e.g., the console output for `--since origin/main`) are presented as illustrations of current behavior.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page strictly describes existing, shipped functionality. It explicitly states that flags are 'verified against `src/cli.ts`' and that exit codes are 'exercised by the inline tests', indicating current, tested behavior. There are no assertions about unreleased or future features in the prose. The code blocks and examples are clearly illustrative of the documented behavior."
+    }
+  }
+]

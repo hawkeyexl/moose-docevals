@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1464,
+      "outputTokens": 328
+    },
+    "durationMs": 4429,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped functionality: 'A gate that is not in CI is a linter someone runs sometimes', 'This page is the GitHub Actions recipe', 'Three things are doing real work here', 'The cache step is not an optimisation', 'paths: keeps the job off pull requests that cannot affect the docs', 'Fork pull requests can execute their author's code', 'Every uncached ai eval is live model calls', 'You do not need a provider to get value on day one', 'No secret, no cost, no model in the critical path'. All prose describes current, operational behavior. The fenced code blocks contain YAML configuration samples and command examples, which are illustrations of how to use the tool, not claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes shipped, operational functionality. It describes existing CI gates, caching mechanisms, fork handling, and deterministic modes as current features. There are no promises of future features, unreleased functionality, or references to upcoming versions. The code blocks contain configuration samples and command examples that illustrate how to use the existing tool, which is acceptable per the assertion criteria."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1464,
+      "outputTokens": 328
+    },
+    "durationMs": 4120,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped functionality: 'A gate that is not in CI is a linter someone runs sometimes', 'This page is the GitHub Actions recipe', 'Three things are doing real work here', 'The cache step is not an optimisation', 'paths: keeps the job off pull requests that cannot affect the docs', 'Fork pull requests can execute their author's code', 'Every uncached ai eval is live model calls', 'You do not need a provider to get value on day one', 'No secret, no cost, no model in the critical path'. All prose describes current, operational behavior. The fenced code blocks contain YAML configuration samples and command examples, which are illustrations of how to use the tool, not claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes shipped, operational functionality. It describes existing CI gates, caching mechanisms, fork handling, and deterministic modes as current features. There are no promises of future features, unreleased functionality, or references to upcoming versions. The code blocks contain configuration samples and command examples that illustrate how to use the existing tool, which is acceptable per the assertion criteria."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1464,
+      "outputTokens": 328
+    },
+    "durationMs": 4308,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing, shipped functionality: 'A gate that is not in CI is a linter someone runs sometimes', 'This page is the GitHub Actions recipe', 'Three things are doing real work here', 'The cache step is not an optimisation', 'paths: keeps the job off pull requests that cannot affect the docs', 'Fork pull requests can execute their author's code', 'Every uncached ai eval is live model calls', 'You do not need a provider to get value on day one', 'No secret, no cost, no model in the critical path'. All prose describes current, operational behavior. The fenced code blocks contain YAML configuration samples and command examples, which are illustrations of how to use the tool, not claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose exclusively describes shipped, operational functionality. It describes existing CI gates, caching mechanisms, fork handling, and deterministic modes as current features. There are no promises of future features, unreleased functionality, or references to upcoming versions. The code blocks contain configuration samples and command examples that illustrate how to use the existing tool, which is acceptable per the assertion criteria."
+    }
+  }
+]

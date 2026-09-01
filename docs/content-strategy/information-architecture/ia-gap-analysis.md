@@ -211,9 +211,36 @@ Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`
 | `tool:reading-level` | `reference/graders.mdx` |
 | `tool:differentiation` | `reference/graders.mdx` |
 
-**No unmapped surface.** Re-run this check whenever a command, config key, or grader is added — a new
-capability with no page is a documentation gap the moment it ships, and this table is where that
-becomes visible.
+### Run outcomes
+
+Added on the 2026-08-31 re-run (ADRs 01030–01032). The three tables above check *inputs* — commands,
+keys, graders — and an exit code is an **output**, so a new exit-2 condition could ship with no page
+and nothing here would notice. It nearly did.
+
+| Outcome | Documented in |
+|---|---|
+| Exit `0` / `1` / `2`, and who each routes to | `reference/output-and-exit-codes.mdx`, `fix/index.mdx`, `ci/exit-codes-and-annotations.mdx` |
+| Exit 2: unknown `--format` | `reference/output-and-exit-codes.mdx` |
+| Exit 2: empty input set (`discoverPages`) | `reference/cli.mdx` |
+| Exit 2: `--eval` / `--suite` matching nothing | `fix/index.mdx`, `reference/cli.mdx`, `ci/exit-codes-and-annotations.mdx` |
+| Exit 2: unresolvable `--since` ref, and `--since` with `--write-baseline` | `reference/cli.mdx` |
+| Exit 2: **a run that would check nothing** (ADR 01030) | `reference/output-and-exit-codes.mdx`, `fix/index.mdx` |
+| Exit 0 with a statement: empty `--since` scope | `reference/cli.mdx` |
+| Exit 0 with a warning: **the run graded nothing** (ADR 01030) | `reference/output-and-exit-codes.mdx` |
+| Exit 1 on a suite below target, suspended by `--eval` / `--suite` / `--since` | `reference/output-and-exit-codes.mdx`, `evals/named-evals-and-suites.mdx` |
+| `--fail-on-review` widening exit 1 | `ci/exit-codes-and-annotations.mdx` |
+
+**No unmapped surface.** Re-run this check whenever a command, config key, grader, **or run outcome**
+is added — a new capability with no page is a documentation gap the moment it ships, and these tables
+are where that becomes visible.
+
+Two behavior changes from the same re-run are deliberately *not* new rows, because neither is a
+surface a reader looks up:
+
+- **`--deterministic-only` no longer warns about an unavailable provider** (ADR 01032). It removes
+  noise from output no page ever quoted; `reference/cli.mdx` never documented the warning.
+- **A grader error now names the eval that failed** (ADR 01031). A message-wording change inside an
+  `error` result whose shape `reference/output-and-exit-codes.mdx` already documents.
 
 ## 5. Still outstanding
 
@@ -228,6 +255,7 @@ The content set is complete; these are not.
 | **A `baseline` glossary entry** | The term now recurs across six pages. `reference/glossary.mdx` is alphabetical and its description reads "The ten terms", so adding one is an edit rather than a consistency fix. | No. |
 | **A recording recipe in `ci/recipes.mdx`** | `ci/exit-codes-and-annotations.mdx` says `--write-baseline` does not belong in the gating job, but no page shows the separate recording invocation. | No. |
 | **`--since` in the CI journey pages** | Documented in `reference/cli.mdx` only (ADR 01029). `ci/index.mdx` and `ci/cost-and-caching.mdx` show unscoped runs, and neither mentions the `fetch-depth: 0` that a scoped run needs — which is the one detail a reader hits before anything else. | No — but it is the gap most likely to produce a support question. |
+| **A suite that graded nothing still reports `ok`** | `summarizeSuites` computes `passRate = graded > 0 ? passed / graded : 1`, so an empty suite meets any target: `--deterministic-only` over the fixture corpus prints `tutorial: 0/0 passed — 100% vs target 70% ok`. Named and left open by ADR 01030, which fixes the run-level case. Reusing ADR 01018's `partial` flag is the obvious remedy and is a third decision: `partial` currently means "a filter was active" and renders as such, so generalizing it changes a public JSON field's meaning, two reporters' wording, and every `--deterministic-only` run's output. | No — the run-level warning now prints beside that line and contradicts it. |
 | **`calibrate --max-turns` is run-wide only because its cases now batch** | Recorded in ADR 01016. If `calibrate` ever returns to judging case-by-case, the flag silently becomes per case again — the reason ADR 01019 withheld it in the first place. | No — a note for whoever touches that loop. |
 
 ### What will drift first
