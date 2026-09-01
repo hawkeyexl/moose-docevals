@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1629,
+      "outputTokens": 220
+    },
+    "durationMs": 2928,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks showing YAML frontmatter examples, bash commands, and console output. The prose describes how to declare evals in frontmatter, referencing named evals, inline evals, and suite assignments. There is no prose that promises unreleased features or points to unreleased versions. The page describes existing functionality (eval declarations, frontmatter validation, error reporting) without claiming future capabilities.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes current, shipped functionality for declaring and validating evals in documentation frontmatter. All examples are contained within fenced code blocks (YAML, bash, console output) which the assertion explicitly excludes from consideration. The prose itself makes no claims about unreleased or future functionality - it describes how to use the existing moose-docevals system."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1629,
+      "outputTokens": 220
+    },
+    "durationMs": 2893,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks showing YAML frontmatter examples, bash commands, and console output. The prose describes how to declare evals in frontmatter, referencing named evals, inline evals, and suite assignments. There is no prose that promises unreleased features or points to unreleased versions. The page describes existing functionality (eval declarations, frontmatter validation, error reporting) without claiming future capabilities.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes current, shipped functionality for declaring and validating evals in documentation frontmatter. All examples are contained within fenced code blocks (YAML, bash, console output) which the assertion explicitly excludes from consideration. The prose itself makes no claims about unreleased or future functionality - it describes how to use the existing moose-docevals system."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1629,
+      "outputTokens": 220
+    },
+    "durationMs": 5629,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks showing YAML frontmatter examples, bash commands, and console output. The prose describes how to declare evals in frontmatter, referencing named evals, inline evals, and suite assignments. There is no prose that promises unreleased features or points to unreleased versions. The page describes existing functionality (eval declarations, frontmatter validation, error reporting) without claiming future capabilities.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes current, shipped functionality for declaring and validating evals in documentation frontmatter. All examples are contained within fenced code blocks (YAML, bash, console output) which the assertion explicitly excludes from consideration. The prose itself makes no claims about unreleased or future functionality - it describes how to use the existing moose-docevals system."
+    }
+  }
+]

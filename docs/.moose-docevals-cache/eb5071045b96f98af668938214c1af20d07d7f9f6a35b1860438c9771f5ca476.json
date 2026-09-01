@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3769,
+      "outputTokens": 284
+    },
+    "durationMs": 3592,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes existing functionality including exit codes (0, 1, 2), command formats (human, json, markdown, github, sarif, junit), and various flags like --fail-on-review, --eval, --suite, --format, --deterministic-only, --no-generate, --since, --write-baseline. All described features are presented as shipped behavior with no mention of unreleased or future functionality. The prose focuses on how the tool currently works, including CI integration, baseline handling, and output formatting.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively documents shipped functionality. It describes exit codes, command formats, flags, and output structures as existing features. There is no prose claiming unreleased or future functionality. The page focuses on current behavior, CI integration, and how to use the tool as it exists today. All examples and code blocks are illustrative of current functionality, not promises of future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3769,
+      "outputTokens": 284
+    },
+    "durationMs": 3617,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes existing functionality including exit codes (0, 1, 2), command formats (human, json, markdown, github, sarif, junit), and various flags like --fail-on-review, --eval, --suite, --format, --deterministic-only, --no-generate, --since, --write-baseline. All described features are presented as shipped behavior with no mention of unreleased or future functionality. The prose focuses on how the tool currently works, including CI integration, baseline handling, and output formatting.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively documents shipped functionality. It describes exit codes, command formats, flags, and output structures as existing features. There is no prose claiming unreleased or future functionality. The page focuses on current behavior, CI integration, and how to use the tool as it exists today. All examples and code blocks are illustrative of current functionality, not promises of future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 3769,
+      "outputTokens": 284
+    },
+    "durationMs": 3606,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page describes existing functionality including exit codes (0, 1, 2), command formats (human, json, markdown, github, sarif, junit), and various flags like --fail-on-review, --eval, --suite, --format, --deterministic-only, --no-generate, --since, --write-baseline. All described features are presented as shipped behavior with no mention of unreleased or future functionality. The prose focuses on how the tool currently works, including CI integration, baseline handling, and output formatting.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively documents shipped functionality. It describes exit codes, command formats, flags, and output structures as existing features. There is no prose claiming unreleased or future functionality. The page focuses on current behavior, CI integration, and how to use the tool as it exists today. All examples and code blocks are illustrative of current functionality, not promises of future features."
+    }
+  }
+]

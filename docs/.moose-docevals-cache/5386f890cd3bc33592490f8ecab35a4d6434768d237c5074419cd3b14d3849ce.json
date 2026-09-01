@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1561,
+      "outputTokens": 321
+    },
+    "durationMs": 17259,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the current behavior of `moose-docevals fill`, including its caching mechanism, confidence thresholds, and how it handles proposals. It explicitly states: 'Raw proposals are cached **before** the confidence gate. Re-running at a different `--confidence` costs nothing' and 'Only proposals at or above the threshold (default `0.7`, config `fill.confidence-threshold`) are appended to the page's frontmatter.' The page also includes a table of links to other pages for 'Where to go next', but these are references to existing documentation, not claims about unreleased features. There are no mentions of unreleased functionality, future features, or upcoming versions in the prose.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of `moose-docevals fill`. It explains how the tool works (caching, confidence thresholds, proposal handling) without making any claims about unreleased or future features. The code blocks and examples are clearly illustrative of current behavior. The 'Where to go next' section contains links to other documentation pages, not promises of future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1561,
+      "outputTokens": 321
+    },
+    "durationMs": 4179,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the current behavior of `moose-docevals fill`, including its caching mechanism, confidence thresholds, and how it handles proposals. It explicitly states: 'Raw proposals are cached **before** the confidence gate. Re-running at a different `--confidence` costs nothing' and 'Only proposals at or above the threshold (default `0.7`, config `fill.confidence-threshold`) are appended to the page's frontmatter.' The page also includes a table of links to other pages for 'Where to go next', but these are references to existing documentation, not claims about unreleased features. There are no mentions of unreleased functionality, future features, or upcoming versions in the prose.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of `moose-docevals fill`. It explains how the tool works (caching, confidence thresholds, proposal handling) without making any claims about unreleased or future features. The code blocks and examples are clearly illustrative of current behavior. The 'Where to go next' section contains links to other documentation pages, not promises of future functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1561,
+      "outputTokens": 321
+    },
+    "durationMs": 4417,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the current behavior of `moose-docevals fill`, including its caching mechanism, confidence thresholds, and how it handles proposals. It explicitly states: 'Raw proposals are cached **before** the confidence gate. Re-running at a different `--confidence` costs nothing' and 'Only proposals at or above the threshold (default `0.7`, config `fill.confidence-threshold`) are appended to the page's frontmatter.' The page also includes a table of links to other pages for 'Where to go next', but these are references to existing documentation, not claims about unreleased features. There are no mentions of unreleased functionality, future features, or upcoming versions in the prose.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing, shipped functionality of `moose-docevals fill`. It explains how the tool works (caching, confidence thresholds, proposal handling) without making any claims about unreleased or future features. The code blocks and examples are clearly illustrative of current behavior. The 'Where to go next' section contains links to other documentation pages, not promises of future functionality."
+    }
+  }
+]

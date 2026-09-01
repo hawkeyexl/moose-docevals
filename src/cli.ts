@@ -163,6 +163,10 @@ program
   )
   .option("--suite <name>", "Run only evals in this suite")
   .option(
+    "--since <ref>",
+    "Evaluate only pages that changed between this git ref and HEAD; corpus-wide graders still see every page",
+  )
+  .option(
     "--max-turns <n>",
     "Stop after this many ensemble runs (a cached ensemble costs none)",
     parseIntArg("--max-turns"),
@@ -195,6 +199,7 @@ program
         maxTurns: opts.maxTurns as number | undefined,
         evalNames: opts.eval as string[] | undefined,
         suite: opts.suite as string | undefined,
+        since: opts.since as string | undefined,
         // commander collapses `--baseline` to true and `--no-baseline` to
         // false on the same key; a string is an explicit path.
         baseline: opts.baseline as string | boolean | undefined,

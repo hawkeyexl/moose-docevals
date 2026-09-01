@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1861,
+      "outputTokens": 305
+    },
+    "durationMs": 5337,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks with YAML configuration samples (e.g., 'Move it into `moose.config.yaml` under `evals`:', 'docevals: evals: no-future-promises:', 'evals: - use: no-future-promises', 'docevals: suites: reference: target-pass-rate: 1.0 evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]', etc.). The prose discusses the moose-docevals tool and its configuration, not unreleased or future functionality of the documentation pages themselves. The page describes how to configure and use the tool, including defining evals and suites.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page is technical documentation about the moose-docevals tool configuration. It does not make any claims about unreleased or future functionality of the documentation pages themselves. The page describes existing features of the tool (evals, suites, target-pass-rate, etc.) and how to configure them. All the future-tense or forward-looking language appears in code blocks and configuration examples, which the assertion explicitly excludes from consideration. The prose itself describes shipped behavior and tool functionality without promising unreleased features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1861,
+      "outputTokens": 305
+    },
+    "durationMs": 4411,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks with YAML configuration samples (e.g., 'Move it into `moose.config.yaml` under `evals`:', 'docevals: evals: no-future-promises:', 'evals: - use: no-future-promises', 'docevals: suites: reference: target-pass-rate: 1.0 evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]', etc.). The prose discusses the moose-docevals tool and its configuration, not unreleased or future functionality of the documentation pages themselves. The page describes how to configure and use the tool, including defining evals and suites.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page is technical documentation about the moose-docevals tool configuration. It does not make any claims about unreleased or future functionality of the documentation pages themselves. The page describes existing features of the tool (evals, suites, target-pass-rate, etc.) and how to configure them. All the future-tense or forward-looking language appears in code blocks and configuration examples, which the assertion explicitly excludes from consideration. The prose itself describes shipped behavior and tool functionality without promising unreleased features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1861,
+      "outputTokens": 305
+    },
+    "durationMs": 4207,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains multiple fenced code blocks with YAML configuration samples (e.g., 'Move it into `moose.config.yaml` under `evals`:', 'docevals: evals: no-future-promises:', 'evals: - use: no-future-promises', 'docevals: suites: reference: target-pass-rate: 1.0 evals: [no-future-promises, fresh-enough, readable, frontmatter-valid]', etc.). The prose discusses the moose-docevals tool and its configuration, not unreleased or future functionality of the documentation pages themselves. The page describes how to configure and use the tool, including defining evals and suites.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page is technical documentation about the moose-docevals tool configuration. It does not make any claims about unreleased or future functionality of the documentation pages themselves. The page describes existing features of the tool (evals, suites, target-pass-rate, etc.) and how to configure them. All the future-tense or forward-looking language appears in code blocks and configuration examples, which the assertion explicitly excludes from consideration. The prose itself describes shipped behavior and tool functionality without promising unreleased features."
+    }
+  }
+]

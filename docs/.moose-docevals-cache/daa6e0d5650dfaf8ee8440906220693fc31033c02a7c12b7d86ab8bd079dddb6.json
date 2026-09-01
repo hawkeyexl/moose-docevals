@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2086,
+      "outputTokens": 251
+    },
+    "durationMs": 3409,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks. The prose discusses existing functionality like 'script-based checks', 'AI verdict', 'needs-review', 'stale generated script', and 'Exit 2' scenarios. There are no claims about unreleased or future functionality in the prose. The page mentions 'If you genuinely disagree with the verdict, that is a conversation with whoever owns the eval, not a thing to work around' which refers to existing functionality. Code blocks and examples are used to illustrate tool usage but do not contain future-tense claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content only describes the current, existing functionality of the moose-docevals tool. All prose refers to established features like CI output types, eval types, and troubleshooting steps. There are no promises of future features, unreleased functionality, or upcoming versions. The page is purely descriptive of how the tool currently works."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2086,
+      "outputTokens": 251
+    },
+    "durationMs": 3236,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks. The prose discusses existing functionality like 'script-based checks', 'AI verdict', 'needs-review', 'stale generated script', and 'Exit 2' scenarios. There are no claims about unreleased or future functionality in the prose. The page mentions 'If you genuinely disagree with the verdict, that is a conversation with whoever owns the eval, not a thing to work around' which refers to existing functionality. Code blocks and examples are used to illustrate tool usage but do not contain future-tense claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content only describes the current, existing functionality of the moose-docevals tool. All prose refers to established features like CI output types, eval types, and troubleshooting steps. There are no promises of future features, unreleased functionality, or upcoming versions. The page is purely descriptive of how the tool currently works."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2086,
+      "outputTokens": 251
+    },
+    "durationMs": 2894,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page content describes the moose-docevals tool and its various checks. The prose discusses existing functionality like 'script-based checks', 'AI verdict', 'needs-review', 'stale generated script', and 'Exit 2' scenarios. There are no claims about unreleased or future functionality in the prose. The page mentions 'If you genuinely disagree with the verdict, that is a conversation with whoever owns the eval, not a thing to work around' which refers to existing functionality. Code blocks and examples are used to illustrate tool usage but do not contain future-tense claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content only describes the current, existing functionality of the moose-docevals tool. All prose refers to established features like CI output types, eval types, and troubleshooting steps. There are no promises of future features, unreleased functionality, or upcoming versions. The page is purely descriptive of how the tool currently works."
+    }
+  }
+]

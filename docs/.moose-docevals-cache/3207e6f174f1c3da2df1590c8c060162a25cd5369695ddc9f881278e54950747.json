@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2494,
+      "outputTokens": 208
+    },
+    "durationMs": 2531,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the moose-docevals tool, its schema, and how to use it. It includes code blocks showing YAML frontmatter examples, tables describing fields, and instructions on validation. The prose discusses current functionality like schema validation, eval resolution order, and page problem reporting. There are no claims about unreleased or future features in the prose sections.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing functionality of the moose-docevals tool (schema validation, eval resolution, page problems, etc.). While there are code blocks and examples throughout, the prose itself makes no claims about unreleased or future features. The examples in code blocks are clearly illustrative of current functionality rather than promises of future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2494,
+      "outputTokens": 208
+    },
+    "durationMs": 2521,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the moose-docevals tool, its schema, and how to use it. It includes code blocks showing YAML frontmatter examples, tables describing fields, and instructions on validation. The prose discusses current functionality like schema validation, eval resolution order, and page problem reporting. There are no claims about unreleased or future features in the prose sections.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing functionality of the moose-docevals tool (schema validation, eval resolution, page problems, etc.). While there are code blocks and examples throughout, the prose itself makes no claims about unreleased or future features. The examples in code blocks are clearly illustrative of current functionality rather than promises of future features."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2494,
+      "outputTokens": 208
+    },
+    "durationMs": 2529,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the moose-docevals tool, its schema, and how to use it. It includes code blocks showing YAML frontmatter examples, tables describing fields, and instructions on validation. The prose discusses current functionality like schema validation, eval resolution order, and page problem reporting. There are no claims about unreleased or future features in the prose sections.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose only describes existing functionality of the moose-docevals tool (schema validation, eval resolution, page problems, etc.). While there are code blocks and examples throughout, the prose itself makes no claims about unreleased or future features. The examples in code blocks are clearly illustrative of current functionality rather than promises of future features."
+    }
+  }
+]

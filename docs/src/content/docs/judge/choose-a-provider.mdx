@@ -86,7 +86,9 @@ Runs the model in-process via llama.cpp. No key, no endpoint, and **no page cont
 machine** — which is the answer when a security review asks where your documentation goes.
 
 The first run is the exception: it fetches the llama.cpp runtime and the model weights into a
-directory the inference library owns, outside your project. Every run after that is offline. Because
+directory the inference library owns, outside your project — set
+`provider.llama-cpp.models-directory` to put them somewhere else, including inside the repo. Every
+run after that is offline. Because
 of that first fetch, this provider belongs in local and self-hosted runs — a fresh CI runner should
 replay a committed cache instead.
 

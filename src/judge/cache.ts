@@ -32,9 +32,38 @@ export { sha256 };
  * structurally-identical object does not satisfy its type.
  */
 export class VerdictCache extends JsonCache<JudgeRun[]> {
+  /** An ensemble is cacheable only if every run produced a verdict. */
+  private static usable(runs: JudgeRun[]): boolean {
+    return runs.every((r) => r.error === undefined && r.verdict !== undefined);
+  }
+
   override set(key: string, value: JudgeRun[]): void {
-    if (value.some((r) => r.error !== undefined)) return;
+    if (!VerdictCache.usable(value)) return;
     super.set(key, value);
+  }
+
+  /**
+   * Reading applies the same predicate, which is what makes the property
+   * total rather than merely forward-looking.
+   *
+   * Guarding only the write cannot heal an entry this class did not write —
+   * and those exist: the 65 errored ensembles that prompted ADR 01026 were on
+   * disk before it, and had to be deleted by hand. The committed docs cache is
+   * exactly the population at risk, because CI replays it with no provider
+   * reachable, so a poisoned entry there is a verdict no future run can
+   * dislodge. Treating it as a miss costs one re-judge and converges;
+   * inheriting `get` unchanged never does.
+   *
+   * The predicate also matches the library's own definition rather than ours:
+   * `computeConsensus` counts a run with no `verdict` as an error vote, so an
+   * entry with neither `verdict` nor `error` — reachable through a truncated
+   * write to these hand-editable JSON files — would otherwise replay as a
+   * permanent human-review with nothing explaining why.
+   */
+  override get(key: string): JudgeRun[] | undefined {
+    const hit = super.get(key);
+    if (hit === undefined) return undefined;
+    return VerdictCache.usable(hit) ? hit : undefined;
   }
 }
 

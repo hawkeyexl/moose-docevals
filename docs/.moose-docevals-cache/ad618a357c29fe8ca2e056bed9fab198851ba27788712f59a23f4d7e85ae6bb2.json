@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2367,
+      "outputTokens": 231
+    },
+    "durationMs": 3016,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a section titled 'The test' with a quote: 'Would two careful reviewers, reading the same page, reach the same verdict?' and a table comparing 'Unjudgeable' and 'Judgeable' items. The page also includes a YAML example showing an assertion about prerequisites. The page discusses concepts like 'flaky eval', 'deterministic checks', and 'holistic judgment'. There is no prose outside of code blocks or quoted examples that claims unreleased or future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content focuses on explaining how to write and evaluate documentation assertions. It does not make any claims about unreleased or future functionality in its prose. The examples provided (like the YAML snippet) are clearly marked as examples and do not count as claims. The page describes existing concepts and practices without promising features that haven't shipped."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2367,
+      "outputTokens": 231
+    },
+    "durationMs": 3093,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a section titled 'The test' with a quote: 'Would two careful reviewers, reading the same page, reach the same verdict?' and a table comparing 'Unjudgeable' and 'Judgeable' items. The page also includes a YAML example showing an assertion about prerequisites. The page discusses concepts like 'flaky eval', 'deterministic checks', and 'holistic judgment'. There is no prose outside of code blocks or quoted examples that claims unreleased or future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content focuses on explaining how to write and evaluate documentation assertions. It does not make any claims about unreleased or future functionality in its prose. The examples provided (like the YAML snippet) are clearly marked as examples and do not count as claims. The page describes existing concepts and practices without promising features that haven't shipped."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 2367,
+      "outputTokens": 231
+    },
+    "durationMs": 3084,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains a section titled 'The test' with a quote: 'Would two careful reviewers, reading the same page, reach the same verdict?' and a table comparing 'Unjudgeable' and 'Judgeable' items. The page also includes a YAML example showing an assertion about prerequisites. The page discusses concepts like 'flaky eval', 'deterministic checks', and 'holistic judgment'. There is no prose outside of code blocks or quoted examples that claims unreleased or future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content focuses on explaining how to write and evaluate documentation assertions. It does not make any claims about unreleased or future functionality in its prose. The examples provided (like the YAML snippet) are clearly marked as examples and do not count as claims. The page describes existing concepts and practices without promising features that haven't shipped."
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1381,
+      "outputTokens": 251
+    },
+    "durationMs": 3144,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality.",
+      "observed": "The page content contains definitions for terms like 'Assertion', 'Capability suite', 'Confidence zone', 'Consensus', 'Ensemble', 'Eval', 'Evidence', 'Finding', 'Golden set', 'Grader', 'Grader hierarchy', 'Human-review zone', 'Pass rate', 'Regression suite', 'Severity', and 'Suite'. None of these definitions or the surrounding prose make any claims about unreleased or future functionality. The text describes existing concepts and mechanisms of the moose-docevals system without promising features that have not shipped.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely descriptive documentation defining terms related to the moose-docevals system. There are no statements in the prose that promise unreleased features, future functionality, or point to unreleased versions. All content describes current, existing concepts and mechanisms. The definitions are factual descriptions of how the system works, not promises of future capabilities."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1381,
+      "outputTokens": 251
+    },
+    "durationMs": 3069,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality.",
+      "observed": "The page content contains definitions for terms like 'Assertion', 'Capability suite', 'Confidence zone', 'Consensus', 'Ensemble', 'Eval', 'Evidence', 'Finding', 'Golden set', 'Grader', 'Grader hierarchy', 'Human-review zone', 'Pass rate', 'Regression suite', 'Severity', and 'Suite'. None of these definitions or the surrounding prose make any claims about unreleased or future functionality. The text describes existing concepts and mechanisms of the moose-docevals system without promising features that have not shipped.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely descriptive documentation defining terms related to the moose-docevals system. There are no statements in the prose that promise unreleased features, future functionality, or point to unreleased versions. All content describes current, existing concepts and mechanisms. The definitions are factual descriptions of how the system works, not promises of future capabilities."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1381,
+      "outputTokens": 251
+    },
+    "durationMs": 3022,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality.",
+      "observed": "The page content contains definitions for terms like 'Assertion', 'Capability suite', 'Confidence zone', 'Consensus', 'Ensemble', 'Eval', 'Evidence', 'Finding', 'Golden set', 'Grader', 'Grader hierarchy', 'Human-review zone', 'Pass rate', 'Regression suite', 'Severity', and 'Suite'. None of these definitions or the surrounding prose make any claims about unreleased or future functionality. The text describes existing concepts and mechanisms of the moose-docevals system without promising features that have not shipped.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page content is purely descriptive documentation defining terms related to the moose-docevals system. There are no statements in the prose that promise unreleased features, future functionality, or point to unreleased versions. All content describes current, existing concepts and mechanisms. The definitions are factual descriptions of how the system works, not promises of future capabilities."
+    }
+  }
+]

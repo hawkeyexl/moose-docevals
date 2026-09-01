@@ -32,6 +32,7 @@ human-review resolution.
 | `--ai-only` | Run only AI-judged evals; skip deterministic graders. |
 | `--eval <name>` | Run only this eval. Repeat the flag for more than one (`--eval a --eval b`) — names are **not** space-separated, because a variadic flag would swallow the following glob. **Suite targets are not evaluated while a filter is active** — see below. A name that matches nothing is a usage error: **exit 2**. |
 | `--suite <name>` | Run only the evals the named suite lists. Same suspension of suite targets; a suite the config does not define is **exit 2**, with the defined names in the message. |
+| `--since <ref>` | Evaluate only the pages that differ between `<ref>` and `HEAD`. Corpus-wide graders still see every page. Suite targets are suspended, as with `--eval`. Nothing changed is **exit 0**, not an error — see below. |
 | `--no-frontmatter-commands` | Skip `command` evals declared in **page frontmatter**. See [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/) — this does **not** gate `tool:doc-detective`. |
 | `--no-generate` | Do not generate scripts for command evals that lack a `command`. |
 | `--no-cache` | Bypass the judge response cache. |
@@ -102,6 +103,65 @@ This is why `--eval` is a local debugging flag and not a CI invocation — see
 [Exit codes and annotations](/moose-docevals/ci/exit-codes-and-annotations/#a-filtered-run-is-not-a-gate)
 and the `partial` field in
 [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#suites).
+
+### Scoping a run to what changed
+
+`--since <ref>` grades only the pages that differ between `<ref>` and `HEAD`, so a job on a pull
+request does not re-judge a corpus nobody touched.
+
+```console
+$ moose-docevals run --since origin/main --format github
+```
+
+The comparison is `<ref>...HEAD` — three dots, so the diff is against the merge base. That is what a
+pull request means by "changed": commits that landed on the base branch after yours forked are not
+your changes. It also means **uncommitted working-tree edits are not included**, which is right for
+CI and surprising locally. Edit a page, run `--since main`, and that page is not graded until the
+edit is committed.
+
+Two things the scope does **not** narrow:
+
+- **Corpus-wide graders.** `tool:differentiation` compares related pages against each other, so its
+  input set *is* its subject. Hand it one page and it has nothing to compare against, reports no
+  findings, and the eval records a **pass** — scoping it would delete the check rather than shrink
+  it. Corpus graders therefore keep the whole corpus. The visible consequence: a scoped run can
+  report a finding on a page you did not touch. The message names the other page.
+- **Resolution.** Every page is still read and resolved, so a bad `eval-*` key or an unknown grader
+  on a page outside the scope still reports, and still exits `1`.
+
+Three things it does change:
+
+- **Nothing changed is exit `0`**, the opposite of an `--eval` that matches nothing. A branch that
+  touched only source is a correct answer, not a typo. The run says so rather than going quiet:
+
+  ```console
+  No pages changed since origin/main — nothing was evaluated.
+  ```
+
+- **Suite targets are reported but not enforced**, exactly as under `--eval`. A scoped run measured
+  a sample of the corpus, so it withholds the verdict.
+- **`--write-baseline` is refused**: **exit 2**, before git is even run. A re-record rebuilds the
+  file from this run's findings, so recording from a scoped run would forgive every finding the
+  scope excluded. Reading a baseline is unaffected, and pages outside the scope are not reported as
+  no longer occurring.
+
+In GitHub Actions, `actions/checkout` clones with `fetch-depth: 1`, so `origin/main` is usually not
+present locally and `--since origin/main` is **exit 2** with a message naming the ref. Fetch the
+full history:
+
+```yaml
+- uses: actions/checkout@v7
+  with:
+    fetch-depth: 0
+```
+
+`--since` has no config key, for the same reason `--eval` and `--suite` have none: it selects work
+for one invocation rather than setting policy, and the ref you compare against belongs to the job,
+not to the repository. `list` takes no `--since`.
+
+`--since` and the [judge cache](/moose-docevals/ci/cost-and-caching/) are complements. `--since`
+avoids dispatching work on a page that did not change; the cache avoids paying twice for a page that
+did change but whose prompt did not.
 
 ## `moose-docevals list [globs...]`
 
@@ -237,3 +297,13 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
 {/* step {"description":"An undefined --suite is a usage error, and the message names the suites that are defined.","runShell":{"command":"npx moose-docevals run --deterministic-only --suite no-such-suite","exitCodes":[2],"stdio":"is not a defined suite"}} */}
 
 {/* step {"description":"list takes the same filters and rejects an unmatched name the same way.","runShell":{"command":"npx moose-docevals list --eval no-such-eval","exitCodes":[2]}} */}
+
+{/* step {"description":"run exposes --since.","runShell":{"command":"npx moose-docevals run --help","exitCodes":[0],"stdio":"--since <ref>"}} */}
+
+{/* step {"description":"Nothing changed since HEAD, so the run exits 0 and says nothing was evaluated — not a usage error.","runShell":{"command":"npx moose-docevals run --deterministic-only --no-generate --since HEAD","exitCodes":[0],"stdio":"nothing was evaluated"}} */}
+
+{/* step {"description":"A ref git cannot resolve is exit 2, and the message names the shallow clone that causes it in CI.","runShell":{"command":"npx moose-docevals run --deterministic-only --since no/such/ref","exitCodes":[2],"stdio":"shallow clone"}} */}
+
+{/* step {"description":"--since cannot be combined with --write-baseline: the re-record would forgive every finding the scope excluded.","runShell":{"command":"npx moose-docevals run --deterministic-only --since HEAD --write-baseline","exitCodes":[2],"stdio":"cannot be combined"}} */}
+
+{/* step {"description":"list takes no --since.","runShell":{"command":"npx moose-docevals list --since HEAD","exitCodes":[1],"stdio":"unknown option"}} */}

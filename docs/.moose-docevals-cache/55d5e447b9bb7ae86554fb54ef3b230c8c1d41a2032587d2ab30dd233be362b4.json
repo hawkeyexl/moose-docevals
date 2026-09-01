@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 256
+    },
+    "durationMs": 3799,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing security mechanisms and configurations for moose-docevals. It discusses current features like `scripts.allow-frontmatter-commands`, `--no-frontmatter-commands`, `tool:doc-detective`, and GitHub Actions workflows. All described functionality appears to be currently implemented and operational. There are no mentions of upcoming features, beta functionality, or unreleased capabilities in the prose sections.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes shipped functionality and security configurations. The prose discusses existing features like frontmatter commands, embedded steps, GitHub Actions gates, and fork handling. No unreleased or future functionality is claimed in the prose. The code blocks and configuration samples (YAML, MDX) are clearly illustrative examples of how to use the existing features, not claims about future capabilities."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 256
+    },
+    "durationMs": 3564,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing security mechanisms and configurations for moose-docevals. It discusses current features like `scripts.allow-frontmatter-commands`, `--no-frontmatter-commands`, `tool:doc-detective`, and GitHub Actions workflows. All described functionality appears to be currently implemented and operational. There are no mentions of upcoming features, beta functionality, or unreleased capabilities in the prose sections.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes shipped functionality and security configurations. The prose discusses existing features like frontmatter commands, embedded steps, GitHub Actions gates, and fork handling. No unreleased or future functionality is claimed in the prose. The code blocks and configuration samples (YAML, MDX) are clearly illustrative examples of how to use the existing features, not claims about future capabilities."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1460,
+      "outputTokens": 256
+    },
+    "durationMs": 3773,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes existing security mechanisms and configurations for moose-docevals. It discusses current features like `scripts.allow-frontmatter-commands`, `--no-frontmatter-commands`, `tool:doc-detective`, and GitHub Actions workflows. All described functionality appears to be currently implemented and operational. There are no mentions of upcoming features, beta functionality, or unreleased capabilities in the prose sections.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page exclusively describes shipped functionality and security configurations. The prose discusses existing features like frontmatter commands, embedded steps, GitHub Actions gates, and fork handling. No unreleased or future functionality is claimed in the prose. The code blocks and configuration samples (YAML, MDX) are clearly illustrative examples of how to use the existing features, not claims about future capabilities."
+    }
+  }
+]

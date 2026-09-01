@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1304,
+      "outputTokens": 270
+    },
+    "durationMs": 3796,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the moose-docevals tool's design, purpose, and usage. It explains that scripts are written to files beside docs, describes where they land, what to look for when evaluating them, how to edit them, when to reject a promotion, and how to treat them like test code. There is no mention of unreleased or future functionality in the prose. The fenced code blocks contain examples of file structures, YAML frontmatter, and bash commands, which are illustrative examples rather than claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose focuses entirely on the current design, purpose, and usage of the moose-docevals tool. It describes existing functionality (scripts written to files, where they land, how to edit them, etc.) without making any claims about unreleased or future features. The code blocks and examples are clearly illustrative, showing file structures, YAML frontmatter, and bash commands, which align with the assertion that such content is illustration rather than claims about unreleased functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1304,
+      "outputTokens": 270
+    },
+    "durationMs": 4230,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the moose-docevals tool's design, purpose, and usage. It explains that scripts are written to files beside docs, describes where they land, what to look for when evaluating them, how to edit them, when to reject a promotion, and how to treat them like test code. There is no mention of unreleased or future functionality in the prose. The fenced code blocks contain examples of file structures, YAML frontmatter, and bash commands, which are illustrative examples rather than claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose focuses entirely on the current design, purpose, and usage of the moose-docevals tool. It describes existing functionality (scripts written to files, where they land, how to edit them, etc.) without making any claims about unreleased or future features. The code blocks and examples are clearly illustrative, showing file structures, YAML frontmatter, and bash commands, which align with the assertion that such content is illustration rather than claims about unreleased functionality."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1304,
+      "outputTokens": 270
+    },
+    "durationMs": 3445,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page's prose describes the moose-docevals tool's design, purpose, and usage. It explains that scripts are written to files beside docs, describes where they land, what to look for when evaluating them, how to edit them, when to reject a promotion, and how to treat them like test code. There is no mention of unreleased or future functionality in the prose. The fenced code blocks contain examples of file structures, YAML frontmatter, and bash commands, which are illustrative examples rather than claims about unreleased features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose focuses entirely on the current design, purpose, and usage of the moose-docevals tool. It describes existing functionality (scripts written to files, where they land, how to edit them, etc.) without making any claims about unreleased or future features. The code blocks and examples are clearly illustrative, showing file structures, YAML frontmatter, and bash commands, which align with the assertion that such content is illustration rather than claims about unreleased functionality."
+    }
+  }
+]

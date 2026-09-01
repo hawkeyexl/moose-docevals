@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1709,
+      "outputTokens": 269
+    },
+    "durationMs": 3255,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'eval' concept, the grader hierarchy (Code, AI judge, human), how verdicts are reached, and the pipeline. The prose describes existing functionality (e.g., 'Vale keeps doing what Vale does', 'Deterministic graders run before the judge on purpose'). There are no claims about unreleased or future features in the prose. The page includes a YAML code block and a text diagram, but the prose itself does not promise future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes the current state of the moose-docevals system (evals, graders, verdicts, pipeline). It mentions existing tools like Vale and existing concepts like 'regression' and 'capability' suites. There is no language suggesting unreleased features, future plans, or upcoming functionality in the prose sections. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1709,
+      "outputTokens": 269
+    },
+    "durationMs": 3208,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'eval' concept, the grader hierarchy (Code, AI judge, human), how verdicts are reached, and the pipeline. The prose describes existing functionality (e.g., 'Vale keeps doing what Vale does', 'Deterministic graders run before the judge on purpose'). There are no claims about unreleased or future features in the prose. The page includes a YAML code block and a text diagram, but the prose itself does not promise future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes the current state of the moose-docevals system (evals, graders, verdicts, pipeline). It mentions existing tools like Vale and existing concepts like 'regression' and 'capability' suites. There is no language suggesting unreleased features, future plans, or upcoming functionality in the prose sections. The assertion is fully satisfied."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1709,
+      "outputTokens": 269
+    },
+    "durationMs": 3299,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains prose describing the 'eval' concept, the grader hierarchy (Code, AI judge, human), how verdicts are reached, and the pipeline. The prose describes existing functionality (e.g., 'Vale keeps doing what Vale does', 'Deterministic graders run before the judge on purpose'). There are no claims about unreleased or future features in the prose. The page includes a YAML code block and a text diagram, but the prose itself does not promise future functionality.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The prose exclusively describes the current state of the moose-docevals system (evals, graders, verdicts, pipeline). It mentions existing tools like Vale and existing concepts like 'regression' and 'capability' suites. There is no language suggesting unreleased features, future plans, or upcoming functionality in the prose sections. The assertion is fully satisfied."
+    }
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1429,
+      "outputTokens": 240
+    },
+    "durationMs": 3506,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains no prose that claims unreleased or future functionality. All examples (e.g., the YAML snippet for `eval-skip: true`, the bash command for `npx moose-docevals run`, and the console output for Suites) are clearly presented as code blocks or quoted examples, not as prose claims. The prose focuses on explaining the tool's behavior, caching, and troubleshooting, without promising any future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality (caching, skipping, exit codes, etc.) and does not make any claims about unreleased or future features. All code blocks and examples are clearly distinguished from prose and do not contain any future-tense claims that would violate the assertion."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1429,
+      "outputTokens": 240
+    },
+    "durationMs": 3508,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains no prose that claims unreleased or future functionality. All examples (e.g., the YAML snippet for `eval-skip: true`, the bash command for `npx moose-docevals run`, and the console output for Suites) are clearly presented as code blocks or quoted examples, not as prose claims. The prose focuses on explaining the tool's behavior, caching, and troubleshooting, without promising any future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality (caching, skipping, exit codes, etc.) and does not make any claims about unreleased or future features. All code blocks and examples are clearly distinguished from prose and do not contain any future-tense claims that would violate the assertion."
+    }
+  },
+  {
+    "provider": "llama-cpp",
+    "model": "qwen3.5-9b",
+    "cached": false,
+    "usage": {
+      "inputTokens": 1429,
+      "outputTokens": 240
+    },
+    "durationMs": 3558,
+    "verdict": {
+      "claim": "The page's own prose makes no claims about unreleased or future functionality. Text inside fenced code blocks, configuration samples, and quoted examples is illustration rather than something the page is claiming, and does not count.",
+      "observed": "The page contains no prose that claims unreleased or future functionality. All examples (e.g., the YAML snippet for `eval-skip: true`, the bash command for `npx moose-docevals run`, and the console output for Suites) are clearly presented as code blocks or quoted examples, not as prose claims. The prose focuses on explaining the tool's behavior, caching, and troubleshooting, without promising any future features.",
+      "match": "pass",
+      "confidence": 0.95,
+      "reasoning": "The page's prose describes existing functionality (caching, skipping, exit codes, etc.) and does not make any claims about unreleased or future features. All code blocks and examples are clearly distinguished from prose and do not contain any future-tense claims that would violate the assertion."
+    }
+  }
+]
