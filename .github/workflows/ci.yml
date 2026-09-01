@@ -661,10 +661,28 @@ jobs:
           fi
           echo "All inline steps parsed."
 
-      # No ANTHROPIC_API_KEY is set, deliberately. The docs-page suite is
-      # deterministic today, and judged evals replay from the committed cache in
-      # docs/.moose-docevals-cache/ once they join the suite. A cache miss surfaces as
-      # a provider error, so a green run here proves the fixtures are real.
+      # An incomplete cache must fail BEFORE the run, not during it.
+      #
+      # This job reaches no provider on purpose, so every judged eval has to
+      # replay from docs/.moose-docevals-cache/. A missing entry does not
+      # announce itself: with `llama-cpp` the provider constructs fine without a
+      # model, so the miss fails at *inference*, records `needs-review`, and
+      # `needs-review` is excluded from both the pass rate and hasFailure — the
+      # job would go green having judged nothing. The miss also tries to install
+      # node-llama-cpp and download several GB of weights on the runner first.
+      #
+      # This comment previously claimed a miss "surfaces as a provider error, so
+      # a green run here proves the fixtures are real". That was true while the
+      # provider was `anthropic` (no key -> makeProvider throws -> the run
+      # degrades to deterministic-only) and became false when the docs corpus
+      # moved to a local model. Checking the keys directly costs milliseconds
+      # and contacts nothing.
+      - name: Assert the committed judge cache is complete
+        run: npm run docs:check-cache
+
+      # --fail-on-review (in the docs:verify script) is the second line: if an
+      # eval reaches the judge and errors anyway, needs-review exits 1 instead
+      # of passing quietly.
       - name: Verify docs (moose-docevals over the docs site)
         run: npm run docs:verify -- --format github
 

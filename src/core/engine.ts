@@ -507,6 +507,8 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   // for resolution — but applied after `applySelection` below, because
   // `PageFile.absPath` only exists post-discovery and resolution problems must
   // surface for every page, scoped or not (ADR 01018's driver).
+  // Blank and option-shaped refs are rejected inside `changedFilesSince`, at
+  // the seam, so a library caller gets the same guard the CLI does.
   const sinceRef = options.since;
   const changed =
     sinceRef === undefined ? null : await changedFilesSince(sinceRef, cwd, exec);
@@ -874,7 +876,14 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   // A scoped run measured part of the corpus, which is the same claim-from-a-
   // sample problem `--eval` has — so it reuses ADR 01018's mechanism rather
   // than growing a second, differently-behaved one.
-  const suites = summarizeSuites(results, config, filtered || scope !== null);
+  // `partial` means coverage was actually lost, not that a narrowing flag was
+  // present. Deriving it from the flag disabled suite-target enforcement on a
+  // `--since` run that happened to touch every page — and since ADR 01029
+  // intends `--since` as the CI invocation, that turned the aggregate gate off
+  // permanently for anyone who adopted it. `pagesSelected` is already the exact
+  // count, so the predicate is free.
+  const scopeLostCoverage = scope !== null && scope.pagesSelected < plans.length;
+  const suites = summarizeSuites(results, config, filtered || scopeLostCoverage);
   const judged = results.filter((r) => r.consensus != null);
   const totalTokens = judged.reduce(
     (n, r) =>

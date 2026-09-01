@@ -46,15 +46,39 @@ export interface Grader {
  * (b) per-page option overrides are honored instead of the first target's
  * options being applied to everyone.
  */
+/**
+ * A plain object with its keys in sorted order, recursively, so that
+ * `JSON.stringify` describes the value rather than the order it was written
+ * in. `undefined` passes through so an absent option stays absent in the key.
+ */
+function sortedForKey(value: unknown): unknown {
+  if (value === undefined || value === null) return value;
+  if (Array.isArray(value)) return value.map(sortedForKey);
+  if (typeof value !== "object") return value;
+  const entries = value as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(entries).sort()) {
+    out[k] = sortedForKey(entries[k]);
+  }
+  return out;
+}
+
 export function groupTargetsByEval(targets: GraderTarget[]): GraderTarget[][] {
   const groups = new Map<string, GraderTarget[]>();
   for (const t of targets) {
     const key = JSON.stringify([
       t.eval.name,
-      t.eval.options,
+      // Key order, not just content: `resolve.ts` rebuilds `options` per page
+      // by spread, so insertion order follows each page's own YAML. Two pages
+      // declaring the same options in a different order used to hash
+      // differently and land in separate groups — which for a corpus grader
+      // means each group holds one target, `gradeGroup` returns [] below two,
+      // and no findings is recorded as a pass. Sorting makes the key describe
+      // the configuration rather than how it happened to be typed.
+      sortedForKey(t.eval.options),
       t.eval.timeoutMs ?? null,
       t.eval.severity,
-      t.eval.severityMap ?? null,
+      sortedForKey(t.eval.severityMap) ?? null,
     ]);
     const list = groups.get(key) ?? [];
     list.push(t);
