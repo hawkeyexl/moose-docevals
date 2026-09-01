@@ -123,11 +123,15 @@
         "severity": {
           "$ref": "#/$defs/severity"
         },
+        "weight": {
+          "$ref": "#/$defs/weight"
+        },
         "options": {
           "type": "object"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "A page joining an eval the config defines, with the overrides that are statements about *this page's relationship to that check*: whether it applies (`skip`), what kind of claim it is here (`type`), how badly a failure matters (`severity`), what it measures here (`options`), and how much it counts toward a suite's pass rate (`weight`). Deliberately absent: `provider`, `model` and `runs`, which say how the tool executes rather than what this page claims - a corpus where each page picks its own judge model is one no operator can cost or reason about - and `target`, because changing which bytes a *named* eval reads makes one name mean two different things in one corpus, which is the confusion `use:` exists to prevent. An eval that needs a different subject is a different eval."
     },
     "inlineEval": {
       "type": "object",
@@ -225,10 +229,7 @@
           "$ref": "#/$defs/severity"
         },
         "weight": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "default": 1,
-          "description": "Relative contribution to its suite's pass rate. Does not change this eval's own pass/fail, nor its severity: the eval still passes or fails on its own terms, and weight only decides how much that outcome moves the suite total against `target-pass-rate`. Zero is excluded deliberately - a weightless eval is a silent disable, and `skip` already means that, loudly."
+          "$ref": "#/$defs/weight"
         },
         "severity-map": {
           "type": "object",
@@ -414,6 +415,12 @@
       ],
       "default": "error",
       "description": "Only error-severity failures fail the run; warning and info report but pass. Default error — the string shorthand implies it."
+    },
+    "weight": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "default": 1,
+      "description": "Relative contribution to its suite's pass rate. Does not change this eval's own pass/fail, nor its severity: the eval still passes or fails on its own terms, and weight only decides how much that outcome moves the suite total against `target-pass-rate`. Zero is excluded deliberately - a weightless eval is a silent disable, and `skip` already means that, loudly."
     },
     "grader": {
       "type": "string",

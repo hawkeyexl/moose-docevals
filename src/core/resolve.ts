@@ -103,6 +103,12 @@ interface FrontmatterEvalRef {
   type?: EvalType;
   skip?: boolean;
   severity?: Severity;
+  /**
+   * How much this check counts *for this page*. The reference form is how
+   * most pages join a suite at all, so a weight the schema accepts and the
+   * merge drops would score the page at the corpus default without saying so.
+   */
+  weight?: number;
   options?: Record<string, unknown>;
 }
 
@@ -333,6 +339,7 @@ export function resolvePage(
         ...base,
         type: ref.type ?? base.type,
         severity: ref.severity ?? base.severity,
+        weight: ref.weight ?? base.weight,
         options: { ...base.options, ...(ref.options ?? {}) },
         skip: ref.skip ?? base.skip,
       });
