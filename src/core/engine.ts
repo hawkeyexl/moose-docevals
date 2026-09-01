@@ -643,7 +643,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       // gate is on `source === "page"` rather than on the key's presence.
       const pageAuthoredArgv =
         ev.source === "page" &&
-        (ev.grader === "command" || Array.isArray(ev.options?.command));
+        (ev.grader === "command" || Array.isArray(ev.options.command));
       if (pageAuthoredArgv && !allowFrontmatterCommands) {
         results.push(
           skippedResult(

@@ -246,7 +246,7 @@ describe("an unknown grant is refused, not ignored", () => {
         allowExecution: ["frontmatter-comands"],
         deterministicOnly: true,
         generate: false,
-      } as never),
+      }),
     ).rejects.toThrow(/unknown execution grant "frontmatter-comands"/);
   });
 
@@ -257,7 +257,7 @@ describe("an unknown grant is refused, not ignored", () => {
         allowExecution: ["nope", "also-nope"],
         deterministicOnly: true,
         generate: false,
-      } as never),
+      }),
     ).rejects.toThrow(/unknown execution grants "nope", "also-nope"/);
   });
 
@@ -270,7 +270,7 @@ describe("an unknown grant is refused, not ignored", () => {
           allowExecution: ["frontmatter-commands", "page-embedded-steps"],
           deterministicOnly: true,
           generate: false,
-        } as never,
+        },
         { exec: fakeExec },
       ),
     ).resolves.not.toThrow();
