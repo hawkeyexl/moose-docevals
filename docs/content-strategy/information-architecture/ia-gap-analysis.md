@@ -198,6 +198,7 @@ Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`
 | `human` | `judge/human-review.mdx` |
 | `tool:docmeta` | `evals/deterministic-checks.mdx`, `reference/graders.mdx` |
 | `tool:markdownlint` | `evals/deterministic-checks.mdx`, `reference/graders.mdx` |
+| `tool:remark` | `reference/graders.mdx` |
 | `tool:vale` | `evals/deterministic-checks.mdx`, `reference/graders.mdx` |
 | `tool:doc-structure-lint` | `evals/deterministic-checks.mdx`, `reference/graders.mdx` |
 | `tool:doc-detective` | `evals/test-your-commands.mdx`, `reference/graders.mdx` |

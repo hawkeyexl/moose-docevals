@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    "remark-frontmatter",
+    "remark-mdx",
+    "remark-gfm",
+    "remark-directive",
+    "remark-preset-lint-recommended"
+  ]
+}

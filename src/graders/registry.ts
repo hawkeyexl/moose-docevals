@@ -5,6 +5,7 @@
 import type { Grader } from "./types.js";
 import { commandGrader } from "./command.js";
 import { markdownlintGrader } from "./tools/markdownlint.js";
+import { remarkGrader } from "./tools/remark.js";
 import { docmetaGrader } from "./tools/docmeta.js";
 import { valeGrader } from "./tools/vale.js";
 import { docStructureLintGrader } from "./tools/doc-structure-lint.js";
@@ -17,6 +18,7 @@ const GRADERS = new Map<string, Grader>(
   [
     commandGrader,
     markdownlintGrader,
+    remarkGrader,
     docmetaGrader,
     valeGrader,
     docStructureLintGrader,

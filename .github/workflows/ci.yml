@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test:
-    # moose-docevals shells out to external tools (markdownlint, Vale, generated
+    # moose-docevals shells out to external tools (remark, Vale, generated
     # check scripts), and the spawn path is genuinely platform-specific:
     # exec.ts leans on cross-spawn to resolve npm `.cmd` shims on Windows, and
     # frontmatter-edit.ts preserves CRLF. Both are developed on Windows and
