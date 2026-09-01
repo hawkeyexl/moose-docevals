@@ -110,8 +110,84 @@ describe("parseConfig", () => {
       ),
       PATH,
     );
-    expect(c.suites.ref).toEqual({ targetPassRate: 1.0, evals: ["my-eval"] });
+    // `criteria` defaults to the empty list rather than being omitted, so
+    // downstream code reads one shape — the same rule every other default in
+    // parseConfig follows.
+    expect(c.suites.ref).toEqual({
+      targetPassRate: 1.0,
+      evals: ["my-eval"],
+      criteria: [],
+    });
     expect(c.evals["my-eval"]?.assertion).toBe("Something is true.");
+  });
+
+  it("parses criteria, defaulting combine to all and weight to 1", () => {
+    const c = parseConfig(
+      moose(
+        "version: 1",
+        "evals:",
+        "  a:",
+        "    assertion: A.",
+        "  b:",
+        "    assertion: B.",
+        "criteria:",
+        "  install-works:",
+        "    evals: [a, b]",
+        "suites:",
+        "  ref:",
+        "    evals: [a, b]",
+        "    criteria: [install-works]",
+      ),
+      PATH,
+    );
+    expect(c.criteria["install-works"]).toEqual({
+      evals: ["a", "b"],
+      combine: "all",
+      weight: 1,
+    });
+    expect(c.suites.ref?.criteria).toEqual(["install-works"]);
+  });
+
+  it("rejects a criterion referencing an undefined eval", () => {
+    expect(() =>
+      parseConfig(
+        moose("version: 1", "criteria:", "  broken:", "    evals: [ghost]"),
+        PATH,
+      ),
+    ).toThrow(/criterion "broken" references undefined eval "ghost"/);
+  });
+
+  it("rejects a suite referencing an undefined criterion", () => {
+    expect(() =>
+      parseConfig(
+        moose("version: 1", "suites:", "  ref:", "    criteria: [ghost]"),
+        PATH,
+      ),
+    ).toThrow(/suite "ref" references undefined criterion "ghost"/);
+  });
+
+  it("rejects a zero weight, which would silently disable an eval", () => {
+    expect(() =>
+      parseConfig(
+        moose(
+          "version: 1",
+          "evals:",
+          "  a:",
+          "    assertion: A.",
+          "    weight: 0",
+        ),
+        PATH,
+      ),
+    ).toThrow();
+  });
+
+  it("rejects a runs count past the cap", () => {
+    expect(() =>
+      parseConfig(
+        moose("version: 1", "evals:", "  a:", "    assertion: A.", "    runs: 51"),
+        PATH,
+      ),
+    ).toThrow();
   });
 
   it("rejects a suite referencing an undefined eval", () => {

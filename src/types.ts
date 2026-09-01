@@ -89,6 +89,12 @@ export interface EvalResult {
    */
   baselined?: number;
   skipReason?: string;
+  /**
+   * The eval's weight in its suite's pass rate. Stamped centrally by the
+   * engine alongside `suite`, and for the same reason: threading it through
+   * the ~30 sites that construct a result would be thirty chances to forget.
+   */
+  weight?: number;
   durationMs: number;
 }
 
@@ -101,7 +107,15 @@ export interface SuiteSummary {
   needsReview: number;
   skipped: number;
   errored: number;
-  /** passed / (total - skipped), 1 when nothing ran. */
+  /**
+   * Weighted share of the graded set that passed, 1 when nothing ran.
+   *
+   * The graded set is pass + fail + error, as it has always been —
+   * `needs-review` and `skipped` are in neither half, so a page awaiting review
+   * neither helps nor hurts. Each eval contributes its `weight` (1 unless it
+   * says otherwise), and an eval that belongs to a criterion contributes
+   * nothing on its own: the criterion contributes once, for the group.
+   */
   passRate: number;
   /** From config: ~1.0 for regression suites, ~0.7 for capability suites. */
   targetPassRate: number;
@@ -112,6 +126,21 @@ export interface SuiteSummary {
    * suite cannot fail the run either: it has numbers, but no verdict.
    */
   partial?: boolean;
+  /**
+   * Criteria scored in this suite. Present only when the suite declares any,
+   * so its absence means "none", never "none passed".
+   *
+   * `suspended` counts criteria whose members were not all graded in this run.
+   * They are out of the rate entirely rather than counted as failures — the
+   * same reasoning as `partial` one level down (ADR 01018): a group measured
+   * in part has numbers but no verdict.
+   */
+  criteria?: {
+    total: number;
+    passed: number;
+    failed: number;
+    suspended: number;
+  };
 }
 
 /** Full run output consumed by reporters. */

@@ -13,7 +13,12 @@
  */
 import { Ajv2020 } from "ajv/dist/2020.js";
 import type { ErrorObject } from "ajv";
-import frontmatterSchema from "../../schemas/frontmatter-1.0.0.json" with { type: "json" };
+// Pages validate against the current schema, not the oldest one still shipped:
+// 1.1.0 adds `weight`, `target`, `runs` and `model`, and validating against
+// 1.0.0 would reject every page that uses them. 1.0.0 stays published and
+// byte-frozen for consumers who pinned it; every page valid against it is
+// valid against this.
+import frontmatterSchema from "../../schemas/frontmatter-1.1.0.json" with { type: "json" };
 import type { EvalType, GraderKind, Severity } from "../types.js";
 import {
   normalizeEvalDef,
@@ -22,6 +27,7 @@ import {
   type RawEvalDef,
 } from "./config.js";
 import type { PageFile } from "./discover.js";
+import type { EvalTarget } from "./target.js";
 
 export interface ResolvedEval {
   /** Kebab-case id, unique per page. */
@@ -42,6 +48,18 @@ export interface ResolvedEval {
   options: Record<string, unknown>;
   severity: Severity;
   severityMap?: Record<string, Severity>;
+  /**
+   * Relative contribution to its suite's pass rate. Defaults to 1, which is
+   * what makes weighting inert until someone asks for it: a suite of
+   * unweighted evals computes exactly the rate it always did.
+   */
+  weight: number;
+  /** Which bytes the grader receives. Absent means the page body. */
+  target?: EvalTarget;
+  /** Judge model for this eval; a CLI --model still wins. */
+  model?: string;
+  /** Ensemble runs for this eval; a CLI --runs still wins. */
+  runs?: number;
   /** Where the eval definition came from. */
   source: "config" | "page";
   skip: boolean;
@@ -140,6 +158,10 @@ function fromDef(
     options: def.options ?? {},
     severity: def.severity ?? "error",
     severityMap: def.severityMap,
+    weight: def.weight ?? 1,
+    target: def.target,
+    model: def.model,
+    runs: def.runs,
     source,
     skip: false,
   };
