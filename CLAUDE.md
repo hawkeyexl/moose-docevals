@@ -2,7 +2,7 @@
 
 Repo-wide guidance for AI agents working on **moose-docevals** — a TypeScript/ESM CLI and library that runs deterministic and LLM-as-judge evals against documentation pages.
 
-Conventions here are ported from [doc-detective](https://github.com/doc-detective/doc-detective) and adapted to this repo. Where a rule depends on tooling doc-detective has and moose-docevals does not yet, that is called out in ["Enforcement not yet wired"](#enforcement-not-yet-wired) rather than described as if it exists.
+Conventions here are ported from [doc-detective](https://github.com/doc-detective/doc-detective) and adapted to this repo. Where a rule depends on tooling doc-detective has and moose-docevals does not yet, that is called out in ["Still requiring one-time setup"](#still-requiring-one-time-setup) rather than described as if it exists.
 
 ## Environment setup (required)
 
@@ -70,7 +70,7 @@ Every **behavior change** ships with an ADR in [MADR](https://adr.github.io/madr
 - **Scope**: ADRs document *decisions* (behavior, contracts, trade-offs), not mechanical changes. Pure refactors, dependency bumps, typo fixes, and style changes don't need one. If a change alters observable behavior or a public contract, it does.
 - **Supersede, never amend.** An ADR records what was decided *at the time it was written*, on the evidence available then. That makes the wrong ones as valuable as the right ones — they are the only account of why a decision looked correct before it wasn't. When reality moves past one, write a new ADR that names what it supersedes; do not edit the old file to match what shipped. The only field that may change is `status:`, which is an index entry rather than part of the record.
 
-The decisions in ["Design decisions"](#design-decisions) below predate this rule and should be backfilled into `adrs/` when the directory is created.
+The decisions in ["Design decisions"](#design-decisions) below predate this rule. They are now backfilled into the reserved `00001`–`00999` range; that range exists for exactly this, so a pre-rule decision never takes a number the new work needs.
 
 ## Fixtures (required)
 
@@ -274,12 +274,12 @@ Tests build configs through `test/helpers/config.ts` (`parseDocevalsConfig` / `n
 
 ## Design decisions
 
-Durable decisions behind the current shape. Backfill these into `adrs/` when that directory is created; until then, this is the record.
+Durable decisions behind the current shape. **The first four are now backfilled into `adrs/`** and the ADR is the record — the summaries here are a map, not the reasoning.
 
-- **One unified concept: the eval.** An earlier design split "runners" (deterministic tools) from "evals" (LLM assertions). That split was rejected as unintuitive — every check is an eval, and the *grader* is what differs.
-- **Generated check scripts are files, not inline code.** A plain-language deterministic assertion has its script written to a file parallel to the doc and referenced as a `command`. Scripts are never embedded in frontmatter, so they stay reviewable in PRs and editable by hand. There is no `script` grader kind.
-- **`type` defaults to `regression`, not `capability`.** Most evals guard behavior that must keep working.
-- **Level 1 orchestrates, it does not reimplement.** Deterministic checks wrap existing tools (docmeta, markdownlint, Vale, doc-structure-lint, Doc Detective); native graders exist only where nothing else covers the gap (freshness, reading level, cross-page differentiation).
+- **One unified concept: the eval** ([ADR 00001](adrs/00001-one-unified-concept-the-eval.md)). An earlier design split "runners" (deterministic tools) from "evals" (LLM assertions). That split was rejected as unintuitive — every check is an eval, and the *grader* is what differs.
+- **Generated check scripts are files, not inline code** ([ADR 00002](adrs/00002-generated-scripts-are-files-not-inline-code.md)). A plain-language deterministic assertion has its script written to a file parallel to the doc and referenced as a `command`. Scripts are never embedded in frontmatter, so they stay reviewable in PRs and editable by hand. There is no `script` grader kind.
+- **`type` defaults to `regression`, not `capability`** ([ADR 00003](adrs/00003-type-defaults-to-regression.md)). Most evals guard behavior that must keep working.
+- **Level 1 orchestrates, it does not reimplement** ([ADR 00004](adrs/00004-level-1-orchestrates-rather-than-reimplements.md)). Deterministic checks wrap existing tools (docmeta, markdownlint, Vale, doc-structure-lint, Doc Detective); native graders exist only where nothing else covers the gap (freshness, reading level, cross-page differentiation).
 - **docmeta publishes the vocabulary; this repo implements the behavior.** Superseded the earlier "schemas are published by the tool that owns them" rule — see ADR 01009. The field names come from docmeta proposal 0023; moose-docevals ships a schema file implementing them (so versioning is not gated on a docmeta release) and owns the graders behind them. The earlier rule was not wrong about versioning, which is why the schema file stays here; it was wrong that owning the *file* meant owning the *names*.
 - **Type-aware lint over a syntax linter.** `tsconfig` is already `strict` with `noUncheckedIndexedAccess`, so a syntax rule set would add little. What `typescript-eslint`'s `strictTypeChecked` catches that `tsc` does not is an *inferred* `any` crossing a boundary — a commander callback parameter, a `JSON.parse`, an untyped tool payload — which never appears as the word `any` and so cannot be grepped for. It found 64 of them in one file. When a rule is wrong for this codebase, retune it in `eslint.config.js` with the reason rather than scattering inline disables.
 - **Conceptual source**: the *Docs as Tests with AI* manuscript (draft 4) — the grader hierarchy, eval sketch fields, 3-run ensemble, confidence zones, 70% calibration threshold, and 15% false-positive alert all come from it.
@@ -300,15 +300,15 @@ The husky hook installs via the `prepare` script on install (`npm ci` runs it to
 
 ### Still requiring one-time setup
 
-Two workflows are inert until configured, by design — both would otherwise fail on every run or take an irreversible action:
+One workflow is inert until configured, by design — it would otherwise take an irreversible action:
 
-- **Claude review** (`claude-pr-review.yml`, `claude.yml`) skip with a notice until the repo has a token:
+- ~~**Claude review** needs a token.~~ **Done.** `CLAUDE_CODE_OAUTH_TOKEN` was set on 2026-07-21 (`gh secret list --repo hawkeyexl/moose-docevals`), so `claude-pr-review.yml` and `claude.yml` are live. Re-set it the same way if it is ever rotated:
 
   ```bash
   gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo hawkeyexl/moose-docevals
   ```
 
-  Even with the token set, `claude-code-action` **refuses to run when the workflow file differs from the copy on the default branch** ("Skipping action due to workflow validation"). That is an anti-tampering guard — otherwise a PR could rewrite the review workflow and run the modified version with repo credentials. Consequences worth knowing: a PR that *introduces or edits* a Claude workflow never gets reviewed by it, and the change only takes effect once merged to `main`. The job still reports success, so a green `review` check does not by itself mean a review happened — check the duration (a real review takes minutes, a skip takes seconds).
+  The caveat below outlived the setup step, and still applies. Even with the token set, `claude-code-action` **refuses to run when the workflow file differs from the copy on the default branch** ("Skipping action due to workflow validation"). That is an anti-tampering guard — otherwise a PR could rewrite the review workflow and run the modified version with repo credentials. Consequences worth knowing: a PR that *introduces or edits* a Claude workflow never gets reviewed by it, and the change only takes effect once merged to `main`. The job still reports success, so a green `review` check does not by itself mean a review happened — check the duration (a real review takes minutes, a skip takes seconds).
 
 - **Releases** are opt-in. moose-docevals has never been published and a first npm publish cannot be undone, so `release.yml` runs only when a repository variable says to:
 
