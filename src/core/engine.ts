@@ -701,7 +701,6 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     byKind.set(t.eval.grader, list);
   }
 
-  const allFindings: Finding[] = [];
   for (const [kind, targets] of byKind) {
     const grader = graderFor(kind);
     if (!grader) {
@@ -764,7 +763,6 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
         continue;
       }
       const durationMs = Date.now() - start;
-      allFindings.push(...findings);
       const grouped = groupFindings(findings);
       for (const t of group) {
         const key = resultKey(t.plan.page.file, t.eval.name);
