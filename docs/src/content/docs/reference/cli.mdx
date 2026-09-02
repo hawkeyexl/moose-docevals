@@ -32,7 +32,7 @@ human-review resolution.
 | `--ai-only` | Run only AI-judged evals; skip deterministic graders. |
 | `--eval <name>` | Run only this eval. Repeat the flag for more than one (`--eval a --eval b`) — names are **not** space-separated, because a variadic flag would swallow the following glob. **Suite targets are not evaluated while a filter is active** — see below. A name that matches nothing is a usage error: **exit 2**. |
 | `--suite <name>` | Run only the evals the named suite lists. Same suspension of suite targets; a suite the config does not define is **exit 2**, with the defined names in the message. |
-| `--since <ref>` | Evaluate only the pages that differ between `<ref>` and `HEAD`. Corpus-wide graders still see every page. Suite targets are suspended, as with `--eval`. Nothing changed is **exit 0**, not an error — see below. |
+| `--since <ref>` | Evaluate only the pages that differ between `<ref>` and `HEAD`. Corpus-wide graders still see every page. Suite targets are suspended **when the scope leaves pages out** — a branch that touched every page still enforces them. Nothing changed is **exit 0**, not an error — see below. |
 | `--allow-execution <kind...>` | Grant content-authored execution for this run: `frontmatter-commands`, `page-embedded-steps`, or both. Adds to `execution.allow`; repeatable. |
 | `--no-execution` | Clear every execution grant for this run, whatever the config says. |
 | `--no-generate` | Do not generate scripts for command evals that lack a `command`. |
@@ -140,8 +140,12 @@ Three things it does change:
   No pages changed since origin/main — nothing was evaluated.
   ```
 
-- **Suite targets are reported but not enforced**, exactly as under `--eval`. A scoped run measured
-  a sample of the corpus, so it withholds the verdict.
+- **Suite targets are reported but not enforced *when the scope left pages out***. A run that
+  measured a sample of the corpus withholds the verdict, exactly as under `--eval`. The condition is
+  coverage actually lost, not the flag's presence: a pull request that touched every page in the
+  corpus is a full run and its suite targets are enforced normally. Deriving it from the flag would
+  have turned the aggregate gate off permanently for anyone who adopted `--since` in CI, which is
+  what ADR 01040 intends it for.
 - **`--write-baseline` is refused**: **exit 2**, before git is even run. A re-record rebuilds the
   file from this run's findings, so recording from a scoped run would forgive every finding the
   scope excluded. Reading a baseline is unaffected, and pages outside the scope are not reported as
