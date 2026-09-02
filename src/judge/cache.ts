@@ -67,6 +67,21 @@ export class VerdictCache extends JsonCache<JudgeRun[]> {
   }
 }
 
+/**
+ * The exact body string the judge keys on: the chunk budget, then the selected
+ * text.
+ *
+ * Exported because anything that wants to know whether a verdict is cached has
+ * to reproduce this byte for byte, and reproducing it by hand is how the
+ * cache-completeness script silently computed keys that matched nothing —
+ * `scripts/check-docs-cache.mjs` passed the raw page body while the judge had
+ * started prefixing the budget. A helper both call is the only version of this
+ * that cannot drift.
+ */
+export function judgeCacheBody(chunkChars: number, text: string): string {
+  return `chunk${String(chunkChars)}\n${text}`;
+}
+
 export function cacheKey(
   provider: string,
   model: string,

@@ -14,53 +14,27 @@
  * Checking the keys directly costs milliseconds and contacts nothing, so the
  * incomplete cache is caught before any of that can start.
  *
- * The reachable set is recomputed the way the judge computes it. That
- * replication is the risk, so it is guarded: every computed key must already
- * exist on disk before a prune deletes anything. A wrong replication finds
- * zero matches and aborts instead of removing live fixtures.
+ * The reachable set is built with the judge's own code — `cacheKey`,
+ * `judgeCacheBody` and `readTarget`, all exported for this — rather than by
+ * reproducing the key composition here. An earlier version did reproduce it and
+ * silently went wrong the moment the judge began prefixing the chunk budget:
+ * every key it computed matched nothing, which reads as "the whole cache is
+ * missing" and, under `--prune`, as "every file is an orphan".
  */
-import { readdirSync, readFileSync, rmSync } from "node:fs";
+import { readdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { buildCacheKey, sha256 } from "@hawkeyexl/inference";
 import {
   loadConfig,
   discoverPages,
   resolvePages,
   resolveProviderIdentity,
+  cacheKey,
+  judgeCacheBody,
+  readTarget,
 } from "../dist/index.js";
 
 const CONFIG = process.env["DOCS_CONFIG"] ?? "docs/moose.config.yaml";
 const prune = process.argv.includes("--prune");
-
-/**
- * Mirrors `cacheKey` in src/judge/cache.ts, which is not exported. Read
- * PROMPT_VERSION from source rather than hard-coding it, so a bump cannot
- * silently make every key here wrong in the same direction.
- */
-const promptSrc = readFileSync("src/judge/prompt.ts", "utf8");
-const pv = /PROMPT_VERSION\s*=\s*"?([^";\s]+)"?/.exec(promptSrc)?.[1];
-if (!pv) {
-  console.error("check-docs-cache: could not read PROMPT_VERSION from src/judge/prompt.ts");
-  process.exit(2);
-}
-
-function keyFor(provider, model, runs, temperature, body, ev) {
-  const fingerprint = JSON.stringify({
-    assertion: ev.assertion,
-    evidence: ev.evidence,
-    examples: ev.examples,
-    type: ev.type,
-  });
-  return buildCacheKey([
-    provider,
-    model,
-    `v${pv}`,
-    `r${runs}`,
-    `t${temperature}`,
-    sha256(body),
-    sha256(fingerprint),
-  ]);
-}
 
 const config = loadConfig(CONFIG, process.cwd());
 const dir = resolve(process.cwd(), config.judge.cacheDir);
@@ -70,10 +44,29 @@ const plans = resolvePages(discoverPages(config, [], process.cwd()), config);
 /** key -> "page :: eval", so a miss can name what is missing. */
 const reachable = new Map();
 for (const plan of plans) {
+  // Skipped pages and skipped evals never reach the judge, so no fixture is
+  // ever written for them; counting them reachable reports permanent misses.
+  if (plan.skip) continue;
   for (const ev of plan.evals) {
-    if (ev.grader !== "ai") continue;
+    if (ev.grader !== "ai" || ev.skip) continue;
+    // Every input the judge uses, resolved the way the judge resolves it:
+    // per-eval provider/model overrides, per-eval `runs`, the chunk budget,
+    // and the *selected target* rather than the whole page body.
+    const identity = resolveProviderIdentity(config, {
+      provider: ev.provider,
+      model: ev.model,
+    });
+    const selected = readTarget(ev.target, plan);
+    if (!selected.ok) continue; // the judge errors this eval; it caches nothing
     reachable.set(
-      keyFor(provider, model, config.judge.ensembleRuns, config.judge.temperature, plan.page.body, ev),
+      cacheKey(
+        identity.provider,
+        identity.model,
+        ev.runs ?? config.judge.ensembleRuns,
+        config.judge.temperature,
+        judgeCacheBody(config.judge.chunkChars, selected.text),
+        ev,
+      ),
       `${plan.page.file} :: ${ev.name}`,
     );
   }
@@ -85,7 +78,7 @@ const missing = [...reachable].filter(([k]) => !diskKeys.has(k));
 
 console.log(
   `check-docs-cache: ${reachable.size} judged eval(s), ${onDisk.length} cache file(s), ` +
-    `${missing.length} missing (provider=${provider} model=${model} v${pv})`,
+    `${missing.length} missing (provider=${provider} model=${model})`,
 );
 
 if (missing.length > 0) {

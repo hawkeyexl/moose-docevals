@@ -22,7 +22,7 @@ import type { DocevalsConfig } from "../core/config.js";
 import type { JudgeFn, JudgeOptions } from "../core/engine.js";
 import type { GraderTarget } from "../graders/types.js";
 import { findReview, loadReviews } from "../core/reviews.js";
-import { cacheKey, VerdictCache } from "./cache.js";
+import { cacheKey, judgeCacheBody, VerdictCache } from "./cache.js";
 import { turnBudgetSkipReason } from "./budget.js";
 import {
   JUDGE_SYSTEM_PROMPT,
@@ -232,8 +232,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
         judgeProvider.modelName(),
         runsPerEval,
         temperature,
-        `chunk${String(chunkChars)}
-${selected.text}`,
+        judgeCacheBody(chunkChars, selected.text),
         ev,
       );
       const cached = cache.get(key) !== undefined;
