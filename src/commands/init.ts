@@ -39,12 +39,13 @@ docevals:
 
   judge:
     ensemble-runs: 3 # 3 isolated runs per eval; agreement is signal
-    # A ceiling on the FIRST run, not a throttle. defaults.suite now attaches
-    # an ai eval to every discovered page, so on a large corpus with a key
-    # exported, an unbounded run would issue ensemble-runs x pages requests
-    # before anyone has read a single verdict. Raise it deliberately once you
-    # know what a full pass costs you; a cached ensemble spends nothing.
-    max-turns: 150
+    # NOTE: defaults.suite attaches an ai eval to every discovered page, so a
+    # keyed run on a large corpus issues ensemble-runs x pages requests. Set
+    # max-turns once you know what a full pass costs you — deliberately, and
+    # high enough to cover the corpus. A budget set *below* what a full pass
+    # needs stops early, reports the remaining pages as skipped, and still exits
+    # 0 (ADR 01019): partial coverage that reads as success. Start with
+    # --deterministic-only, which needs no provider at all.
     temperature: 0
     zones:
       auto-pass: 0.8 # unanimous pass + mean confidence >= 0.8

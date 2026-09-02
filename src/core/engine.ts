@@ -692,10 +692,15 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
     );
   }
   const filtered = applySelection(plans, config, options);
-  const scope =
-    changed === null || sinceRef === undefined
-      ? null
-      : { ref: sinceRef, ...applySinceScope(plans, changed) };
+  // Declared here, applied *after* the feasibility pass below. `--since` scopes
+  // what is graded, never what is diagnosed — and `applySinceScope` empties
+  // `plan.evals` on unchanged pages, so scoping first would hand
+  // `checkFeasibility` nothing to look at. A pull request that edits only
+  // `moose.config.yaml` changes no page, so under `--since` every plan would be
+  // empty and the config's own validity — a malformed grader option, an unknown
+  // key — would go unchecked, exiting 0. The one flag meant for CI would make a
+  // config-only change the least examined kind of change there is.
+  let scope: { ref: string; pagesSelected: number; pagesTotal: number } | null = null;
   const judgeOptions = options.judgeOptions ?? {};
 
   const problems: RunProblem[] = plans.flatMap((p) =>
@@ -737,6 +742,16 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       ...(options.aiOnly === true ? { aiOnly: true } : {}),
     }),
   );
+
+  // Now that every page has been diagnosed, narrow what will actually be
+  // graded. See the declaration above for why this cannot move earlier.
+  if (changed !== null && sinceRef !== undefined) {
+    scope = {
+      ref: sinceRef,
+      pagesTotal: plans.length,
+      ...applySinceScope(plans, changed),
+    };
+  }
 
   for (const plan of plans) {
     if (plan.problems.some((p) => p.level === "error")) continue;

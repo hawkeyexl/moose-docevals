@@ -236,6 +236,15 @@ export function buildBaseline(
     // every baselined finding would reappear as new with nothing to explain it.
     const key = canonicalFilePath(r.file, ctx);
     for (const f of r.findings ?? []) {
+      // A diagnostic is never recorded. It is not a finding *about the page* —
+      // it is the grader reporting that it could not reach a verdict, and ADR
+      // 01022 says that fails the eval at any severity. Recording it lets the
+      // next run suppress it, which empties `fresh` entirely and makes the
+      // recompute below yield `pass`: "the grader could not run" becomes a
+      // permanent green that no later run can dislodge. The severity-plus-
+      // diagnostic predicate in `applyBaseline` only covers *partial*
+      // suppression; this is what covers the whole-set case.
+      if (f.diagnostic === true) continue;
       const list = entries[key] ?? [];
       const print = fingerprint(f);
       // Two identical findings in one file are one fingerprint; storing the

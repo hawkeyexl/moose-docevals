@@ -133,10 +133,18 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     // non-optional: `??` is dead code to the compiler and the lint rejects it,
     // while the runtime hazard is real. This says what is actually being
     // checked (ADR 01039).
+    // `Number.isInteger(n) && n >= 1`, not `Number.isFinite`: the hazard is a
+    // worker pool of zero, and `Number.isFinite(0)` is `true`. A caller-supplied
+    // `judge.concurrency: 0` sails past a finite check into
+    // `Array.from({length: 0})`, which builds no workers at all — every AI eval
+    // then vanishes from the results, not skipped and not errored but absent,
+    // with the run exiting 0. The config file cannot express it (`minimum: 1`),
+    // but `makeJudge` is exported and takes a caller-supplied config.
     const configured = config.judge.concurrency;
-    const concurrency = Number.isFinite(configured)
-      ? configured
-      : config.defaults.concurrency;
+    const concurrency =
+      Number.isInteger(configured) && configured >= 1
+        ? configured
+        : config.defaults.concurrency;
     let index = 0;
 
     /**
