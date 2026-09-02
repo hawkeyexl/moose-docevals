@@ -25,6 +25,20 @@ export function renderMarkdown(report: EngineReport): string {
     );
   }
 
+  // What `--since` scoped the run to. This matters most in the CI formats: a
+  // clean-tree run is otherwise an empty table nobody can tell apart from a
+  // corpus that passed (ADR 01040).
+  const sc = report.since;
+  if (sc) {
+    lines.push("");
+    lines.push(
+      sc.pagesSelected === 0
+        ? `> **No pages changed since \`${sc.ref}\` — nothing was evaluated.**`
+        : `_Scoped to ${sc.pagesSelected} of ${sc.pagesTotal} page(s) changed since ` +
+          `\`${sc.ref}\`. Corpus-wide graders still saw every page._`,
+    );
+  }
+
   // The baseline line belongs in the CI formats above all: `removed` is the
   // only signal that an over-narrow re-record just forgave findings, and
   // `renderGithub` delegates its summary here, so omitting it meant the

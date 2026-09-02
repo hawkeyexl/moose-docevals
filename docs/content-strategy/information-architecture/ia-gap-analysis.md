@@ -25,7 +25,10 @@ This document therefore no longer enumerates a backlog. It keeps three jobs:
    deciding whether a page still earns its place.
 3. **§4** is the live check: every command, config key, and grader kind maps to a page. **Re-run it
    whenever the CLI grows.** A new capability with no page is a gap the moment it ships, and this
-   table is where that becomes visible. Last re-run against ADRs 01016–01020, which added
+   table is where that becomes visible. Last re-run against ADRs 01038–01043, which added
+   `run --since` and `judge.concurrency`, and made a run that would check nothing a usage error —
+   the re-run that added the **run outcomes** table below. It also caught up the `llama-cpp`
+   provider keys from ADR 01037, which the tables had missed. Before that, ADRs 01016–01020 added
    `--seed`, `--eval`, `--suite`, `--baseline`, `--no-baseline`, `--write-baseline` and the
    `baseline` config key, and removed the `max-cost-usd` keys and the `pricing` block.
 
@@ -155,6 +158,11 @@ Notable flags with a home beyond the CLI reference: `--deterministic-only` and `
 `--no-baseline` and `--write-baseline` (`adopt/retrofit-a-legacy-corpus.mdx`,
 `reference/files-and-state.mdx`).
 
+`--since` (ADR 01040) is documented **only** in `reference/cli.mdx`. That is a mapped surface, not an
+unmapped one, but it is the thinnest kind: the flag exists to make a CI job affordable on a large
+corpus, and the CUJ that wants it — `cuj-run-in-ci`, via `ci/index.mdx` and `ci/cost-and-caching.mdx`
+— still shows only unscoped invocations. Listed in [§5](#5-still-outstanding).
+
 ### Config keys
 
 Keys are written fully qualified so this table is greppable against
@@ -166,8 +174,9 @@ Keys are written fully qualified so this table is greppable against
 | `files.include`, `files.exclude` | `reference/configuration.mdx`, `adopt/retrofit-a-legacy-corpus.mdx` |
 | `defaults.suite` | `evals/named-evals-and-suites.mdx` |
 | `defaults.fail-fast`, `defaults.concurrency` | `reference/configuration.mdx` |
-| `provider.default`, `provider.anthropic`, `provider.openai`, `provider.claude-cli` | `judge/choose-a-provider.mdx`, `reference/configuration.mdx` |
+| `provider.default`, `provider.anthropic`, `provider.openai`, `provider.claude-cli`, `provider.llama-cpp` | `judge/choose-a-provider.mdx`, `reference/configuration.mdx` |
 | `judge.ensemble-runs`, `judge.temperature`, `judge.zones` | `judge/index.mdx` |
+| `judge.concurrency` | `reference/configuration.mdx` |
 | `judge.false-positive-alert` | `judge/calibrate.mdx` |
 | `judge.cache-dir`, `fill.cache-dir` | `ci/cost-and-caching.mdx`, `reference/files-and-state.mdx` |
 | `judge.max-turns`, `fill.max-turns` | `ci/cost-and-caching.mdx` |
@@ -203,9 +212,36 @@ Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`
 | `tool:reading-level` | `reference/graders.mdx` |
 | `tool:differentiation` | `reference/graders.mdx` |
 
-**No unmapped surface.** Re-run this check whenever a command, config key, or grader is added — a new
-capability with no page is a documentation gap the moment it ships, and this table is where that
-becomes visible.
+### Run outcomes
+
+Added on this re-run (ADRs 01040–01043). The three tables above check *inputs* — commands, keys,
+graders — and an exit code is an **output**, so a new exit-2 condition could ship with no page and
+nothing here would notice. It nearly did.
+
+| Outcome | Documented in |
+|---|---|
+| Exit `0` / `1` / `2`, and who each routes to | `reference/output-and-exit-codes.mdx`, `fix/index.mdx`, `ci/exit-codes-and-annotations.mdx` |
+| Exit 2: unknown `--format` | `reference/output-and-exit-codes.mdx` |
+| Exit 2: empty input set (`discoverPages`) | `reference/cli.mdx` |
+| Exit 2: `--eval` / `--suite` matching nothing | `fix/index.mdx`, `reference/cli.mdx`, `ci/exit-codes-and-annotations.mdx` |
+| Exit 2: unresolvable `--since` ref, and `--since` with `--write-baseline` | `reference/cli.mdx` |
+| Exit 2: **a run that would check nothing** (ADR 01041) | `reference/output-and-exit-codes.mdx`, `fix/index.mdx` |
+| Exit 0 with a statement: empty `--since` scope | `reference/cli.mdx` |
+| Exit 0 with a warning: **the run graded nothing** (ADR 01041) | `reference/output-and-exit-codes.mdx` |
+| Exit 1 on a suite below target, suspended by `--eval` / `--suite` / `--since` | `reference/output-and-exit-codes.mdx`, `evals/named-evals-and-suites.mdx` |
+| `--fail-on-review` widening exit 1 | `ci/exit-codes-and-annotations.mdx` |
+
+**No unmapped surface.** Re-run this check whenever a command, config key, grader, **or run
+outcome** is added — a new capability with no page is a documentation gap the moment it ships, and
+these tables are where that becomes visible.
+
+Two behavior changes from the same re-run are deliberately *not* new rows, because neither is a
+surface a reader looks up:
+
+- **`--deterministic-only` no longer warns about an unavailable provider** (ADR 01043). It removes
+  noise from output no page ever quoted; `reference/cli.mdx` never documented the warning.
+- **A grader error now names the eval that failed** (ADR 01042). A message-wording change inside an
+  `error` result whose shape `reference/output-and-exit-codes.mdx` already documents.
 
 ## 5. Still outstanding
 
@@ -218,6 +254,8 @@ The content set is complete; these are not.
 | **Slimming the README** | Now unblocked: §1 maps every section to a destination that exists. | No. |
 | ~~**`moose-docevals list --format` validation**~~ | **Done** (ADR 01007). An unknown `--format` is a usage error on every command that takes the flag; `ci.yml` asserts exit 2 and the allowed-set message through the built CLI on both runners. | — |
 | **A `baseline` glossary entry** | The term now recurs across six pages. `reference/glossary.mdx` is alphabetical and its description reads "The ten terms", so adding one is an edit rather than a consistency fix. | No. |
+| **`--since` in the CI journey pages** | Documented in `reference/cli.mdx` only (ADR 01040). `ci/index.mdx` and `ci/cost-and-caching.mdx` show unscoped runs, and neither mentions the `fetch-depth: 0` that a scoped run needs — which is the one detail a reader hits before anything else. | No — but it is the gap most likely to produce a support question. |
+| **A suite that graded nothing still reports `ok`** | `summarizeSuites` computes the pass rate over the graded set, so an empty suite meets any target: `--deterministic-only` over the fixture corpus prints `tutorial: 0/0 passed — 100% vs target 70% ok`. Named and left open by ADR 01041, which fixes the run-level case. Reusing ADR 01018's `partial` flag is the obvious remedy and is a third decision: `partial` currently means "a filter was active" and renders as such, so generalizing it changes a public JSON field's meaning, two reporters' wording, and every `--deterministic-only` run's output. | No — the run-level warning now prints beside that line and contradicts it. |
 | **A recording recipe in `ci/recipes.mdx`** | `ci/exit-codes-and-annotations.mdx` says `--write-baseline` does not belong in the gating job, but no page shows the separate recording invocation. | No. |
 | **`calibrate --max-turns` is run-wide only because its cases now batch** | Recorded in ADR 01016. If `calibrate` ever returns to judging case-by-case, the flag silently becomes per case again — the reason ADR 01019 withheld it in the first place. | No — a note for whoever touches that loop. |
 

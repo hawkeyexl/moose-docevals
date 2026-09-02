@@ -308,7 +308,16 @@ export function applyBaseline(
     // only on an error-severity finding, so suppressing the last of them makes
     // the eval pass. Leaving `outcome` alone would baseline the finding and
     // still fail the run.
-    const hasError = fresh.some((f) => f.severity === "error");
+    // `diagnostic` is part of the failing condition, not just severity. A
+    // diagnostic finding means the grader reached no verdict, and ADR 01022
+    // says that fails the eval at any severity — the engine enforces exactly
+    // that when it first computes the outcome. Recomputing on severity alone
+    // let a baseline turn "the grader could not run" into `pass`, which is the
+    // one thing a baseline must never forgive: it suppresses *known* findings,
+    // never the absence of a verdict.
+    const hasError = fresh.some(
+      (f) => f.severity === "error" || f.diagnostic === true,
+    );
     return {
       ...r,
       outcome: hasError ? ("fail" as const) : ("pass" as const),

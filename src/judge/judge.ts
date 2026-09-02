@@ -11,12 +11,10 @@
  * resolution.
  */
 import {
-  JsonCache,
   computeConsensus,
   runEnsemble,
   zoneFor,
   type InferenceProvider,
-  type JudgeRun,
 } from "@hawkeyexl/inference";
 import verdictSchemaJson from "./verdict-schema.json" with { type: "json" };
 import type { EvalResult } from "../types.js";
@@ -24,7 +22,7 @@ import type { DocevalsConfig } from "../core/config.js";
 import type { JudgeFn, JudgeOptions } from "../core/engine.js";
 import type { GraderTarget } from "../graders/types.js";
 import { findReview, loadReviews } from "../core/reviews.js";
-import { cacheKey } from "./cache.js";
+import { cacheKey, VerdictCache } from "./cache.js";
 import { turnBudgetSkipReason } from "./budget.js";
 import {
   JUDGE_SYSTEM_PROMPT,
@@ -114,7 +112,7 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
       options.runs ?? ev.runs ?? config.judge.ensembleRuns;
     const temperature = config.judge.temperature;
     const chunkChars = options.chunkChars ?? config.judge.chunkChars;
-    const cache = new JsonCache<JudgeRun[]>(
+    const cache = new VerdictCache(
       resolvePath(root, config.judge.cacheDir),
       options.noCache !== true,
       "moose-docevals",
@@ -124,7 +122,21 @@ export function makeJudge(deps: JudgeStageDeps): JudgeFn {
     let turnsSpent = 0;
 
     const results: EvalResult[] = [];
-    const concurrency = config.defaults.concurrency;
+    // `makeJudge` is a published export taking a caller-supplied config, so a
+    // JS consumer can hand us one shaped for a version before `judge.concurrency`
+    // existed. The type says that cannot happen; at a package boundary it can.
+    // Unguarded it is `Math.min(undefined, n)` -> NaN -> `Array.from({length:
+    // NaN})` -> zero workers, and every AI eval vanishes from the results —
+    // not skipped, not errored, absent — with the run exiting 0.
+    //
+    // Tested with `Number.isFinite` rather than `??` because the value is typed
+    // non-optional: `??` is dead code to the compiler and the lint rejects it,
+    // while the runtime hazard is real. This says what is actually being
+    // checked (ADR 01039).
+    const configured = config.judge.concurrency;
+    const concurrency = Number.isFinite(configured)
+      ? configured
+      : config.defaults.concurrency;
     let index = 0;
 
     /**

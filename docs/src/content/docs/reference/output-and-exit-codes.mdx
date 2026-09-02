@@ -12,7 +12,7 @@ the fixture corpus.
 |---|---|---|
 | `0` | Everything passed. | Nobody. |
 | `1` | Failures, errors, or a suite below its target pass rate. | The page author. |
-| `2` | Operational or usage error — bad config, missing provider, malformed flag. | Whoever owns the pipeline. |
+| `2` | Operational or usage error — bad config, missing provider, malformed flag, or a run that would check nothing. | Whoever owns the pipeline. |
 
 **`1` and `2` route to different people**, which is the whole reason they are distinct. A CI recipe
 that treats any non-zero exit as "the docs are bad" blames authors for infrastructure problems and
@@ -23,6 +23,26 @@ earns the check a reputation for flakiness it does not deserve.
 A run narrowed by `--eval` or `--suite` **cannot** exit `1` on a suite target: its suite summaries
 are marked [`partial`](#suites) and are not enforced. Exit `1` then comes only from the evals that
 actually ran, or from an `error`-level resolution problem.
+
+### A run that would check nothing is exit 2
+
+If **no page the run would check resolves a single eval**, `run` stops with exit `2` instead of
+reporting success over an empty report. Nothing is wired up: no `defaults.suite` in the config, and
+no `eval-suite` or `evals` key on any page. The message names how many pages were affected, the
+keys that would attach an eval, and `moose-docevals list`, which prints the resolved plan.
+
+This is the same answer `--eval no-such-eval` already gave. Reaching "nothing would have been
+checked" through a config file rather than a flag does not make it a passing build.
+
+Two empty runs are **not** errors, because both are choices rather than misconfigurations:
+
+- Every page carrying `eval-skip` — pages you skipped are not counted.
+- A `--since` scope that selects no pages (see [Scoping a run to what
+  changed](/moose-docevals/reference/cli/#scoping-a-run-to-what-changed)).
+
+Neither passes in silence. Whenever no eval reaches a verdict, the report carries a warning saying
+the run graded nothing and established nothing about the corpus — so a green exit code is never the
+only thing you have to go on.
 
 ## Which formats each command accepts
 

@@ -111,6 +111,7 @@ Which of the three to pick, and what each one implies about where your pages go,
 | `judge.zones.auto-fail` | number 0–1 | `0.8` | Confidence at or above which a failing consensus auto-fails. |
 | `judge.false-positive-alert` | number 0–1 | `0.15` | Calibration alerts above this false-positive rate. |
 | `judge.cache-dir` | string | `.moose-docevals/cache` | |
+| `judge.concurrency` | integer ≥ 1 | `defaults.concurrency` | Pages judged in parallel. Separate from `defaults.concurrency` because a local `llama-cpp` model runs in-process against one GPU and serves one context at a time, while deterministic graders are happy at 4. |
 | `judge.max-turns` | integer ≥ 1 \| null | `null` | Stop judging after this many uncached inference calls. One ai eval spends `judge.ensemble-runs` turns; a cached ensemble spends none. `null` is unbounded. |
 | `judge.chunk-chars` | integer ≥ 1 | `12000` | Characters of page per judge call. A longer page is read in parts: each part contributes the passages bearing on the assertion, and one judge then answers against the collected evidence. Content that fits is judged in a single call, exactly as before. |
 

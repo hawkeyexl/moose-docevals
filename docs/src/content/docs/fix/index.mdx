@@ -109,8 +109,14 @@ and commit the updated script alongside your change.
 
 ## Exit 2
 
-Bad config, a missing provider key, a malformed flag. **This is not a docs problem and not your
-fault.** Tell whoever owns the pipeline. Re-running the job will not help.
+Bad config, a missing provider key, a malformed flag, or a run that would have checked nothing.
+**This is not a docs problem and not your fault.** Tell whoever owns the pipeline. Re-running the
+job will not help.
+
+`No evals resolved` is the one worth naming, because it looks like the tool is complaining about
+your pages. It is not: it means nothing in the config attaches an eval to any page the run would
+check, so the job stopped rather than reporting success over an empty report. That is a
+configuration fix, not a content fix.
 
 ---
 
