@@ -102,4 +102,11 @@ export {
   frontmatterSchemaPath,
   FRONTMATTER_SCHEMA_ID,
 } from "./schema.js";
+// The judge cache key and the exact body it hashes. Exported so that anything
+// asking "is this verdict already cached?" — `scripts/check-docs-cache.mjs`
+// above all — computes it with the judge's own code instead of reproducing the
+// composition by hand, which is how that script silently keyed on the raw page
+// body after the judge started prefixing the chunk budget.
+export { cacheKey, judgeCacheBody } from "./judge/cache.js";
+export { readTarget } from "./core/target.js";
 export * from "./types.js";

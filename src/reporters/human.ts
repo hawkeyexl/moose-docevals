@@ -97,6 +97,22 @@ export function renderHuman(report: EngineReport): string {
     );
   }
 
+  // What `--since` scoped the run to. The zero case gets its own line, in
+  // yellow, because a clean-tree run is otherwise an indistinguishable green:
+  // same exit code, same empty body, nothing saying that nothing ran.
+  const sc = report.since;
+  if (sc) {
+    lines.push("");
+    lines.push(
+      sc.pagesSelected === 0
+        ? pc.yellow(`No pages changed since ${sc.ref} — nothing was evaluated.`)
+        : pc.dim(
+            `Scoped to ${sc.pagesSelected} of ${sc.pagesTotal} page(s) changed since ${sc.ref}. ` +
+              `Corpus-wide graders still saw every page.`,
+          ),
+    );
+  }
+
   // The baseline's line in the summary. `removed` is the load-bearing number
   // on a re-record: an accidental --write-baseline over a narrowed glob
   // forgives everything it did not see, and nothing else in a CI log says so.

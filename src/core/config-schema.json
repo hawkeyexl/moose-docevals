@@ -142,6 +142,10 @@
               "type": "integer",
               "minimum": 1
             },
+            "concurrency": {
+              "type": "integer",
+              "minimum": 1
+            },
             "temperature": {
               "type": "number",
               "minimum": 0

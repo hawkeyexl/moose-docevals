@@ -17,8 +17,12 @@ docevals:
       - "**/node_modules/**"
 
   defaults:
-    # Suite applied to pages without an eval-suite frontmatter key.
-    suite: null
+    # Suite applied to pages without an eval-suite frontmatter key. Naming the
+    # suite defined at the bottom of this file is what makes a fresh corpus
+    # check anything at all: with "null", a page carrying no eval frontmatter
+    # resolves zero evals, and a run over zero evals is a usage error rather
+    # than a green build (ADR 01041).
+    suite: default
     fail-fast: false
     concurrency: 4
 
@@ -35,6 +39,13 @@ docevals:
 
   judge:
     ensemble-runs: 3 # 3 isolated runs per eval; agreement is signal
+    # NOTE: defaults.suite attaches an ai eval to every discovered page, so a
+    # keyed run on a large corpus issues ensemble-runs x pages requests. Set
+    # max-turns once you know what a full pass costs you — deliberately, and
+    # high enough to cover the corpus. A budget set *below* what a full pass
+    # needs stops early, reports the remaining pages as skipped, and still exits
+    # 0 (ADR 01019): partial coverage that reads as success. Start with
+    # --deterministic-only, which needs no provider at all.
     temperature: 0
     zones:
       auto-pass: 0.8 # unanimous pass + mean confidence >= 0.8

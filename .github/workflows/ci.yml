@@ -242,6 +242,26 @@ jobs:
             *"fresh-enough"*) ;;
             *) echo "scaffolded config resolved no named evals — got: $out"; exit 1 ;;
           esac
+          # ADR 01041. The scaffold defined a suite named `default` and then set
+          # `defaults.suite: null`, so nothing selected it — and a page carrying
+          # no eval frontmatter, which is every page on day one, resolved zero
+          # evals and exited 0 having checked nothing. The page above carries an
+          # `evals:` key of its own, so only a bare page can catch this.
+          printf -- '---\ntitle: Bare\nlast-reviewed: 2026-08-01\n---\n\n# Bare\n\nBody.\n' > docs/bare.md
+          out=$(node ../dist/cli.js list docs/bare.md)
+          case "$out" in
+            *"no evals"*) echo "the scaffolded suite does not attach to a bare page - got: $out"; exit 1 ;;
+            *) ;;
+          esac
+          case "$out" in
+            *"fresh-enough"*) ;;
+            *) echo "the scaffolded suite resolved nothing on a bare page - got: $out"; exit 1 ;;
+          esac
+          # ...and end to end: the first run after `init` grades something and
+          # exits 0, rather than reaching the empty-plan usage error below.
+          set +e; node ../dist/cli.js run --deterministic-only --no-generate > /dev/null 2>&1; code=$?; set -e
+          if [ "$code" -ne 0 ]; then echo "a freshly scaffolded corpus must run clean, got $code"; exit 1; fi
+          rm -f docs/bare.md
           expect_usage_error() {
             set +e
             out=$("$@" 2>&1)
@@ -419,6 +439,184 @@ jobs:
           case "$out" in
             *"2 evals resolved"*) ;;
             *) echo "::error::--eval is not repeatable: $out"; exit 1 ;;
+          esac
+
+      # ADR 01040. A clean checkout has nothing changed since HEAD, so this is
+      # the exact shape a CI job hits on a branch that touched only source: it
+      # must exit 0 *and say so*. A green run that is indistinguishable from a
+      # corpus that passed is the failure this step exists to catch.
+      - name: Dogfood --since scoping
+        shell: bash
+        run: |
+          expect_code() {
+            want=$1; shift
+            set +e
+            out=$("$@" 2>&1); code=$?
+            set -e
+            if [ "$code" -ne "$want" ]; then
+              echo "::error::expected exit $want from: $* - got $code"; echo "$out"; exit 1
+            fi
+            printf "%s" "$out"
+          }
+          # Nothing changed between HEAD and HEAD. Unlike an --eval that matches
+          # nothing, that is a correct answer and not a usage error.
+          out=$(expect_code 0 node dist/cli.js run --deterministic-only --no-generate --since HEAD)
+          echo "$out"
+          case "$out" in
+            *"nothing was evaluated"*) ;;
+            *) echo "::error::a clean --since run must say nothing was evaluated"; exit 1 ;;
+          esac
+          # It must not have graded the corpus anyway: goTo.mdx fails freshness
+          # at error severity, so a scope that leaked would exit 1 above.
+          case "$out" in
+            *"vs target"*ok*) echo "::error::a scoped run reported a suite target as met"; exit 1 ;;
+            *) ;;
+          esac
+          # A ref git cannot resolve is operational, not the author's problem -
+          # and the message has to name shallow clones, because fetch-depth: 1
+          # is the default and will be the most common report.
+          out=$(expect_code 2 node dist/cli.js run --deterministic-only --since no/such/ref)
+          case "$out" in
+            *shallow*fetch-depth*) ;;
+            *) echo "::error::an unresolvable --since ref must mention shallow clones: $out"; exit 1 ;;
+          esac
+          # A re-record from a scoped run would forgive every finding the scope
+          # excluded, so the combination is refused before git is spawned.
+          expect_code 2 node dist/cli.js run --deterministic-only --since HEAD --write-baseline > /dev/null
+
+      # ADR 01041. The silent green this repo exists to prevent, at the very
+      # top of the pipeline: a corpus whose config attaches nothing resolved
+      # zero evals, printed a blank line and the word `Suites`, and exited 0.
+      # The identical condition reached by `--eval no-such-eval` was already
+      # exit 2, so the two routes disagreed. Both halves are asserted - the
+      # error *and* the same corpus passing once a suite is attached, so this
+      # cannot go green by the scratch corpus being broken some other way.
+      - name: Dogfood the empty-plan contract
+        shell: bash
+        run: |
+          rm -rf .ci-empty-plan-check
+          mkdir -p .ci-empty-plan-check/docs
+          cd .ci-empty-plan-check
+          { echo '---'; echo 'title: Bare'; echo 'last-reviewed: 2026-08-01'; echo '---'; echo; echo 'Body.'; } > docs/bare.md
+          write_config() {
+            { echo 'docevals:'; echo '  version: 1'; echo '  files:'; echo '    include: ["docs/**/*.md"]'; \
+              echo '  defaults:'; echo "    suite: $1"; echo '  evals:'; echo '    fresh-enough:'; \
+              echo '      assertion: Reviewed recently.'; echo '      grader: tool:freshness'; echo '      options:'; \
+              echo '        max-age-days: 100000'; echo '  suites:'; echo '    default:'; \
+              echo '      evals: [fresh-enough]'; } > moose.config.yaml
+          }
+          # A suite is defined; nothing selects it. Every page resolves nothing.
+          write_config 'null'
+          set +e; out=$(node ../dist/cli.js run --deterministic-only 2>&1); code=$?; set -e
+          echo "$out"
+          if [ "$code" -ne 2 ]; then echo "::error::a run resolving no evals must exit 2, got $code"; exit 1; fi
+          case "$out" in
+            *"No evals resolved"*) ;;
+            *) echo "::error::the empty-plan error must say what happened - got: $out"; exit 1 ;;
+          esac
+          # The whole population of this error is a config that attaches
+          # nothing, so the message has to name the key that would.
+          case "$out" in
+            *defaults.suite*) ;;
+            *) echo "::error::the empty-plan error must name defaults.suite - got: $out"; exit 1 ;;
+          esac
+          # The other half: attaching the suite makes the same corpus run.
+          write_config 'default'
+          set +e; node ../dist/cli.js run --deterministic-only > /dev/null 2>&1; code=$?; set -e
+          if [ "$code" -ne 0 ]; then echo "::error::the same corpus must pass once a suite is attached, got $code"; exit 1; fi
+          # Evals resolved and every one skipped is deliberately NOT an error -
+          # `eval-skip` is a feature and the report is full of `skip` lines. It
+          # still must not pass in silence.
+          { echo '---'; echo 'title: Bare'; echo 'last-reviewed: 2026-08-01'; echo 'eval-skip: true'; echo '---'; echo; echo 'Body.'; } > docs/bare.md
+          set +e; out=$(node ../dist/cli.js run --deterministic-only 2>&1); code=$?; set -e
+          echo "$out"
+          if [ "$code" -ne 0 ]; then echo "::error::an all-skipped corpus must still exit 0, got $code"; exit 1; fi
+          case "$out" in
+            *"graded nothing"*) ;;
+            *) echo "::error::an all-skipped run must say it established nothing - got: $out"; exit 1 ;;
+          esac
+          # A page carrying `eval-skip` and no suite resolves ZERO evals, not
+          # evals that are then skipped - so a rule counting resolved evals
+          # over every page turns a deliberate skip into a usage error.
+          # test/fixtures/pages/index.mdx is exactly that page, and
+          # docs/src/content/docs/evals/index.mdx runs it expecting exit 0.
+          set +e; out=$(node ../dist/cli.js run docs/bare.md --deterministic-only 2>&1); code=$?; set -e
+          if [ "$code" -ne 0 ]; then echo "::error::a wholly skipped corpus must not be a usage error, got $code"; echo "$out"; exit 1; fi
+          # ...and one page the author did NOT skip, with nothing checking it,
+          # is still the original defect.
+          { echo '---'; echo 'title: Unskipped'; echo 'last-reviewed: 2026-08-01'; echo '---'; echo; echo 'Body.'; } > docs/unskipped.md
+          write_config 'null'
+          set +e; node ../dist/cli.js run --deterministic-only > /dev/null 2>&1; code=$?; set -e
+          if [ "$code" -ne 2 ]; then echo "::error::an unskipped page with nothing to check must exit 2, got $code"; exit 1; fi
+          cd ..
+          rm -rf .ci-empty-plan-check
+
+      # ADR 01042. The engine caught grader failures once per grader *kind*,
+      # while batch adapters loop their eval groups inside grade() - so a throw
+      # on the second group discarded the first group's findings and stamped the
+      # broken eval's message onto every sibling. This is the original
+      # reproduction: two tool:docmeta evals, one pointing at a schema file that
+      # does not exist. Relative paths only, per the note on the dogfood step
+      # above.
+      - name: Dogfood grader isolation
+        shell: bash
+        run: |
+          rm -rf .ci-isolation-check
+          mkdir -p .ci-isolation-check/docs
+          cd .ci-isolation-check
+          { echo '---'; echo 'title: Sample'; echo 'description: A sample page.'; echo 'evals:'; \
+            echo '  - use: schema-good'; echo '  - use: schema-bad'; echo '---'; echo; echo 'Body.'; } > docs/page.md
+          { echo 'docevals:'; echo '  version: 1'; echo '  files:'; echo '    include: ["docs/**/*.md"]'; \
+            echo '  evals:'; echo '    schema-good:'; echo '      assertion: Frontmatter validates.'; \
+            echo '      grader: tool:docmeta'; echo '      options:'; \
+            echo '        schemas: ["../schemas/frontmatter-1.0.0.json"]'; \
+            echo '    schema-bad:'; echo '      assertion: Frontmatter validates against a missing schema.'; \
+            echo '      grader: tool:docmeta'; echo '      options:'; \
+            echo '        schemas: ["./does-not-exist.json"]'; } > moose.config.yaml
+          set +e; out=$(node ../dist/cli.js run --deterministic-only --no-generate 2>&1); code=$?; set -e
+          echo "$out"
+          # The broken eval fails the run, which is why exit 1 is expected here.
+          if [ "$code" -ne 1 ]; then echo "::error::expected exit 1 from the broken eval, got $code"; exit 1; fi
+          # The good eval must have reached its own verdict, not inherited the
+          # bad one's error. This is the assertion that was false before.
+          case "$out" in
+            *pass*schema-good*) ;;
+            *) echo "::error::a broken eval erased its sibling - got: $out"; exit 1 ;;
+          esac
+          # ...and the error must name the eval that actually failed.
+          case "$out" in
+            *"failed for eval"*schema-bad*) ;;
+            *) echo "::error::the grader error does not name the failing eval - got: $out"; exit 1 ;;
+          esac
+          cd ..
+          rm -rf .ci-isolation-check
+
+      # ADR 01043. Commander defaults a `--no-generate` key to `true`, so the
+      # old condition suppressed this warning only under the accidental pairing
+      # `--deterministic-only --no-generate` - and the standard keyless CI
+      # invocation warned about the provider it had just been told to skip. The
+      # defaults only exist through the real parser, so this has to drive the
+      # built CLI rather than call runRun.
+      - name: Dogfood the missing-provider warning
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ""
+          OPENAI_API_KEY: ""
+        run: |
+          # Exit 1 is the fixture corpus doing its job; only the text matters.
+          set +e
+          quiet=$(node dist/cli.js run --deterministic-only --no-generate 2>&1)
+          loud=$(node dist/cli.js run --no-generate 2>&1)
+          set -e
+          case "$quiet" in
+            *"provider unavailable"*) echo "::error::--deterministic-only warned about the provider it was told to skip"; exit 1 ;;
+            *) ;;
+          esac
+          # The guard against fixing that by deleting the warning: a run that
+          # wanted the judge and could not have it still says so.
+          case "$loud" in
+            *"provider unavailable"*) ;;
+            *) echo "::error::a run that wanted the judge must warn when it is unavailable"; exit 1 ;;
           esac
 
       # ADR 01017. The ratchet is only useful if a recorded finding actually
