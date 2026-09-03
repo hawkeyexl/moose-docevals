@@ -28,3 +28,6 @@ moose-docevals.junit.xml
 # Scratch from the CI HTML-report check, when it is run locally.
 moose-docevals.html
 check-html.mjs
+
+# Vale styles are fetched by `vale sync`, not committed
+.vale/styles/
