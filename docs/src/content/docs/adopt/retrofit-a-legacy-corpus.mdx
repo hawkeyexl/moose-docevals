@@ -8,7 +8,7 @@ once. The result is accurate and useless: unmergeable, untriageable, and it teac
 the tool is wrong rather than that the docs are.
 
 The instinct that follows is to soften the assertions until the build goes green. **That is the
-failure this page exists to prevent**, because it is irreversible in practice — an assertion weakened
+failure this page exists to prevent**, because it is irreversible in practice. An assertion weakened
 to accommodate the corpus permanently encodes the corpus as the standard, and nobody ever tightens it
 back.
 
@@ -44,15 +44,15 @@ npx moose-docevals run --write-baseline
 ```
 
 A bare `--write-baseline` records into the **configured** path, not the default. That matters if you
-put the file somewhere other than the repo root: without that rule, a repo pointing `baseline:` at
-`config/docs-baseline.json` would record into `.moose-docevals-baseline.json`, nothing would read it,
+put the file somewhere other than the repo root. Without that rule, a repo pointing `baseline:` at
+`config/docs-baseline.json` would record into `.moose-docevals-baseline.json`. Nothing would read it,
 and the ratchet would do nothing while looking like it worked.
 
 ```console
 Baseline .moose-docevals-baseline.json: recorded 412 finding(s) (+412, -0).
 ```
 
-The recording run applies the baseline it just wrote, so it exits `0` — recording a finding *is*
+The recording run applies the baseline it just wrote, so it exits `0`. Recording a finding *is*
 declaring it accepted. You do not have to wrap the command in `|| true`, which is the reliable way to
 lose the exit code that matters on the next run.
 
@@ -63,7 +63,7 @@ git add .moose-docevals-baseline.json
 ```
 
 It is team state, not a cache. Sorted keys and sorted fingerprints mean it diffs and merges legibly,
-and every later change to it shows up in review — which is the point. Shape and re-record mechanics
+and every later change to it shows up in review, which is the point. Shape and re-record mechanics
 are in [Files and state](/moose-docevals/reference/files-and-state/#findings-baseline).
 
 ### 4. Gate on new findings
@@ -84,13 +84,13 @@ Read this before you rely on it. The gate a baseline gives you is real but weake
 ### Identity is per rule per file, not per occurrence
 
 A finding's identity is `(file, eval name, rule id)`. The line number and the message text are
-deliberately excluded: a fingerprint that moved with the line would present a pure reordering as a
-wall of new findings, and one that included the message would be invalidated for every consuming repo
+deliberately excluded. A fingerprint that moved with the line would present a pure reordering as a
+wall of new findings. One that included the message would be invalidated for every consuming repo
 the next time markdownlint or Vale rewords a string.
 
 **The consequence: a file baselined for three `MD013` findings will not fail when a fourth
 appears.** That is not an oversight waiting on a fix. Per-occurrence identity needs a stable anchor,
-and prose has none — a text snippet churns on every edit, an ordinal renumbers on every insertion.
+and prose has none. A text snippet churns on every edit, and an ordinal renumbers on every insertion.
 
 Plan around it. A baseline stops a *new kind* of problem entering a file; it does not stop more of a
 problem that file already has. Where you need the stricter guarantee, fix the file and drop its entry.
@@ -98,8 +98,8 @@ problem that file already has. Where you need the stricter guarantee, fix the fi
 ### It covers findings, which means deterministic graders
 
 `command` and `tool:*` graders produce findings, so those are what a baseline records. An ai-graded
-eval's verdict carries no rule identity to fingerprint, and freezing a judge verdict in a backlog file
-is not what you want anyway — [human review](/moose-docevals/judge/human-review/) is the mechanism
+eval's verdict carries no rule identity to fingerprint. Freezing a judge verdict in a backlog file
+is not what you want anyway. [Human review](/moose-docevals/judge/human-review/) is the mechanism
 for those.
 
 Two more things a baseline does not touch:
@@ -107,7 +107,7 @@ Two more things a baseline does not touch:
 - **An eval that errored.** `error` is "the check could not run", not "the page is bad", and there is
   no finding to record. It still exits `1`.
 - **A suite below its `target-pass-rate`.** Suppressed findings do raise the pass rate, because
-  suppressing the last error-severity finding makes the eval pass — but the target itself is a
+  suppressing the last error-severity finding makes the eval pass. The target itself is a
   separate lever. See [Set capability targets near
   reality](#7-set-capability-targets-near-reality) below.
 
@@ -128,14 +128,14 @@ Baseline .moose-docevals-baseline.json: recorded 1 finding(s) (+0, -1).
 ```
 
 `removed` is the load-bearing number. A baseline's failure mode is over-forgiveness, and it is silent
-by construction — the whole job of the file is to make a red run green. An accidental
+by construction. The whole job of the file is to make a red run green. An accidental
 `--write-baseline` over a narrowed glob, a mistyped `files.exclude`, a run from the wrong directory:
-each forgives everything it did not see, and the fingerprints are opaque hashes, so a diff dropping
+each forgives everything it did not see. The fingerprints are opaque hashes, so a diff dropping
 200 of them reads as noise unless a number names it.
 
 Re-record deliberately, over the same scope as your gate, and read that line.
 
-A hand-broken baseline is rejected rather than silently ignored, for the same reason — a typed
+A hand-broken baseline is rejected rather than silently ignored, for the same reason. A typed
 fingerprint can never match a real finding, so the symptom would otherwise be "that finding came
 back" with nothing to explain it:
 
@@ -144,7 +144,7 @@ moose-docevals: Baseline ".moose-docevals-baseline.json": entries["docs/install.
 "not-a-fingerprint", which is not a fingerprint (16 lowercase hex characters).
 ```
 
-Exit `2` — the pipeline owner's problem, not the author's.
+Exit `2`, the pipeline owner's problem, not the author's.
 
 ## The rest of the sequence
 
@@ -154,7 +154,7 @@ converge.
 ### 5. Decide what should not be evaluated at all
 
 Triage before you record. Deprecated sections, generated reference, and archives should be
-**excluded**, not baselined — a baseline entry is a promise to come back, and nobody is coming back
+**excluded**, not baselined. A baseline entry is a promise to come back, and nobody is coming back
 for `docs/archive/`.
 
 ```yaml
@@ -209,7 +209,7 @@ why before how, and last quarter it was 45%" is a real report. See
 
 ### 8. Burn down, and let the baseline shrink
 
-Pick the section that matters most — usually the one with the most traffic, not the most findings.
+Pick the section that matters most, usually the one with the most traffic, not the most findings.
 Fix its pages, then re-record so the fixed findings leave the file. [Fix a failing
 eval](/moose-docevals/fix/) is the page to hand contributors.
 
@@ -225,7 +225,7 @@ That number falling is the burndown. Re-record when it is worth the diff.
 ### 9. Make the survivors cheap
 
 A retrofitted corpus is disproportionately ai-graded, because `fill` proposes ai evals by
-construction. Before the recurring cost becomes the story, push them down the hierarchy —
+construction. Before the recurring cost becomes the story, push them down the hierarchy with
 [Promote to deterministic](/moose-docevals/adopt/promote-to-deterministic/).
 
 ## When severity inversion is still the answer
@@ -236,8 +236,8 @@ specific case:
 
 > A finding class you do not intend to fix, on pages you do not intend to exclude.
 
-Reading level on an API reference, line length in generated tables — checks worth *seeing* and not
-worth gating. Say that with severity, which is honest about the class, rather than with a baseline,
+Reading level on an API reference, line length in generated tables: these are checks worth *seeing*
+and not worth gating. Say that with severity, which is honest about the class, rather than with a baseline,
 which claims you will come back.
 
 | Situation | Reach for |

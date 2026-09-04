@@ -33,11 +33,11 @@ has a tool whose value he accepts and whose entry cost he cannot pay, and he doe
 [Iris](../personas/iris-retrofitter.md) it is the first half of a longer, more careful path.
 
 The sequence is deliberately `--dry-run` before write, and the docs must not reorder it for
-convenience. Two reasons, and only one is obvious: the reader gets to see the proposals before they
-touch the repo, and — the non-obvious one — **the dry run is where the inference calls are actually
-spent, so the write pass that follows it is a cache hit and spends none**. Looking first is therefore
+convenience. Two reasons, and only one is obvious. The reader gets to see the proposals before they
+touch the repo. The non-obvious one is that **the dry run is where the inference calls are actually
+spent**. The write pass that follows it is a cache hit and spends none. Looking first is therefore
 free in the only unit the tool counts. The size of the whole pass is also knowable before any of it
-runs, because `fill` spends exactly one inference call per uncached page; `--max-turns` is how the
+runs, because `fill` spends exactly one inference call per uncached page. `--max-turns` is how the
 reader caps that number before the first call rather than discovering it after. For a reader paying
 out of pocket, that ordering and that arithmetic are the difference between trying it and not.
 
@@ -48,8 +48,8 @@ it, picks wrong, and pays twice. It belongs in the first screen, not in a cachin
 
 The journey's honest ending is a review step, not a green run. `fill` proposes; it does not decide.
 Proposals are ai-graded with explicit `examples` by construction, existing evals are never modified,
-and name collisions against the page's resolved plan are dropped — all of which makes it safe to run,
-and none of which makes its output automatically good. A page implying the corpus is now covered sets
+and name collisions against the page's resolved plan are dropped. All of that makes it safe to run,
+and none of it makes its output automatically good. A page implying the corpus is now covered sets
 the reader up to be wrong later.
 
-**Status.** All 7 steps are served by written pages (5 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.
+**Status.** All 7 steps are served by written pages (5 distinct). Re-check this when the journey changes. A step whose `doc` no longer resolves signals that this journey has drifted ahead of the docs. So does a new step with no page behind it.

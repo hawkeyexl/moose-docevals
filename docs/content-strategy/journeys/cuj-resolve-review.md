@@ -21,19 +21,19 @@ steps:
 # CUJ: Resolve an eval that landed in human review
 
 **Scope:** the recurring operational loop of clearing the review queue. Establishing confidence in the
-judge as a whole is [`cuj-trust-the-judge`](cuj-trust-the-judge.md) — a periodic, project-shaped
+judge as a whole is [`cuj-trust-the-judge`](cuj-trust-the-judge.md), a periodic, project-shaped
 activity. This one is a Tuesday.
 
 **Trigger.** A pull request is blocked, or a report shows evals in the needs-review zone, and a human
 has to decide.
 
-**Narrative.** This is a small journey with an outsized effect on whether the tool survives, because
-it is where the **human-review zone stops being an elegant design idea and becomes someone's inbox.**
+**Narrative.** This is a small journey with an outsized effect on whether the tool survives. It is
+where the **human-review zone stops being an elegant design idea and becomes someone's inbox.**
 A queue nobody knows how to clear silently becomes a queue nobody clears, and the team's response is
 to turn the zone off.
 
-Three facts do most of the work. **`moose-docevals review` with no arguments lists what is waiting** —
-readers assume they need to hunt through a report, and they do not. **A recorded verdict persists**, so
+Three facts do most of the work. **`moose-docevals review` with no arguments lists what is waiting.**
+Readers assume they need to hunt through a report, and they do not. **A recorded verdict persists**, so
 this is not a per-run tax; unchanged pages stay resolved. And **verdicts self-invalidate when the page
 changes**, which is the property that makes persistence safe rather than a way to accumulate stale
 approvals. That last one must be stated explicitly, because a reader who does not know it will either
@@ -41,19 +41,19 @@ distrust persistence or over-trust it.
 
 `--fail-on-review` is a genuine policy fork and the docs should present it as one rather than
 recommending a default. Blocking on review means the queue is never ignored and pull requests
-sometimes wait on a person; not blocking keeps the pipeline moving and lets the queue rot. Which is
-right depends on whether the team has someone who owns the queue — and naming that as the deciding
+sometimes wait on a person. Not blocking keeps the pipeline moving and lets the queue rot. Which is
+right depends on whether the team has someone who owns the queue. Naming that as the deciding
 question is more useful than a recommendation.
 
 The last step is the important one and is easy to omit: **a repeat offender is a diagnosis, not a
-chore.** An eval that lands in review every single run is telling you its assertion is ambiguous, and
-the repair is in [`cuj-write-judgeable-assertions`](cuj-write-judgeable-assertions.md), not in
+chore.** An eval that lands in review every single run is telling you its assertion is ambiguous. The repair
+is in [`cuj-write-judgeable-assertions`](cuj-write-judgeable-assertions.md), not in
 answering it faster forever.
 
 Shared between [Sara](../personas/sara-standard-owner.md), who owns the standard and usually the
 queue, and [Priya](../personas/priya-corpus-owner.md), who owns whether the queue is anyone's job.
 Note that [Theo](../personas/theo-contributor.md) *encounters* this zone in
-[`cuj-fix-red-check`](cuj-fix-red-check.md) and cannot resolve it — being told to escalate, and to
+[`cuj-fix-red-check`](cuj-fix-red-check.md) and cannot resolve it. Being told to escalate, and to
 whom, is his correct outcome.
 
-**Status.** All 7 steps are served by written pages (5 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.
+**Status.** All 7 steps are served by written pages (5 distinct). Re-check this when the journey changes. A step whose `doc` no longer resolves signals that this journey has drifted ahead of the docs. So does a new step with no page behind it.

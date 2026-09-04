@@ -4,7 +4,7 @@ description: The ten terms that recur across every section of these docs.
 ---
 
 **Assertion**
-: The claim an eval makes about a page — true or false, not an aspiration. "The page states its
+: The claim an eval makes about a page, true or false, not an aspiration. "The page states its
   prerequisites before the first command" is an assertion; "the page is well-written" is not. See
   [Write good assertions](/moose-docevals/evals/write-good-assertions/).
 
@@ -20,7 +20,7 @@ description: The ten terms that recur across every section of these docs.
 
 **Consensus**
 : How N independent judge runs become one verdict. A `partial` verdict counts as a **fail**, and an
-  errored run counts **against** consensus — so errors can only push an eval toward human review,
+  errored run counts **against** consensus. Errors can only push an eval toward human review,
   never toward a silent pass.
 
 **Ensemble**
@@ -29,10 +29,10 @@ description: The ten terms that recur across every section of these docs.
 
 **Eval**
 : The unit. A named, testable assertion plus a grader that decides pass or fail. There is one
-  concept, not a split between "runners" and "evals" — what differs between checks is the *grader*.
+  concept, not a split between "runners" and "evals". What differs between checks is the *grader*.
 
 **Evidence**
-: The `evidence` field — what part of the page the judge should look at. Scoping it stops the judge
+: The `evidence` field, naming what part of the page the judge should look at. Scoping it stops the judge
   reasoning from sections the assertion was never about.
 
 **Finding**
@@ -46,16 +46,16 @@ description: The ten terms that recur across every section of these docs.
 
 **Grader**
 : What decides an eval. `command` and `tool:*` are code, `ai` is the judge, `human` is a person.
-  They sit in that preference order — see [Graders](/moose-docevals/reference/graders/).
+  They sit in that preference order. See [Graders](/moose-docevals/reference/graders/).
 
 **Grader hierarchy**
-: The rule that code beats judge beats human. If you can express the criterion as code, do — it is
+: The rule that code beats judge beats human. If you can express the criterion as code, do. It is
   cheaper, faster, and explicable in a review. `promote` and `generate` are how you keep moving evals
   down it.
 
 **Human-review zone**
 : The band between the two confidence thresholds, where verdicts route to a person. It is not an
-  admission of failure — it is what makes a binary verdict acceptable.
+  admission of failure. It is what makes a binary verdict acceptable.
 
 **Pass rate**
 : `passed / (total - skipped)` for a suite. Verdicts are binary; the nuance lives here, which is why
@@ -66,7 +66,7 @@ description: The ten terms that recur across every section of these docs.
   eval `type` is `regression` because most evals guard something.
 
 **Severity**
-: `error`, `warning`, or `info` on a deterministic eval. Only `error` fails the build — which is
+: `error`, `warning`, or `info` on a deterministic eval. Only `error` fails the build, which is
   what lets you enter a new check at `warning` and ratchet it up. See
   [Retrofit a legacy corpus](/moose-docevals/adopt/retrofit-a-legacy-corpus/).
 

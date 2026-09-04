@@ -6,7 +6,7 @@
 # must be all-green. Both run; neither replaces the other.
 #
 # See docs/content-strategy/information-architecture/proposed-ia.md
-# ("Authoring convention: pages that show commands") and ADR 01004.
+# ("Authoring convention for pages that show commands") and ADR 01004.
 docevals:
   version: 1
 

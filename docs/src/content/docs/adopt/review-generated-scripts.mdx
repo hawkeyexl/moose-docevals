@@ -4,10 +4,10 @@ description: Generated checks are ordinary source. Read them like it.
 ---
 
 moose-docevals writes check scripts to files beside your docs rather than embedding them in frontmatter.
-That design exists for exactly one reason: **so they show up in pull requests and someone reads
+That design exists for exactly one reason. **They show up in pull requests, and someone reads
 them.**
 
-If nobody does, the design has bought you nothing — and a generated script that passes for the wrong
+If nobody does, the design has bought you nothing. A generated script that passes for the wrong
 reason is worse than the ai eval it replaced, because it is now silent, fast, and free.
 
 ## Where they land
@@ -20,7 +20,7 @@ docs/
 ```
 
 `<scripts.dir>/<page-basename>.<eval-name>.mjs`, with `{docDir}` expanding to the page's directory.
-They are ES modules using only Node built-ins — no dependencies to audit.
+They are ES modules using only Node built-ins, with no dependencies to audit.
 
 Frontmatter records the reference and the hash of the assertion that produced it:
 
@@ -33,8 +33,8 @@ Frontmatter records the reference and the hash of the assertion that produced it
 ## What to look for
 
 **Does it check the assertion, or something adjacent?** The common failure is a script that tests a
-weaker condition than the words promise. "Contains a bash code block with `npm i -g doc-detective`"
-checked by searching the whole file for the substring `npm i -g doc-detective` will pass on a page
+weaker condition than the words promise. Take "Contains a bash code block with `npm i -g
+doc-detective`", checked by searching the whole file for that substring. It will pass on a page
 that mentions it in prose and never shows the code block.
 
 **Does it pass for the wrong reason?** Try it against a page you know should fail:
@@ -56,11 +56,11 @@ script that throws reports as a failure, which looks like a docs problem and is 
 ## Edit them
 
 They are yours. Fix a bad regex, tighten a match, add a comment explaining a non-obvious rule. Hand
-edits survive — regeneration only happens when the **assertion** changes, which is what
+edits survive. Regeneration only happens when the **assertion** changes, which is what
 `assertion-hash` tracks.
 
 If you change the assertion, the hash stops matching, the script is stale, and moose-docevals regenerates
-it — discarding your edits. That is intended: the assertion is the contract, the script is an
+it, discarding your edits. That is intended: the assertion is the contract, the script is an
 implementation of it. Change them together.
 
 ## When to reject a promotion
@@ -69,9 +69,9 @@ Not every `promotable` verdict should be taken. Push back when:
 
 - The script only approximates the assertion, and the gap matters.
 - The assertion was vague, and the script has now *silently made it precise* in a way nobody agreed
-  to. Fix the assertion first — see
+  to. Fix the assertion first. See
   [Write good assertions](/moose-docevals/evals/write-good-assertions/).
-- The check is cheap either way and the AI-graded version is more robust to legitimate rewording.
+- The check is cheap either way, and the AI-graded version copes better with legitimate rewording.
 
 Reverting is just deleting the script and setting `grader: ai` back.
 

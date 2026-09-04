@@ -10,22 +10,22 @@ decision-makers: [hawkeyexl]
 
 `src/judge/providers/`, `src/judge/cache.ts`, and `src/judge/cost.ts` were the original of a layer
 that had since been copied into dockg (`src/llm/`) and agentevals (`src/judge/`). The three copies
-drifted, and each ended up holding a fix the others lacked — moose-docevals was missing the
+drifted, and each ended up holding a fix the others lacked. moose-docevals was missing the
 OpenAI-strict-mode work that dockg had grown (`toStrictSchema`, null-stripping, the opaque
-`HTTP 400` fallback) and the `claude-sonnet-4-6` price agentevals had added.
+`HTTP 400` fallback), and the `claude-sonnet-4-6` price agentevals had added.
 
 The copies also made moose-docevals an accidental library. agentevals depended on it via
 `"docevals": "file:../docevals"` purely to reach `makeProvider`, `MockProvider`, `computeConsensus`,
-and `zoneFor` — a spec npm publishes verbatim, which blocked agentevals from publishing at all.
+and `zoneFor`. npm publishes such a spec verbatim, which blocked agentevals from publishing at all.
 An eval tool should not be a peer tool's inference vendor.
 
 ## Decision Drivers
 
 - A provider fix should land once, not three times.
-- The exec seam is shared: `realExec` serves both the judge's subprocess provider and the
+- The exec seam is shared. `realExec` serves both the judge's subprocess provider and the
   command/tool graders, so it cannot simply follow the providers out of the repo.
-- moose-docevals' judge stage is genuinely more than an ensemble — concurrency, budget, self-judgment
-  warning, human review — and that orchestration is not shareable.
+- moose-docevals' judge stage is genuinely more than an ensemble. It adds concurrency, a budget, a
+  self-judgment warning and human review, and that orchestration is not shareable.
 
 ## Considered Options
 
@@ -35,29 +35,29 @@ An eval tool should not be a peer tool's inference vendor.
 
 ## Decision Outcome
 
-Chosen option: **depend on `@hawkeyexl/inference`**. `src/judge/providers/`, `src/judge/cache.ts`
+The chosen option is to **depend on `@hawkeyexl/inference`**. `src/judge/providers/`, `src/judge/cache.ts`
 (the class), `src/judge/cost.ts`, and `src/judge/types.ts` are deleted.
 
 What stays in `src/judge/` is what only moose-docevals can decide:
 
-- `prompt.ts` — the prompts, `cleanBody`'s fence-aware MDX stripping, and `PROMPT_VERSION`.
-- `verdict-schema.json` — structurally the library's canonical schema, but worded for pages.
+- `prompt.ts` holds the prompts, `cleanBody`'s fence-aware MDX stripping, and `PROMPT_VERSION`.
+- `verdict-schema.json` is structurally the library's canonical schema, but worded for pages.
   Passed as the library's `schema` override, because field descriptions are prompt surface.
-- `cache.ts` — cache-key composition only. What invalidates an entry is moose-docevals' business; the
+- `cache.ts` is cache-key composition only. What invalidates an entry is moose-docevals' business; the
   storage is the library's `JsonCache`.
-- `provider.ts` — the config → `ProviderSpec` mapping.
-- `judge.ts` — the orchestration around `runEnsemble`: the bounded-concurrency pool across targets,
+- `provider.ts` is the config → `ProviderSpec` mapping.
+- `judge.ts` is the orchestration around `runEnsemble`: the bounded-concurrency pool across targets,
   the cost budget, the self-judgment warning, and human-review resolution.
 
 **The exec seam is re-exported, not repointed.** `src/graders/exec.ts` now re-exports the library's
 `realExec` and keeps only `outputTail`; `src/graders/types.ts` re-exports `ExecFn`/`ExecOptions`/
 `ExecResult`. Every existing grader import keeps working unchanged, and the toolchain has one
-cross-spawn wrapper — which matters because the tricky parts are all Windows-specific (npm `.cmd`
-shim resolution without `shell: true`, stdin piping past the ~32K command-line limit, and
-StringDecoder-backed output so multi-byte UTF-8 survives chunk boundaries).
+cross-spawn wrapper. That matters because the tricky parts are all Windows-specific. They are npm
+`.cmd` shim resolution without `shell: true` and stdin piping past the ~32K command-line limit.
+They also include StringDecoder-backed output, so multi-byte UTF-8 survives chunk boundaries.
 
-The judge vocabulary — `Match`, `Zone`, `JudgeVerdict`, `JudgeRun`, `ConsensusResult` — is
-re-exported from `src/types.ts` rather than defined twice.
+The judge vocabulary is re-exported from `src/types.ts` rather than defined twice. That covers
+`Match`, `Zone`, `JudgeVerdict`, `JudgeRun` and `ConsensusResult`.
 
 ### Consequences
 
@@ -90,8 +90,8 @@ resolve the `.cmd` shim, which it does.
 ### Let the others depend on moose-docevals
 
 - Good, because no new package.
-- Bad, because this is what was already happening, and it produced an unpublishable `file:` spec in
-  agentevals plus a YAML round-trip through `parseConfig` to satisfy a factory signature. It also
+- Bad, because this is what was already happening. It produced an unpublishable `file:` spec in
+  agentevals, plus a YAML round-trip through `parseConfig` to satisfy a factory signature. It also
   freezes moose-docevals' public API around other tools' needs.
 
 ### Keep three copies

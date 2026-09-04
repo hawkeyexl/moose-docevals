@@ -1,6 +1,6 @@
 ---
 title: Write evals
-description: Declare evals in page frontmatter — the contract, the three entry forms, and what wins on collision.
+description: Declare evals in page frontmatter, covering the contract, the three entry forms, and what wins on collision.
 ---
 
 Every eval declaration lives under the `evals` key in page frontmatter. This page is the contract;
@@ -42,7 +42,7 @@ eval-skip: true
 
 ## Three ways to declare an eval
 
-**A bare string is an assertion**, judged by AI at error severity — the fastest way to guard
+**A bare string is an assertion**, judged by AI at error severity. It is the fastest way to guard
 something once:
 
 ```yaml
@@ -84,7 +84,7 @@ evals:
     grader: command
 ```
 
-Inline evals need an `id` — kebab-case, unique on the page. Everything else is optional: `grader`
+Inline evals need an `id`, kebab-case and unique on the page. Everything else is optional: `grader`
 defaults to `ai` and `type` to `regression`. The id is required rather than derived from position,
 because a position-derived name orphans every cached verdict as soon as entries move.
 
@@ -94,12 +94,12 @@ An assertion pasted into twelve pages drifts into twelve slightly different asse
 can then say what a how-to page is checked for. Move anything used more than once into the config and
 reference it. See [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/).
 
-Inline is right for something genuinely specific to one page — like the exact install command above.
+Inline is right for something genuinely specific to one page, like the exact install command above.
 
 ## What wins
 
 The plan is built suite-first, then page entries in document order. **Page entries win on name
-collision** — local override beats global default.
+collision**, so a local override beats the global default.
 
 That is the correct default and completely invisible until it surprises you, so check rather than
 guess:
@@ -119,24 +119,24 @@ test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
 ```
 
 Each line is `name [grader, type, source]`. `source` tells you whether the definition came from the
-config or the page — which is exactly what you need when a page behaves differently from its
+config or the page. That is exactly what you need when a page behaves differently from its
 neighbours.
 
 ## Problems are reported, not thrown
 
 A malformed page does not stop the run. Unknown suite names, unknown eval references, and
-schema-invalid frontmatter are reported as page errors with a source line; duplicate names and
+schema-invalid frontmatter are reported as page errors with a source line. Duplicate names and
 inline ai evals missing `examples` are warnings.
 
-Validate the declarations themselves as an eval, so bad frontmatter fails like any other check —
-see [Frontmatter reference](/moose-docevals/reference/frontmatter/#validating-the-frontmatter-itself).
+Validate the declarations themselves as an eval, so bad frontmatter fails like any other check.
+See [Frontmatter reference](/moose-docevals/reference/frontmatter/#validating-the-frontmatter-itself).
 
 ## Next
 
-- [Write good assertions](/moose-docevals/evals/write-good-assertions/) — the wording that decides whether
+- [Write good assertions](/moose-docevals/evals/write-good-assertions/), the wording that decides whether
   an eval is worth having
-- [Deterministic checks](/moose-docevals/evals/deterministic-checks/) — the graders to prefer
-- [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/) — turning this into a library
+- [Deterministic checks](/moose-docevals/evals/deterministic-checks/), the graders to prefer
+- [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/), turning this into a library
 
 {/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 

@@ -25,24 +25,24 @@ steps:
 [`cuj-cheapen-evals`](cuj-cheapen-evals.md).
 
 **Trigger.** The gate worked on one page, so it got copied. Now the same assertion exists in twelve
-pages with three slightly different wordings, and nobody can answer "what do we actually check on a
+pages with three slightly different wordings. Nobody can answer "what do we actually check on a
 how-to?"
 
 **Narrative.** This is the journey where moose-docevals stops being a linter and becomes a standard. The
-mechanics are small — named evals under `evals:` in the config, suites that group them, a page
-referencing an eval by name instead of inlining it — but the shift is conceptual: quality rules become
-a *shared, versioned artifact* rather than page decoration.
+mechanics are small. Named evals under `evals:` in the config, suites that group them, and a page
+referencing an eval by name instead of inlining it. The shift is conceptual, in that quality rules
+become a *shared, versioned artifact* rather than page decoration.
 
 Two things reliably surprise readers here and both must be documented rather than discovered.
 
 First, **resolution order**. A page can reference a named eval, inline its own, and name a suite that
-expands to more, all at once — and on a name collision the page wins. That is the right default
-(local override beats global default) but it is invisible until it bites, and the fix is that
+expands to more, all at once. On a name collision the page wins. That is the right default
+(local override beats global default), but it is invisible until it bites. The fix is that
 `moose-docevals list` shows the resolved plan per page without running anything. Teaching `list` as the
 dry-run for this journey saves readers from debugging by running.
 
 Second, **`target-pass-rate` is a suite property, not a page one**. The nuance that binary verdicts seem
-to lose lives here: a regression suite targets 1.0 because those checks must all hold, and a
+to lose lives here. A regression suite targets 1.0 because those checks must all hold. A
 capability suite targets something like 0.7 because it measures reach rather than correctness. Readers
 who miss this treat every capability finding as a build break and conclude the tool is too strict.
 
@@ -50,4 +50,4 @@ This journey is shared between [Priya](../personas/priya-corpus-owner.md), who o
 infrastructure, and [Sara](../personas/sara-standard-owner.md), who owns what goes in it. In a small
 org they are the same person; the pages must not require a handoff between them.
 
-**Status.** All 6 steps are served by written pages (5 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.
+**Status.** All 6 steps are served by written pages (5 distinct). Re-check this when the journey changes. A step whose `doc` no longer resolves signals that this journey has drifted ahead of the docs. So does a new step with no page behind it.

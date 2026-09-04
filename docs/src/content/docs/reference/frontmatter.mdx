@@ -6,13 +6,13 @@ description: Every field an eval can carry, and how page evals resolve against c
 Eval declarations live in page frontmatter under four keys, validated by the JSON Schema this
 package publishes at `schemas/frontmatter-1.0.0.json`. That schema implements
 `docmeta:evals:1.0.0-proposal.1`, the common vocabulary docmeta proposes for per-page quality
-assertions — docmeta publishes the vocabulary, moose-docevals implements the graders behind it.
+assertions. docmeta publishes the vocabulary, and moose-docevals implements the graders behind it.
 Verified against that schema and `src/core/resolve.ts`.
 
 ## The four page keys
 
 Settings are page-level facts, not an enclosing object. The page root stays open, so a sibling
-tool's keys pass untouched — but the **`eval-` prefix is reserved**: an unrecognized `eval-*` key is
+tool's keys pass untouched. But the **`eval-` prefix is reserved**: an unrecognized `eval-*` key is
 an error, not something silently ignored.
 
 | Key | Type | Meaning |
@@ -22,8 +22,8 @@ an error, not something silently ignored.
 | `eval-skip` | boolean (`false`) | Skip this page entirely; it reports as skipped. |
 | `eval-provenance` | list | The machine-proposal trail `fill` writes. See below. |
 
-The page's own top-level `generated-by` — not an `eval-*` key — records the model that wrote the
-page's content. The judge reads it to warn about self-preference bias when it matches the judging
+The page's own top-level `generated-by`, which is not an `eval-*` key, records the model that wrote
+the page's content. The judge reads it to warn about self-preference bias when it matches the judging
 model.
 
 ```yaml
@@ -67,7 +67,7 @@ evals: The documented install command matches the current package name.
 
 :::caution[This changed]
 In the 0.1 schema a bare string *referenced* a config-defined eval. It is an assertion now, so a
-page that still says `- fresh-enough` no longer runs the freshness grader — it sends those words to
+page that still says `- fresh-enough` no longer runs the freshness grader. It sends those words to
 the judge. moose-docevals warns when a string shorthand matches a defined eval id, but the fix is
 yours: write `use:`.
 :::
@@ -88,10 +88,10 @@ evals:
 | `options` | **Merged** over the base options, not replaced. |
 | `skip` | Skips this one eval on this page. |
 
-## `target` — which bytes are graded
+## `target` selects which bytes are graded
 
 `evidence` tells the judge where to look *within* what it is given. `target` decides what it is
-given in the first place, which is why deterministic graders honour it too — a regex grader has no
+given in the first place, which is why deterministic graders honour it too. A regex grader has no
 focus, it has a target.
 
 | Value | What the grader receives |
@@ -110,46 +110,45 @@ evals:
       pattern: "^owner:"
 ```
 
-A target that cannot be read is an **error**, not a quiet fall back to the page body: a verdict
+A target that cannot be read is an **error**, not a quiet fall back to the page body. A verdict
 about the wrong bytes is worse than no verdict. A companion path may not be absolute and may not
 climb out of the page's directory.
 
-**An inline definition** declares an eval that exists only on this page. It requires an `id` —
-kebab-case, unique on the page — and takes every field below. Ids are required rather than derived
+**An inline definition** declares an eval that exists only on this page. It requires an `id`, kebab-case and unique on the page, and takes every field below. Ids are required rather than derived
 from position, because a position-derived name orphans every cached verdict as soon as entries move.
 
 ## Eval fields
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `assertion` | string | — | Required when `grader` is set. The claim about the page that is true or false. |
+| `assertion` | string | none | Required when `grader` is set. The claim about the page that is true or false. |
 | `type` | `regression` \| `capability` | `regression` | Most evals guard behavior that must keep working. |
 | `grader` | string | `ai` | `ai`, `command`, `human`, or `tool:<name>`. It is `ai`, not `llm`, because the judge may be an agent rather than a bare model. |
 | `provider` | string | config default | Which configured provider or agent judges this `ai` eval. |
-| `model` | string | config default | Which model judges this `ai` eval, within `provider`. A CLI `--model` still wins. Use it to name a stronger judge for an eval that matters — or a judge other than the model that wrote the page. |
+| `model` | string | config default | Which model judges this `ai` eval, within `provider`. A CLI `--model` still wins. Use it to name a stronger judge for an eval that matters, or a judge other than the model that wrote the page. |
 | `runs` | integer 1–50 | `judge.ensemble-runs` | Ensemble runs for this eval alone. A CLI `--runs` still wins. Capped because it multiplies judge cost directly. |
-| `evidence` | string | — | Scopes what the judge looks at **within** what is graded. A hint, not a selector — see `target`. |
+| `evidence` | string | none | Scopes what the judge looks at **within** what is graded. A hint, not a selector; see `target`. |
 | `target` | see below | `body` | Which bytes the grader receives. |
-| `examples.pass` / `examples.fail` | string or string[] | — | Pins the boundary; one anchor or several. An inline ai eval without them raises a warning. |
-| `command` | string[] | — | For `command` graders. `{file}` expands to the page's absolute path. |
+| `examples.pass` / `examples.fail` | string or string[] | none | Pins the boundary; one anchor or several. An inline ai eval without them raises a warning. |
+| `command` | string[] | none | For `command` graders. `{file}` expands to the page's absolute path. |
 | `success-exit-codes` | integer[] | `[0]` | Exit codes treated as a pass. |
 | `timeout-ms` | integer ≥ 1 | grader-specific | |
-| `generated-assertion-hash` | string | — | Written by script generation, always beside `command`; a mismatch means the script is stale. |
+| `generated-assertion-hash` | string | none | Written by script generation, always beside `command`; a mismatch means the script is stale. |
 | `options` | object | `{}` | Grader-specific. See [Graders](/moose-docevals/reference/graders/). |
 | `severity` | `error` \| `warning` \| `info` | `error` | Only `error` findings fail the build. |
-| `weight` | number > 0 | `1` | How much this eval moves its suite's pass rate. It does **not** change the eval's own pass/fail. Zero is rejected — a weightless eval is a silent disable, and `skip` already means that, loudly. |
-| `severity-map` | object | — | Maps a tool's own severities onto moose-docevals severities. |
+| `weight` | number > 0 | `1` | How much this eval moves its suite's pass rate. It does **not** change the eval's own pass/fail. Zero is rejected, because a weightless eval is a silent disable, and `skip` already means that, loudly. |
+| `severity-map` | object | none | Maps a tool's own severities onto moose-docevals severities. |
 
 ## Resolution order
 
 For each page, the plan is built in this order:
 
-1. **Suite evals** from the config — the page's `eval-suite`, or `defaults.suite`.
+1. **Suite evals** from the config, via the page's `eval-suite` or `defaults.suite`.
 2. **Page entries**, in document order. A reference merges onto the suite's version of that eval; an
    inline definition replaces it.
 
 **Page entries win on id collision.** Local override beats global default, which is the right
-behavior and invisible until it bites — so check the resolved plan with `moose-docevals list` rather than
+behavior and invisible until it bites. Check the resolved plan with `moose-docevals list` rather than
 by running.
 
 Every resolved eval records its `source` as `config` or `page`, which `list` prints.

@@ -34,7 +34,7 @@ Chosen option: "Option N", because …
 
 ### Confirmation
 
-How compliance with this decision is checked — the test, review step, or CI gate that would catch a regression.
+How compliance with this decision is checked. Name the test, review step, or CI gate that would catch a regression.
 
 ## Pros and Cons of the Options
 

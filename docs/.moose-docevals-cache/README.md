@@ -4,10 +4,10 @@
 
 `docs/moose.config.yaml` points `judge.cacheDir` and `fill.cacheDir` here rather than at the
 default `.moose-docevals/cache`, which the repo-root `.gitignore` excludes. Committing the cache is what
-lets the `verify-docs` CI job replay LLM verdicts for the docs site **with no `ANTHROPIC_API_KEY`** —
-the same guarantee the deterministic graders already give, extended to the judged evals.
+lets the `verify-docs` CI job replay LLM verdicts for the docs site **with no `ANTHROPIC_API_KEY`**.
+That is the same guarantee the deterministic graders already give, extended to the judged evals.
 
-## Current state: empty
+## Current state, which is empty
 
 The site is currently section-index stubs, and the `docs-page` suite contains only deterministic
 evals. Judging placeholder prose would produce fixtures that assert nothing, so there are none yet.
@@ -26,8 +26,8 @@ with a provider configured, then commit what appears here.
 
 Cache keys include `PROMPT_VERSION` (`src/judge/prompt.ts`) and `FILL_PROMPT_VERSION`
 (`src/fill/prompt.ts`). **Bumping either invalidates every fixture here and turns `verify-docs` red
-until it is regenerated** — which is deliberate. A prompt change can change a verdict, and the pages
-present those verdicts as documented behavior, so the breakage forces someone to re-read them rather
+until it is regenerated.** That is deliberate. A prompt change can change a verdict, and the pages
+present those verdicts as documented behavior. The breakage forces someone to re-read them rather
 than letting a stale example survive a prompt revision.
 
 ```bash

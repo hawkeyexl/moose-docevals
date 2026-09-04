@@ -73,7 +73,7 @@ Two things will bite, and both have their own page:
 - **Fork pull requests can execute their author's code**, and the obvious-looking config flag does
   not prevent it. Read [Untrusted pull requests](/moose-docevals/ci/untrusted-pull-requests/) before this
   job runs on a public repo.
-- **Every uncached ai eval is live model calls** — `judge.ensemble-runs` of them. Bound a run with
+- **Every uncached ai eval is live model calls**, `judge.ensemble-runs` of them. Bound a run with
   `judge.max-turns` or `--max-turns`: evals past the budget are skipped and reported, and evals
   served from cache never count against it. See
   [Caching and turn budgets](/moose-docevals/ci/cost-and-caching/).
@@ -86,23 +86,23 @@ You do not need a provider to get value on day one:
       - run: npx moose-docevals run --deterministic-only --format github
 ```
 
-No secret, no cost, no model in the critical path — and freshness, structure, lint, and generated
+No secret, no cost, no model in the critical path. Freshness, structure, lint, and generated
 checks all still run. This is also the correct job for forks.
 
 ## Exit codes route to different people
 
 | Code | Meaning | Whose problem |
 |---|---|---|
-| `0` | Pass | — |
+| `0` | Pass | Nobody |
 | `1` | Findings, or a suite below target | The author |
-| `2` | Operational — bad config, missing key | The pipeline owner |
+| `2` | Operational, such as bad config or a missing key | The pipeline owner |
 
 A recipe that treats any non-zero exit as "the docs are bad" blames authors for infrastructure
-problems and teaches the team the check is flaky. Do not collapse `1` and `2`.
+problems. It also teaches the team the check is flaky. Do not collapse `1` and `2`.
 
 ## Verify the gate can fail
 
-Before you trust it, make it fail once: break a page deliberately, confirm the job goes red with an
+Before you trust it, make it fail once. Break a page deliberately, confirm the job goes red with an
 annotation on the right line, and revert. A gate that has only ever been seen passing has not been
 shown to work.
 

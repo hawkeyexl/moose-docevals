@@ -4,7 +4,7 @@ description: Clear the review queue, make verdicts persist, and know when a repe
 ---
 
 The human-review zone is where the judge routes what it is not confident about. That is the design
-working — but it only works if someone clears the queue.
+working, but only if someone clears the queue.
 
 A queue nobody knows how to clear becomes a queue nobody clears, and the team's response is to turn
 the zone off.
@@ -16,7 +16,7 @@ npx moose-docevals review
 ```
 
 With no arguments, `review` lists the evals awaiting a verdict. You do not need to hunt through a
-report — this surprises people, so it is worth knowing on day one.
+report. This surprises people, so it is worth knowing on day one.
 
 ## Record a verdict
 
@@ -26,7 +26,7 @@ npx moose-docevals review docs/install.md explains-why-before-how pass \
   --note "Motivation is in the intro paragraph, not a heading."
 ```
 
-Verdict is `pass` or `fail`. `--reviewer` and `--note` are optional and worth using — the note is
+Verdict is `pass` or `fail`. `--reviewer` and `--note` are optional and worth using. The note is
 what stops the next person re-litigating the same borderline case.
 
 ## Verdicts persist, and expire on their own
@@ -51,28 +51,29 @@ Two properties make this safe:
 changes, the review is silently ignored and the eval returns to needs-review.
 
 That second property is what makes the first one safe. Without it, persistence would be a way to
-accumulate stale approvals — a page reviewed once in 2024 passing forever regardless of what happened
-to it since.
+accumulate stale approvals. A page reviewed once in 2024 would pass forever, regardless of what
+happened to it since.
 
-Commit `reviews.yaml`. It is team state, not a cache — see
+Commit `reviews.yaml`. It is team state, not a cache. See
 [Files and state](/moose-docevals/reference/files-and-state/).
 
 ## Your verdicts build the golden set
 
 Clearing the queue is not just unblocking a build. Every verdict you record is a page, an eval, and a
-human's pass/fail — the exact shape of a calibration golden case, in a file the tool already owns.
+human's pass/fail. That is the exact shape of a calibration golden case, in a file the tool already
+owns.
 
 ```bash
 npx moose-docevals calibrate --seed
 ```
 
 That reads `reviews.yaml` and writes candidates to `.moose-docevals/golden/from-reviews.yaml`. It
-judges nothing and needs no provider, and it carries each review's `contentHash` across, so a seeded
+judges nothing and needs no provider. It carries each review's `contentHash` across, so a seeded
 case expires with its page the same way the review did.
 
-Candidates land `reviewed: false` and stay there until a human sets the bit. That is on purpose:
-filing a verdict to clear a queue and endorsing that verdict as ground truth are different acts, and
-the tool will not do the second one for you. Read them, then
+Candidates land `reviewed: false` and stay there until a human sets the bit. That is on purpose.
+Filing a verdict to clear a queue and endorsing that verdict as ground truth are different acts.
+The tool will not do the second one for you. Read them, then
 [calibrate](/moose-docevals/judge/calibrate/).
 
 The practical consequence for this page: **`--reviewer` and `--note` are worth more than they look.**
@@ -87,19 +88,19 @@ the case belongs in the set at all.
 |---|---|---|
 | The queue | Never ignored | Can rot |
 | Pull requests | Sometimes wait on a person | Keep moving |
-| Requires | Someone who owns the queue | — |
+| Requires | Someone who owns the queue | Nobody |
 
-There is no universally right answer, and the deciding question is not about the docs — it is
+There is no universally right answer, and the deciding question is not about the docs. It is
 **whether anyone owns the queue**. If nobody does, blocking on it converts a rotting queue into
 blocked contributors, which is worse.
 
-A middle path that works: don't block on pull requests, and run with `--fail-on-review` on a schedule
-so the queue is visible without holding anyone up.
+A middle path works well. Don't block on pull requests, and run with `--fail-on-review` on a
+schedule so the queue is visible without holding anyone up.
 
 ## Contributors cannot clear it themselves
 
 Someone whose pull request is blocked by a needs-review eval usually has no standing to resolve it.
-Escalating is the correct outcome for them — see [Fix a failing eval](/moose-docevals/fix/). Make sure your
+Escalating is the correct outcome for them. See [Fix a failing eval](/moose-docevals/fix/). Make sure your
 contributing guide names who to escalate to; "ask someone" is how these sit for a week.
 
 ## A repeat offender is a diagnosis
@@ -107,12 +108,13 @@ contributing guide names who to escalate to; "ask someone" is how these sit for 
 **An eval that lands in review on every single run is telling you its assertion is ambiguous.**
 
 Answering it faster forever is the wrong response. The repair is in
-[Write good assertions](/moose-docevals/evals/write-good-assertions/) — usually adding `evidence` to scope
-what the judge looks at, or an `examples.fail` that writes down the boundary being disputed.
+[Write good assertions](/moose-docevals/evals/write-good-assertions/). Usually that means adding
+`evidence` to scope what the judge looks at, or an `examples.fail` that writes down the boundary
+being disputed.
 
 If you are unsure whether a rewrite helped, record your verdict, pull it into the golden set with
 `calibrate --seed`, confirm it, and [calibrate](/moose-docevals/judge/calibrate/). That converts "it
-feels better" into a measurement — and repeat offenders are exactly the cases worth having in the
+feels better" into a measurement. Repeat offenders are exactly the cases worth having in the
 set, because they are where the assertion is ambiguous.
 
 ## Tuning how much lands here
@@ -120,5 +122,5 @@ set, because they are where the assertion is ambiguous.
 `judge.zones.auto-pass` and `judge.zones.auto-fail` (both default `0.8`) control the width of the
 review band. Raising them sends more to people; lowering them sends more to automation.
 
-Change them with calibration data rather than by feel — a narrower band with a rising false-positive
+Change them with calibration data rather than by feel. A narrower band with a rising false-positive
 rate is a worse gate, not a faster one.

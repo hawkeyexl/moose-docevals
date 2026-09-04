@@ -28,27 +28,27 @@ verdicts that land in the review zone is [`cuj-resolve-review`](cuj-resolve-revi
 technical. It is: *why should a model be allowed to block our pipeline?*
 
 **Narrative.** This journey produces an artifact, not an understanding. [Sara](../personas/sara-standard-owner.md)
-does not need to feel confident — she needs a number she can put in front of a skeptic. Everything
+does not need to feel confident. She needs a number she can put in front of a skeptic. Everything
 here serves that.
 
 The mechanics come first because they are the answer to the sharpest form of the objection,
 *"nondeterminism has no place in CI."* Temperature 0, pinned models, structured JSON verdicts, and
 content-addressed caching mean the same page and the same assertion produce the same verdict. An
 N-run ensemble with consensus absorbs what variance remains. Two details are counterintuitive and
-must be stated rather than implied: a `partial` verdict **counts as a fail**, and an **errored run
-counts against consensus** — which can only push an eval toward human review, never toward a silent
+must be stated rather than implied. A `partial` verdict **counts as a fail**, and an **errored run
+counts against consensus**. Both can only push an eval toward human review, never toward a silent
 pass. That asymmetry is the design's safety property and it is exactly what a skeptic is probing for.
 
-Then the confidence zones, which reframe the whole thing: the judge is not being asked to be right, it
-is being asked to **know when it is unsure**. Auto-pass, auto-fail, and a human-review band between
-them. Presented this way, the human-review zone stops looking like an admission of failure and starts
-looking like the reason a binary verdict is acceptable at all.
+Then the confidence zones, which reframe the whole thing. The judge is not being asked to be right,
+it is being asked to **know when it is unsure**. Auto-pass, auto-fail, and a human-review band between
+them. Presented this way, the human-review zone stops looking like an admission of failure. It starts
+looking like what makes a binary verdict acceptable at all.
 
 Calibration is the proof. Twenty to fifty human-verified cases in `.moose-docevals/golden/`, `moose-docevals
 calibrate`, an agreement rate, and a false-positive rate. The threshold behavior carries a lesson
-worth stating plainly: **below 70% agreement the command exits 1, and the correct response is to
+worth stating plainly. **Below 70% agreement the command exits 1, and the correct response is to
 refine the assertions, not the grader.** Low agreement is nearly always evidence that the assertions
-are ambiguous — which routes the reader back to
+are ambiguous. That routes the reader back to
 [`cuj-write-judgeable-assertions`](cuj-write-judgeable-assertions.md) rather than into model tuning,
 where they would waste a week.
 
@@ -57,7 +57,7 @@ pages is disabled within a week; one that misses a few bad pages survives. `judg
 encodes that asymmetry.
 
 The provider step closes a loop opened in [`cuj-ci-wire`](cuj-ci-wire.md) and answers the security
-question the lead audience will face: an OpenAI-compatible `base-url` reaches a self-hosted endpoint,
+question the lead audience will face. An OpenAI-compatible `base-url` reaches a self-hosted endpoint,
 and `claude-cli` needs no API key at all.
 
-**Status.** All 7 steps are served by written pages (3 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.
+**Status.** All 7 steps are served by written pages (3 distinct). Re-check this when the journey changes. A step whose `doc` no longer resolves signals that this journey has drifted ahead of the docs. So does a new step with no page behind it.

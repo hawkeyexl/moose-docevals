@@ -9,10 +9,10 @@ decision-makers: [hawkeyexl]
 ## Context and Problem Statement
 
 Content files drive arbitrary code execution by two paths, and only one was gated. A `command`
-eval declared in page frontmatter ran unless `scripts.allow-frontmatter-commands` said otherwise —
+eval declared in page frontmatter ran unless `scripts.allow-frontmatter-commands` said otherwise,
 and it defaulted to **true**. The `tool:doc-detective` grader executes steps embedded in page
 *bodies*, and nothing covered it at all. CLAUDE.md recorded the hole and instructed readers never
-to document the flag as sufficient, which is an unusual thing to have to write about your own gate.
+to document the flag as sufficient. That is an unusual thing to have to write about your own gate.
 
 ## Decision Drivers
 
@@ -30,7 +30,7 @@ to document the flag as sufficient, which is an unusual thing to have to write a
 
 ## Decision Outcome
 
-Chosen option: **one operator grant naming capabilities**, default-deny.
+The chosen option is **one operator grant naming capabilities**, default-deny.
 
 ```yaml
 docevals:
@@ -44,13 +44,13 @@ aliased.
 
 ### Consequences
 
-- Good, because the two capabilities are granted independently, so an operator can run a corpus
+- Good, because the two capabilities are granted independently. An operator can run a corpus
   whose frontmatter it trusts without also executing steps out of its prose.
 - Good, because the default is deny, which is the correct posture for content-driven execution and
   the opposite of what shipped before.
 - Good, because the removed key raises a message naming `execution.allow`, rather than Ajv's
   "must NOT have additional properties" against the parent object. The old key *changed meaning* as
-  well as moving — it defaulted to permitting, the grant defaults to denying — so a silent
+  well as moving. It defaulted to permitting and the grant defaults to denying. A silent
   migration would have quietly stopped running checks rather than loudly stopping the run.
 - Bad, because every corpus relying on the permissive default must now say so, including this
   repo's own `moose.config.yaml` and `docs/moose.config.yaml`, which move in the same change.
@@ -60,11 +60,11 @@ aliased.
 
 ### Confirmation
 
-`test/unit/execution-grant.test.ts` pins that both paths deny by default, that granting one leaves
-the other denied, that `--no-execution` clears a configured grant, that `--allow-execution` grants
-without touching the config, and that the removed key raises a message naming its replacement. The
-suite injects an `ExecFn`: a test that shelled out to check whether shelling out was gated would be
-no test at all.
+`test/unit/execution-grant.test.ts` pins that both paths deny by default, and that granting one
+leaves the other denied. It pins that `--no-execution` clears a configured grant, and that
+`--allow-execution` grants without touching the config. It pins that the removed key raises a
+message naming its replacement. The suite injects an `ExecFn`. A test that shelled out to check
+whether shelling out was gated would be no test at all.
 
 ## Pros and Cons of the Options
 
@@ -83,5 +83,5 @@ no test at all.
 ### One grant naming capabilities
 
 - Good, because adding a capability is adding an enum member, not another boolean.
-- Good, because the config reads as what it is — a list of things this corpus may do.
+- Good, because the config reads as what it is, a list of things this corpus may do.
 - Bad, because it is more to write than `true`.

@@ -1,8 +1,10 @@
 name: Vale
 
-# Prose lint against the Moose house voice (Voices + Direct). Advisory for
-# now: reviewdog annotates only the lines a PR adds, and errors do not fail
-# the check. Flip fail_on_error once the existing corpus is worked down.
+# Prose lint against the Moose house voice (Voices + Direct). Blocking: the
+# whole corpus is at zero alerts, so `nofilter` reports every alert in the
+# checkout rather than only the lines a pull request adds, and an error fails
+# the check. See ADR 01044 for why the gate is whole-file rather than
+# diff-scoped, and `.vale.ini` for the one path that is exempt.
 on:
   pull_request:
     paths:
@@ -23,7 +25,7 @@ jobs:
         with:
           version: 3.20.0
           reporter: github-pr-review
-          filter_mode: added
-          fail_on_error: false
+          filter_mode: nofilter
+          fail_on_error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

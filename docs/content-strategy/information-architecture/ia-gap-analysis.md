@@ -12,33 +12,33 @@ status: content set complete
 # IA gap analysis
 
 **Scope:** the distance between [the proposed IA](proposed-ia.md) and what exists today. It does not
-restate the target structure — read that file first.
+restate the target structure, so read that file first.
 
-**The content set is complete.** All 34 planned pages are written, all 82 CUJ steps resolve to a real
-page, and `moose-docevals run` over the site passes 102/102 with no API key.
+**The content set is complete.** All 34 planned pages are written, and all 82 CUJ steps resolve to a
+real page. `moose-docevals run` over the site passes 102/102 with no API key.
 
 This document therefore no longer enumerates a backlog. It keeps three jobs:
 
 1. **§1** records where each README section went, so the README can be slimmed without losing
    content.
-2. **§2** is the delivery record — what was built and why — which is what a later reader needs when
+2. **§2** is the delivery record of what was built and why. That is what a later reader needs when
    deciding whether a page still earns its place.
 3. **§4** is the live check: every command, config key, and grader kind maps to a page. **Re-run it
    whenever the CLI grows.** A new capability with no page is a gap the moment it ships, and this
    table is where that becomes visible. Last re-run against ADRs 01038–01043, which added
-   `run --since` and `judge.concurrency`, and made a run that would check nothing a usage error —
-   the re-run that added the **run outcomes** table below. It also caught up the `llama-cpp`
+   `run --since` and `judge.concurrency`, and made a run that would check nothing a usage error.
+   That re-run added the **run outcomes** table below. It also caught up the `llama-cpp`
    provider keys from ADR 01037, which the tables had missed. Before that, ADRs 01016–01020 added
-   `--seed`, `--eval`, `--suite`, `--baseline`, `--no-baseline`, `--write-baseline` and the
-   `baseline` config key, and removed the `max-cost-usd` keys and the `pricing` block.
+   `--seed`, `--eval`, `--suite`, `--baseline`, `--no-baseline`, and `--write-baseline`, plus the
+   `baseline` config key. They also removed the `max-cost-usd` keys and the `pricing` block.
 
 The outstanding work is listed in [§5](#5-still-outstanding).
 
 ## 1. README decomposition map
 
 The README is a features tour. Every section has a destination, so it can be slimmed to a hook, a
-five-line quickstart, and links without losing content. Slimming it is **not** part of this change —
-it happens when the destination pages exist.
+five-line quickstart, and links without losing content. Slimming it is **not** part of this change.
+It happens when the destination pages exist.
 
 | README section | Destination |
 |---|---|
@@ -61,20 +61,20 @@ it happens when the destination pages exist.
 **Stays in the README permanently:** the hook, badges, a five-line quickstart, install, and links into
 the site. Nothing else.
 
-## 2. Delivery record — the content the CUJs require
+## 2. Delivery record of the content the CUJs require
 
 All 34 pages are written. Priorities below are the order they were built in and the order to restore
-them in if the site is ever rebuilt; `state` records what each was before this pass.
+them in if the site is ever rebuilt. `state` records what each was before this pass.
 
-### P0 — launch (18)
+### P0, launch (18)
 
 | Page | State | Serves | Why it matters |
 |---|:--:|---|---|
 | `index.mdx` | partial | all | Nobody can self-route without it; every persona lands here first. |
 | `get-started/index.mdx` | partial | `cuj-first-gate` | Nate's ten-minute window. No finding, no adoption. |
 | `get-started/how-moose-docevals-works.mdx` | new | `cuj-first-gate`, `cuj-orchestrate-tools` | The model every other page assumes. Priya will not commit her team without it. |
-| `evals/index.mdx` | partial | `cuj-first-gate`, `cuj-eval-library` | The frontmatter contract — the tool's primary interface. |
-| `evals/write-good-assertions.mdx` | new | `cuj-write-judgeable-assertions` | Highest-leverage page for Sara. Vague assertions are the root cause of flaky evals. |
+| `evals/index.mdx` | partial | `cuj-first-gate`, `cuj-eval-library` | The frontmatter contract, the tool's primary interface. |
+| `evals/write-good-assertions.mdx` | new | `cuj-write-judgeable-assertions` | The page that does most for Sara. Vague assertions are the root cause of flaky evals. |
 | `evals/deterministic-checks.mdx` | new | `cuj-orchestrate-tools`, `cuj-cheapen-evals` | Without it readers conclude moose-docevals means "an LLM grades my docs" and lose the cost argument internally. |
 | `adopt/index.mdx` | partial | `cuj-bootstrap-corpus` | `fill` is the entire product for the solo owner. |
 | `ci/index.mdx` | partial | `cuj-ci-wire` | A gate that is not in CI is a linter someone runs sometimes. |
@@ -89,7 +89,7 @@ them in if the site is ever rebuilt; `state` records what each was before this p
 | `reference/graders.mdx` | new | `cuj-orchestrate-tools` | Nine grader kinds with per-kind `options`, documented nowhere. Also owes the `tool:doc-detective` contract: `options.command` is a partial override, and a timeout is reported distinctly from a failure (ADR 01005). |
 | `reference/output-and-exit-codes.mdx` | new | `cuj-first-gate` | Four output formats; readers must be able to parse what they see. |
 
-### P1 — depth (11)
+### P1, depth (11)
 
 | Page | Serves | Why |
 |---|---|---|
@@ -105,7 +105,7 @@ them in if the site is ever rebuilt; `state` records what each was before this p
 | `fix/faq.mdx` | `cuj-fix-red-check` | Failures that are not the contributor's to fix. |
 | `reference/glossary.mdx` | *(vocabulary)* | Ten terms used across every section. |
 
-### P2 — completeness (5)
+### P2, completeness (5)
 
 | Page | Serves | Why deferred |
 |---|---|---|
@@ -117,7 +117,7 @@ them in if the site is ever rebuilt; `state` records what each was before this p
 
 ## 3. Pages that serve no CUJ
 
-Two of the 34 are not required by any journey step. Both are kept, with a stated reason — the check
+Two of the 34 are not required by any journey step. Both are kept, with a stated reason. The check
 exists so that furniture is a decision rather than an accident.
 
 | Page | Disposition | Reason |
@@ -125,8 +125,8 @@ exists so that furniture is a decision rather than an accident.
 | `reference/index.mdx` | **Keep** | Navigation, not content. Starlight needs a section entry point and readers need a shelf index. It carries no unique information and must not grow any. |
 | `reference/glossary.mdx` | **Keep** | Vocabulary support. Ten terms recur across every section; a glossary is cheaper than defining them repeatedly. If it starts explaining rather than defining, it has become a concept page in the wrong section. |
 
-Nothing is pruned, because nothing exists yet. **Re-run this section at the first content audit** —
-after launch, pages accumulate that serve no journey, and that is when this table earns its keep.
+Nothing is pruned, because nothing exists yet. **Re-run this section at the first content audit.**
+After launch, pages accumulate that serve no journey, and that is when this table earns its keep.
 
 ## 4. Surface coverage check
 
@@ -159,9 +159,10 @@ Notable flags with a home beyond the CLI reference: `--deterministic-only` and `
 `reference/files-and-state.mdx`).
 
 `--since` (ADR 01040) is documented **only** in `reference/cli.mdx`. That is a mapped surface, not an
-unmapped one, but it is the thinnest kind: the flag exists to make a CI job affordable on a large
-corpus, and the CUJ that wants it — `cuj-run-in-ci`, via `ci/index.mdx` and `ci/cost-and-caching.mdx`
-— still shows only unscoped invocations. Listed in [§5](#5-still-outstanding).
+unmapped one, but it is the thinnest kind. The flag exists to make a CI job affordable on a large
+corpus, and the CUJ that wants it still shows only unscoped invocations. That CUJ is
+`cuj-run-in-ci`, via `ci/index.mdx` and `ci/cost-and-caching.mdx`. Listed in
+[§5](#5-still-outstanding).
 
 ### Config keys
 
@@ -186,14 +187,14 @@ Keys are written fully qualified so this table is greppable against
 | `fill.confidence-threshold`, `fill.max-evals-per-page`, `fill.temperature` | `adopt/index.mdx` |
 | `evals` (named evals), `suites` (incl. `target-pass-rate`) | `evals/named-evals-and-suites.mdx` |
 
-Golden-case fields — `reviewed`, `content-hash`, `source`, `reviewed-by` — are covered by
+Golden-case fields (`reviewed`, `content-hash`, `source`, `reviewed-by`) are covered by
 `judge/calibrate.mdx` and `reference/files-and-state.mdx` (ADR 01016). The baseline file's own
 shape is in `reference/files-and-state.mdx` (ADR 01017).
 
-Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`, `success-exit-codes`,
-`timeout-ms`, `generated`, `options`, `severity`, `severity-map` — are all covered by
-`reference/frontmatter.mdx`, with `assertion`/`evidence`/`examples` taught in
-`evals/write-good-assertions.mdx` and `severity`/`severity-map` in `evals/severity-and-findings.mdx`.
+Eval fields (`assertion`, `type`, `grader`, `evidence`, `examples`, `command`, `success-exit-codes`,
+`timeout-ms`, `generated`, `options`, `severity`, `severity-map`) are all covered by
+`reference/frontmatter.mdx`. Of those, `assertion`/`evidence`/`examples` are taught in
+`evals/write-good-assertions.mdx`, and `severity`/`severity-map` in `evals/severity-and-findings.mdx`.
 
 ### Grader kinds
 
@@ -214,25 +215,25 @@ Eval fields — `assertion`, `type`, `grader`, `evidence`, `examples`, `command`
 
 ### Run outcomes
 
-Added on this re-run (ADRs 01040–01043). The three tables above check *inputs* — commands, keys,
-graders — and an exit code is an **output**, so a new exit-2 condition could ship with no page and
-nothing here would notice. It nearly did.
+Added on this re-run (ADRs 01040–01043). The three tables above check *inputs*, meaning commands,
+keys, and graders. An exit code is an **output**, so a new exit-2 condition could ship with no page
+and nothing here would notice. It nearly did.
 
 | Outcome | Documented in |
 |---|---|
 | Exit `0` / `1` / `2`, and who each routes to | `reference/output-and-exit-codes.mdx`, `fix/index.mdx`, `ci/exit-codes-and-annotations.mdx` |
-| Exit 2: unknown `--format` | `reference/output-and-exit-codes.mdx` |
-| Exit 2: empty input set (`discoverPages`) | `reference/cli.mdx` |
-| Exit 2: `--eval` / `--suite` matching nothing | `fix/index.mdx`, `reference/cli.mdx`, `ci/exit-codes-and-annotations.mdx` |
-| Exit 2: unresolvable `--since` ref, and `--since` with `--write-baseline` | `reference/cli.mdx` |
-| Exit 2: **a run that would check nothing** (ADR 01041) | `reference/output-and-exit-codes.mdx`, `fix/index.mdx` |
-| Exit 0 with a statement: empty `--since` scope | `reference/cli.mdx` |
-| Exit 0 with a warning: **the run graded nothing** (ADR 01041) | `reference/output-and-exit-codes.mdx` |
+| Exit 2 on an unknown `--format` | `reference/output-and-exit-codes.mdx` |
+| Exit 2 on an empty input set (`discoverPages`) | `reference/cli.mdx` |
+| Exit 2 when `--eval` / `--suite` match nothing | `fix/index.mdx`, `reference/cli.mdx`, `ci/exit-codes-and-annotations.mdx` |
+| Exit 2 on an unresolvable `--since` ref, and on `--since` with `--write-baseline` | `reference/cli.mdx` |
+| Exit 2 when **a run would check nothing** (ADR 01041) | `reference/output-and-exit-codes.mdx`, `fix/index.mdx` |
+| Exit 0 with a statement, on an empty `--since` scope | `reference/cli.mdx` |
+| Exit 0 with a warning, when **the run graded nothing** (ADR 01041) | `reference/output-and-exit-codes.mdx` |
 | Exit 1 on a suite below target, suspended by `--eval` / `--suite` / `--since` | `reference/output-and-exit-codes.mdx`, `evals/named-evals-and-suites.mdx` |
 | `--fail-on-review` widening exit 1 | `ci/exit-codes-and-annotations.mdx` |
 
 **No unmapped surface.** Re-run this check whenever a command, config key, grader, **or run
-outcome** is added — a new capability with no page is a documentation gap the moment it ships, and
+outcome** is added. A new capability with no page is a documentation gap the moment it ships, and
 these tables are where that becomes visible.
 
 Two behavior changes from the same re-run are deliberately *not* new rows, because neither is a
@@ -249,15 +250,15 @@ The content set is complete; these are not.
 
 | Item | Why it is not done | Blocking? |
 |---|---|---|
-| ~~**GitHub Pages deployment**~~ | **Done** (ADR 01006). `docs.yml` runs verify → build → link check → deploy on every push to `main`; the site is live at <https://hawkeyexl.github.io/moose-docevals/>. | — |
-| **LLM evals on the docs corpus** | The `docs-page` suite is deterministic-only. `docs-page-full` adds `no-future-promises`, `serves-one-journey`, and `readable`, and needs committed cache fixtures generated with a provider (`npm run docs:refresh-cache`). | No — but the prose quality of these pages is currently ungated. |
+| ~~**GitHub Pages deployment**~~ | **Done** (ADR 01006). `docs.yml` runs verify → build → link check → deploy on every push to `main`; the site is live at <https://hawkeyexl.github.io/moose-docevals/>. | n/a |
+| **LLM evals on the docs corpus** | The `docs-page` suite is deterministic-only. `docs-page-full` adds `no-future-promises`, `serves-one-journey`, and `readable`, and needs committed cache fixtures generated with a provider (`npm run docs:refresh-cache`). | No, but the prose quality of these pages is currently ungated. |
 | **Slimming the README** | Now unblocked: §1 maps every section to a destination that exists. | No. |
-| ~~**`moose-docevals list --format` validation**~~ | **Done** (ADR 01007). An unknown `--format` is a usage error on every command that takes the flag; `ci.yml` asserts exit 2 and the allowed-set message through the built CLI on both runners. | — |
+| ~~**`moose-docevals list --format` validation**~~ | **Done** (ADR 01007). An unknown `--format` is a usage error on every command that takes the flag. `ci.yml` asserts exit 2 and the allowed-set message through the built CLI on both runners. | n/a |
 | **A `baseline` glossary entry** | The term now recurs across six pages. `reference/glossary.mdx` is alphabetical and its description reads "The ten terms", so adding one is an edit rather than a consistency fix. | No. |
-| **`--since` in the CI journey pages** | Documented in `reference/cli.mdx` only (ADR 01040). `ci/index.mdx` and `ci/cost-and-caching.mdx` show unscoped runs, and neither mentions the `fetch-depth: 0` that a scoped run needs — which is the one detail a reader hits before anything else. | No — but it is the gap most likely to produce a support question. |
-| **A suite that graded nothing still reports `ok`** | `summarizeSuites` computes the pass rate over the graded set, so an empty suite meets any target: `--deterministic-only` over the fixture corpus prints `tutorial: 0/0 passed — 100% vs target 70% ok`. Named and left open by ADR 01041, which fixes the run-level case. Reusing ADR 01018's `partial` flag is the obvious remedy and is a third decision: `partial` currently means "a filter was active" and renders as such, so generalizing it changes a public JSON field's meaning, two reporters' wording, and every `--deterministic-only` run's output. | No — the run-level warning now prints beside that line and contradicts it. |
+| **`--since` in the CI journey pages** | Documented in `reference/cli.mdx` only (ADR 01040). `ci/index.mdx` and `ci/cost-and-caching.mdx` show unscoped runs, and neither mentions the `fetch-depth: 0` that a scoped run needs, which is the one detail a reader hits before anything else. | No, but it is the gap most likely to produce a support question. |
+| **A suite that graded nothing still reports `ok`** | `summarizeSuites` computes the pass rate over the graded set, so an empty suite meets any target: `--deterministic-only` over the fixture corpus prints `tutorial: 0/0 passed — 100% vs target 70% ok`. Named and left open by ADR 01041, which fixes the run-level case. Reusing ADR 01018's `partial` flag is the obvious remedy, and is a third decision. `partial` currently means "a filter was active" and renders as such. Generalizing it changes a public JSON field's meaning, two reporters' wording, and every `--deterministic-only` run's output. | No; the run-level warning now prints beside that line and contradicts it. |
 | **A recording recipe in `ci/recipes.mdx`** | `ci/exit-codes-and-annotations.mdx` says `--write-baseline` does not belong in the gating job, but no page shows the separate recording invocation. | No. |
-| **`calibrate --max-turns` is run-wide only because its cases now batch** | Recorded in ADR 01016. If `calibrate` ever returns to judging case-by-case, the flag silently becomes per case again — the reason ADR 01019 withheld it in the first place. | No — a note for whoever touches that loop. |
+| **`calibrate --max-turns` is run-wide only because its cases now batch** | Recorded in ADR 01016. If `calibrate` ever returns to judging case-by-case, the flag silently becomes per case again. That is why ADR 01019 withheld it in the first place. | No; a note for whoever touches that loop. |
 
 ### What will drift first
 
@@ -265,7 +266,7 @@ Ranked by likelihood, for whoever picks this up next:
 
 1. **Reference pages against a changing CLI.** `reference/cli.mdx`, `configuration.mdx`, and
    `graders.mdx` restate the source. The inline Doc Detective steps catch changed *behavior*; they do
-   not catch a new flag that nobody documented. §4 is the guard — run it.
+   not catch a new flag that nobody documented. §4 is the guard, so run it.
 2. **Captured output samples.** `output-and-exit-codes.mdx` embeds real run output. A reporter change
    makes those stale silently, since no step asserts against the pretty-printed form.
 3. ~~**Cross-links.**~~ **Now guarded.** `scripts/check-docs-links.mjs` resolves every internal

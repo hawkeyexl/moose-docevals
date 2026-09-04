@@ -8,14 +8,14 @@ decision-makers: [hawkeyexl]
 
 Supersedes the *completeness claim* of
 [ADR 01022](01022-a-grader-that-reached-no-verdict-fails-the-eval.md), whose
-decision was right and whose survey was wrong — for the same reason, and in the
-same words, that 01022 said this about
+decision was right and whose survey was wrong. The reason is the one 01022
+gave, in the same words, about
 [ADR 01020](01020-unreadable-tool-output-is-a-finding-not-a-pass.md).
 
 ## Context and Problem Statement
 
-The invariant is settled and has not changed: **a finding that says the grader
-could not reach a verdict is not a claim about the page, and must not be
+The invariant is settled and has not changed. **A finding that says the grader
+could not reach a verdict is not a claim about the page. It must not be
 downgradable by the eval's severity.** ADR 01022 states it, and
 `src/core/engine.ts` enforces it in one line:
 
@@ -38,7 +38,7 @@ The four:
    the tool is never invoked. At `severity: warning` the eval reported and
    passed, having checked nothing. Found in review.
 2. **`tool:doc-detective`, timeout.** The branch's own comment says it matches
-   `commandGrader` — and `commandGrader`'s timeout *is* a diagnostic. This one
+   `commandGrader`, and `commandGrader`'s timeout *is* a diagnostic. This one
    was not.
 3. **`tool:doc-detective`, non-zero exit with no parseable report.** What an
    uninstalled or misconfigured doc-detective produces. ADR 01022 already
@@ -46,15 +46,15 @@ The four:
    the adapter it was fixing, and did not check this one.
 4. **`tool:markdownlint`, timeout and non-zero exit with nothing parseable.**
    The worst of the four, and the only one that is invisible rather than merely
-   downgradable: the adapter inspected `spawnError` and nothing else, so a
+   downgradable. The adapter inspected `spawnError` and nothing else. A
    timed-out or misconfigured run parsed zero findings, returned `[]`, and
    **every eval in the batch passed**. That is the original ADR 01020 defect,
    in a different adapter, still open two ADRs later.
 
 Three rounds is enough to say what the actual problem is. Reading six adapters
-and asking "does each remember?" is a check whose failure mode is silence, and
-it has now produced a false clean bill of health twice. The tests did not
-compensate, because they were written at the default severity — where
+and asking "does each remember?" is a check whose failure mode is silence. It
+has now produced a false clean bill of health twice. The tests did not
+compensate, because they were written at the default severity. There
 `severity: "error"` and `ev.severity` are the same value, so the assertion
 passes either way. The test in `doc-structure-lint.test.ts` named
 `unreadable output cannot be downgraded` could not fail.
@@ -63,45 +63,45 @@ passes either way. The test in `doc-structure-lint.test.ts` named
 
 - The invariant is worth exactly as much as its weakest adapter, and a survey
   cannot tell you which one that is.
-- The failure is silent by construction: a missing flag produces a *passing*
+- The failure is silent by construction. A missing flag produces a *passing*
   run, so nothing draws attention to it.
 - A seventh adapter will be written by someone who has not read this file.
 
 ## Considered Options
 
-1. **An enumerating test over every grader's no-verdict paths** — chosen.
+1. **An enumerating test over every grader's no-verdict paths.** Chosen.
 2. Fix the four and survey again more carefully.
 3. A lint rule requiring `diagnostic` on any finding whose message matches
    /failed|timed out|could not/.
 4. Restructure `Grader` so no-verdict outcomes cannot be expressed as a
-   `Finding` at all — ADR 01022's rejected option 4.
+   `Finding` at all. This is ADR 01022's rejected option 4.
 
 ## Decision Outcome
 
-Chosen: **option 1**, plus the four fixes.
+**Option 1 wins**, plus the four fixes.
 
 `test/unit/no-verdict.test.ts` enumerates, per grader, every shape in which its
-tool can fail to answer: spawn failure, timeout, non-zero exit with unreadable
-output, and missing required configuration. Each row drives the real adapter
-with a fake `exec` and asserts three things:
+tool can fail to answer. Those are spawn failure, timeout, non-zero exit with
+unreadable output, and missing required configuration. Each row drives the real
+adapter with a fake `exec` and asserts three things:
 
-- **at least one finding** — silence is the failure mode 01020 opened on;
+- **at least one finding**, because silence is the failure mode 01020 opened on;
 - **every finding carries `diagnostic: true`**;
-- **severity is untouched** — rewriting it is 01022's rejected option 2, and it
+- **severity is untouched**, since rewriting it is 01022's rejected option 2 and
   would take `warning` away from real findings.
 
 Every eval in the file is at **`severity: warning`**, deliberately. At the
-default `error` these assertions hold whether or not the flag is set, which is
+default `error` these assertions hold whether or not the flag is set. That is
 precisely how the previous round's tests managed to be vacuous.
 
-Two complement cases sit beside it — markdownlint lint output, and a command
-that simply exits non-zero — asserting those are *not* diagnostics. Without
-them, marking everything `diagnostic: true` would satisfy the block above while
-destroying what severity means.
+Two complement cases sit beside it, asserting those are *not* diagnostics. They
+cover markdownlint lint output and a command that simply exits non-zero.
+Without them, marking everything `diagnostic: true` would satisfy the block
+above while destroying what severity means.
 
 **Adding a grader means adding its rows.** That is a convention, not a
 mechanism, and it is a weaker guarantee than the engine gives. It is still
-strictly better than the two surveys it replaces: a missing row is visible in a
+strictly better than the two surveys it replaces. A missing row is visible in a
 diff, where a missing flag is visible only in a run that passes.
 
 Rejected, and why:
@@ -111,16 +111,15 @@ Rejected, and why:
 - **Option 3** matches on message prose, which is exactly the coupling
   `src/judge/budget.ts` was created to remove. It would also miss the
   markdownlint case entirely, since there is no message to match.
-- **Option 4** remains the cleanest model and remains too large: `Finding[]` is
+- **Option 4** remains the cleanest model and remains too large. `Finding[]` is
   the grader contract, consumed by every reporter, the baseline fingerprint,
   and the SARIF and JUnit writers.
 
 ### What making markdownlint honest uncovered
 
 Marking the markdownlint paths turned this repo's own `verify-docs` gate red,
-which is the point, and the reason why is worth recording: **two further
-defects were sitting behind the silent pass, and neither was reachable while
-it held.**
+which is the point. **Two further defects were sitting behind the silent pass,
+and neither was reachable while it held.**
 
 1. **`markdownlint-cli2` was a dependency of nothing.** Not in the root
    `package.json`, not in `docs/`, not installed by the `verify-docs` job. The
@@ -130,15 +129,15 @@ it held.**
    third of it never executed.
 2. **`parseMarkdownlintOutput` did not match the tool's output.**
    markdownlint-cli2 0.23 prints a severity token between the position and the
-   rule id — `file.md:6:81 error MD013/line-length ...` — and the pattern,
-   written against an older format, matched none of it. So even with the tool
-   installed, every finding was dropped and every eval still passed.
+   rule id, as in `file.md:6:81 error MD013/line-length ...`. The pattern was
+   written against an older format and matched none of it. So even with the
+   tool installed, every finding was dropped and every eval still passed.
 
 Two independent faults, stacked, each hidden by the other and both hidden by
 the missing flag. Installing the tool and widening the pattern surfaced **1,416
 markdownlint findings** across the docs corpus that had never been reported.
-They are `severity: warning` there by configuration, so they report and pass —
-which is the intended behavior, and now actually happening.
+They are `severity: warning` there by configuration, so they report and pass.
+That is the intended behavior, and it is now actually happening.
 
 This is the strongest argument for the decision above. Three ADRs treated this
 as a question of whether adapters remember a flag. The flag was the visible
@@ -157,7 +156,7 @@ part; what it was covering was a gate that had never run.
   enforcement behind it. Recorded as such rather than described as a guarantee.
 - `markdownlint-cli2` joins `devDependencies`, so the docs gate runs the tool
   it has always claimed to run. A tool an eval names must be installed by the
-  job that runs the eval; nothing checks this, and the diagnostic flag is now
+  job that runs the eval. Nothing checks this, and the diagnostic flag is now
   what makes a violation loud.
 - The `doc-detective` non-zero-exit branch splits: with a readable failure
   report it stays an ordinary finding, without one it becomes a diagnostic.
@@ -165,8 +164,8 @@ part; what it was covering was a gate that had never run.
 
 ### Confirmation
 
-All five previously-unflagged paths were verified to fail before the fix — two
-of them (`markdownlint` timeout, `markdownlint` non-zero) as
+All five previously-unflagged paths were verified to fail before the fix. Two
+of them (`markdownlint` timeout, `markdownlint` non-zero) failed as
 `expected 0 to be greater than 0`, which is the silent-pass shape stated as an
 assertion. The full suite passes at 456 tests with no other test changing,
 which is itself evidence: nothing had been depending on the old behavior.

@@ -13,20 +13,20 @@ decision-makers: [hawkeyexl]
 The adapter parsed the tool's `--json` stdout inside a `try`. On a parse failure
 it pushed a finding only when the exit code was non-zero; with exit `0` it fell
 through to a bare `continue`. Nothing was recorded, the eval had no findings, and
-an eval with no findings passes. A second path was worse: output that parsed but
+an eval with no findings passes. A second path was worse. Output that parsed but
 was not an array reached `for (const r of parsed)` and threw
-`parsed is not iterable`, so a malformed payload surfaced as an engine-level
-error rather than as a finding against the page.
+`parsed is not iterable`. A malformed payload therefore surfaced as an
+engine-level error rather than as a finding against the page.
 
 Both are reachable without anything being wrong with the page. A version bump
-that changes the tool's output shape, a wrapper that prints a banner before the
-JSON, a `--json` flag that silently stops being honored — each turns the eval
-green while checking nothing.
+changes the tool's output shape. A wrapper prints a banner before the JSON. A
+`--json` flag silently stops being honored. Each turns the eval green while
+checking nothing.
 
 This is the same failure the repository already treats as a first-class hazard
 elsewhere. `ci.yml` carries an explicit step asserting that every inline
-Doc Detective step parses, because a page whose steps are all invalid reports
-"no tests" and exits 0 — green with nothing executed. `discoverPages` throws on
+Doc Detective step parses. A page whose steps are all invalid reports
+"no tests" and exits 0, green with nothing executed. `discoverPages` throws on
 an empty input set for the same reason. The rule was applied to the corpus and
 to discovery, but not to the adapters.
 
@@ -46,27 +46,27 @@ fixture, which is why this survived: the other five tool adapters have both.
 
 ## Considered Options
 
-1. **Report unreadable output as a finding** — chosen.
-2. **Throw a `DocevalsError`** — rejected: that is an operational error (exit 2)
-   for something that is per-page and per-eval, and it stops the whole run over
+1. **Report unreadable output as a finding.** Chosen.
+2. **Throw a `DocevalsError`.** Rejected. That is an operational error (exit 2)
+   for something that is per-page and per-eval. It stops the whole run over
    one page's tool output.
-3. **Keep the silent pass, add a warning to stderr** — rejected: a warning that
+3. **Keep the silent pass, add a warning to stderr.** Rejected. A warning that
    does not affect the verdict is the status quo with extra text. The eval still
    passes, and CI still goes green.
-4. **Leave it, and cover it only in CI like doc-detective** — rejected: the CI
+4. **Leave it, and cover it only in CI like doc-detective.** Rejected. The CI
    guard for Doc Detective exists because that grader executes steps out of page
    *bodies*, which no adapter contract can police. This one is a plain parse,
    and the adapter is the right place.
 
 ## Decision Outcome
 
-Chosen: **report it**. `src/graders/tools/doc-structure-lint.ts` now records a
+**Report it.** `src/graders/tools/doc-structure-lint.ts` now records a
 finding at the eval's configured severity in both cases:
 
 - stdout that is not JSON, whatever the exit code. When the exit code is `0` the
-  message says so explicitly — "exited 0 but its output could not be read as
-  JSON" — because that combination is the surprising one and naming it is what
-  makes the cause findable.
+  message says so explicitly, as "exited 0 but its output could not be read as
+  JSON". That combination is the surprising one, and naming it is what makes the
+  cause findable.
 - JSON that is not the list of results the tool documents, with the same
   treatment. The shape check replaces the unguarded iteration.
 
@@ -84,18 +84,19 @@ actually printed rather than being told only that it could not be read.
   `test/fixtures/tool-output/doc-structure-lint-{pass,fail}.json`, with a fake
   `exec` and no real binary.
 - The other five adapters were reviewed for the same shape while writing this.
-  They differ: `markdownlint` and `vale` parse into their own helpers with
-  explicit guards, `docmeta` calls a library function rather than a subprocess,
-  and `doc-detective` already reports a timeout distinctly from a failure
-  (ADR 01005). No second instance of this defect was found — but the property is
-  worth stating so it is checked when the seventh adapter is written: **a grader
-  that cannot read its tool's output reports, it does not pass.**
+  They differ. `markdownlint` and `vale` parse into their own helpers with
+  explicit guards, and `docmeta` calls a library function rather than a
+  subprocess. `doc-detective` already reports a timeout distinctly from a
+  failure (ADR 01005). No second instance of this defect was found. The property
+  is still worth stating, so it is checked when the seventh adapter is written.
+  **A grader that cannot read its tool's output reports, it does not pass.**
 
 ### Confirmation
 
 `test/unit/doc-structure-lint.test.ts` asserts a finding for unparseable stdout
-with exit `0` — the case that previously returned `[]` — and for valid JSON of
-the wrong shape, which previously threw. The happy path, the structured-failure
-path with line and column, the missing `options.template` path, the spawn
-failure, and a non-zero exit with non-JSON output are pinned alongside them, so
-the change is visible as a change in one branch rather than a rewrite.
+with exit `0`, the case that previously returned `[]`. It asserts another for
+valid JSON of the wrong shape, which previously threw. Pinned alongside them are
+the happy path and the structured-failure path with line and column. So are the
+missing `options.template` path, the spawn failure, and a non-zero exit with
+non-JSON output. The change is then visible as a change in one branch rather
+than a rewrite.

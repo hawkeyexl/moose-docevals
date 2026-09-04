@@ -37,15 +37,15 @@ trusting a repo's frontmatter is not the same as trusting arbitrary steps writte
 :::danger
 **No combination of grants makes a run over untrusted contributions safe.**
 
-A grant says *this corpus* is trusted to execute. A fork's pages are not this corpus — a fork
+A grant says *this corpus* is trusted to execute. A fork's pages are not this corpus. A fork
 rewrites the pages, and if the job runs with a grant, it runs the fork's code. Denying both grants
-does protect the runner, but a reader who grants either and concludes they are safe against a
+does protect the runner. But a reader who grants either and concludes they are safe against a
 hostile fork is wrong, and confidently so.
 
 The control is the job trigger, not the flag. Restrict execution to same-repo pull requests.
 :::
 
-## The complete answer: gate the job
+## The complete answer is to gate the job
 
 Flags are not sufficient. Restrict the job that can execute content-driven code to **same-repo**
 pull requests:
@@ -54,7 +54,7 @@ pull requests:
 jobs:
   verify-docs:
     runs-on: ubuntu-latest
-    # SECURITY GATE — do not remove.
+    # SECURITY GATE. Do not remove.
     if: >-
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
@@ -79,8 +79,8 @@ Then give forks a separate job that executes nothing and needs no secret:
       - run: npx moose-docevals run --deterministic-only --no-execution --format github
 ```
 
-Fork contributors still get freshness, lint, structure, and frontmatter validation — most of the
-value — with nothing executed and no credential in reach.
+Fork contributors still get freshness, lint, structure, and frontmatter validation, which is most of
+the value, with nothing executed and no credential in reach.
 
 ## Why `pull_request_target` is the wrong fix
 
@@ -91,7 +91,7 @@ above is the safe version of what you want.
 ## Secrets are unavailable on forks by design
 
 GitHub does not expose secrets to fork pull requests. That is a feature. It also means the fork path
-*must* work without a provider — which `--deterministic-only` does.
+*must* work without a provider, which `--deterministic-only` does.
 
 If your gate is unusable without a key, fork contributors get no signal at all, and you will be
 tempted toward the unsafe workaround above.
@@ -100,8 +100,8 @@ tempted toward the unsafe workaround above.
 
 - [ ] The job that can execute content code is gated to same-repo pull requests.
 - [ ] Forks run a separate `--deterministic-only` job with no secrets.
-- [ ] `execution.allow` grants only what the corpus needs, and nothing on a fork-facing job —
-      defence in depth, not the defence.
+- [ ] `execution.allow` grants only what the corpus needs, and nothing on a fork-facing job.
+      That is defence in depth, not the defence.
 - [ ] Third-party actions pinned to a full commit SHA, not a tag.
 - [ ] `permissions:` set to least privilege (`contents: read` for a check job).
 - [ ] A spend ceiling set, so a malicious or accidental loop cannot run up a bill.
@@ -109,6 +109,6 @@ tempted toward the unsafe workaround above.
 ## Reviewing changes to the gate itself
 
 A pull request that edits the workflow is asking for a change to what runs with your credentials.
-Review those with the same care as a change to authentication code — and remember that a contributor
+Review those with the same care as a change to authentication code. Remember too that a contributor
 who can add a `tool:doc-detective` eval to the config has changed the security posture of the whole
-job, even if the workflow file is untouched.
+job. That holds even if the workflow file is untouched.

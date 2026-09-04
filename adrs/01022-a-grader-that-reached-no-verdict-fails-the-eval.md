@@ -23,14 +23,14 @@ adapter it did fix. Three separate problems, one cause:
 1. **The survey missed three instances.** `src/graders/tools/vale.ts` emits
    `Failed to run vale … (is it installed?)` and `Vale produced no JSON output`
    at `ev.severity`. `src/graders/tools/docmeta.ts` emits `docmeta/no-schemas`
-   at the eval's severity — and ADR 01013 makes `options.schemas` mandatory, so
+   at the eval's severity, and ADR 01013 makes `options.schemas` mandatory, so
    a `severity: warning` docmeta eval with no `schemas` key passes forever
    having validated nothing. `markdownlint`, `doc-detective` and the `command`
    grader have the same shape for spawn failures and timeouts.
 
 2. **The fix itself was incomplete.** 01020's implementation only reached the
    `exit 0` branches. The non-zero-exit branch and the spawn-failure branch kept
-   `ev.severity` — and the non-zero branch is the *likeliest* trigger of all,
+   `ev.severity`. The non-zero branch is the *likeliest* trigger of all,
    because it is what an uninstalled tool produces.
 
 3. **The mechanism was wrong.** Hard-coding `severity: "error"` inside one
@@ -38,8 +38,8 @@ adapter it did fix. Three separate problems, one cause:
    The next adapter gets it wrong by default, which is exactly what happened
    here across five of them.
 
-The property is not about `doc-structure-lint`. It is: **a finding that says the
-grader could not reach a verdict is not a claim about the page, and must not be
+The property is not about `doc-structure-lint`. **A finding that says the
+grader could not reach a verdict is not a claim about the page. It must not be
 downgradable by the eval's severity.** Severity expresses how much a *page
 problem* matters. It has no jurisdiction over whether the check ran.
 
@@ -48,19 +48,19 @@ problem* matters. It has no jurisdiction over whether the check ran.
 - The invariant is one sentence and applies to every grader, so it belongs in
   one place.
 - A new adapter must inherit it rather than remember it.
-- Severity must keep meaning what it means for real findings — a
+- Severity must keep meaning what it means for real findings. A
   `severity: warning` lint check should still report and still pass.
 
 ## Considered Options
 
-1. **A `diagnostic` flag on `Finding`, enforced once in the engine** — chosen.
+1. **A `diagnostic` flag on `Finding`, enforced once in the engine.** Chosen.
 2. Hard-code `severity: "error"` in every adapter's diagnostic paths.
 3. A reserved `ruleId` prefix (`*/unreadable`) the engine special-cases.
 4. A separate `GraderError` channel outside `Finding[]`.
 
 ## Decision Outcome
 
-Chosen: **option 1**. `Finding` gains `diagnostic?: boolean`, and
+**Option 1 wins.** `Finding` gains `diagnostic?: boolean`, and
 `src/core/engine.ts` computes the outcome as:
 
 ```ts
@@ -70,8 +70,8 @@ const hasError = own.some(
 ```
 
 Every "the tool did not run / its output could not be read" finding across all
-six graders is marked `diagnostic: true` and keeps `ev.severity` for display, so
-a warning-severity eval still renders its diagnostic as a warning — and still
+six graders is marked `diagnostic: true`. Each keeps `ev.severity` for display,
+so a warning-severity eval still renders its diagnostic as a warning. It still
 fails, because no verdict was reached.
 
 Rejected, and why:
@@ -80,7 +80,7 @@ Rejected, and why:
   invariant, and the sixth adapter will not have it.
 - **Option 3** couples the engine to a string convention that nothing enforces,
   and a typo in a `ruleId` silently reopens the hole.
-- **Option 4** is the cleanest model but a much larger change: `Finding[]` is the
+- **Option 4** is the cleanest model but a much larger change. `Finding[]` is the
   grader contract, and every reporter, the baseline fingerprint, and the SARIF
   and JUnit writers consume it. A second channel is worth revisiting if
   diagnostics ever need to carry more than a message.
@@ -88,23 +88,23 @@ Rejected, and why:
 ### Consequences
 
 - A `severity: warning` eval now **fails** when its tool is missing or broken,
-  where it previously passed. That is the point, and it will look like new
-  breakage to anyone whose tooling was already silently absent — which is the
+  where it previously passed. That is the point. It will look like new
+  breakage to anyone whose tooling was already silently absent, which is the
   population this exists to inform.
 - `diagnostic` joins `Finding`, so it appears in `--format json`. The baseline
-  fingerprint deliberately ignores it: identity stays `(file, evalName, ruleId)`
-  per ADR 01017, so baselining a diagnostic is possible and remains a way to
-  accept a permanently-missing tool. That is a real escape hatch, and it is at
-  least explicit.
+  fingerprint deliberately ignores it, and identity stays
+  `(file, evalName, ruleId)` per ADR 01017. Baselining a diagnostic is therefore
+  possible, and remains a way to accept a permanently-missing tool. That is a
+  real escape hatch, and it is at least explicit.
 - The rule is now stated once. A seventh adapter inherits it by writing
   `diagnostic: true`, and the engine needs no change.
 
 ### Confirmation
 
-`test/unit/doc-structure-lint.test.ts` covers the shapes that reach no verdict —
-unparseable stdout at exit 0, JSON of the wrong shape, a list of non-objects, a
-list containing null, an entry whose `errors` is not a list, a non-zero exit, and
-a spawn failure — asserting each produces exactly one finding carrying
-`diagnostic: true`, and that a real structure error does not. The engine's own
-`hasError` rule is what turns that flag into a failure, so the two are tested
-where each lives.
+`test/unit/doc-structure-lint.test.ts` covers the shapes that reach no verdict.
+Those are unparseable stdout at exit 0, JSON of the wrong shape, and a list of
+non-objects. They also include a list containing null, an entry whose `errors`
+is not a list, a non-zero exit, and a spawn failure. Each must produce exactly
+one finding carrying `diagnostic: true`, and a real structure error must not.
+The engine's own `hasError` rule is what turns that flag into a failure, so the
+two are tested where each lives.

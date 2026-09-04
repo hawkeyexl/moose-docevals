@@ -4,7 +4,7 @@ description: Turn per-page assertions into a shared library, and measure page ty
 ---
 
 The gate worked on one page, so it got copied. Now the same assertion exists in twelve pages with
-three slightly different wordings and nobody can say what a how-to page is actually checked for.
+three slightly different wordings. Nobody can say what a how-to page is actually checked for.
 
 This is where moose-docevals stops being a linter and becomes a standard.
 
@@ -37,7 +37,7 @@ Change the wording in one place and every page that uses it changes. Names match
 
 ## Group them into suites
 
-A suite is a named group plus a target pass rate — the checks that apply to a *kind* of page.
+A suite is a named group plus a target pass rate, the checks that apply to a *kind* of page.
 
 ```yaml
 docevals:
@@ -69,8 +69,8 @@ This is the piece people miss, and missing it makes moose-docevals look far too 
 
 Individual verdicts are binary. The nuance lives in the **rate across a suite**:
 
-- **1.0** for a regression suite — these checks must all hold.
-- **~0.7** for a capability suite — this measures how far a quality goal has spread, and a corpus
+- **1.0** for a regression suite. These checks must all hold.
+- **~0.7** for a capability suite. This measures how far a quality goal has spread, and a corpus
   partway there is the expected state, not a failure.
 
 ```console
@@ -78,16 +78,16 @@ Suites
   reference: 2/3 passed — 67% vs target 100% below target (1 skipped)
 ```
 
-A suite below target fails the run. Treating a capability finding as a build break — because the
-suite was left at the default 1.0 — is the most common way to conclude the tool is unusable.
+A suite below target fails the run. Leaving a capability suite at the default 1.0 turns every
+capability finding into a build break. That is the most common way to conclude the tool is unusable.
 
-Skipped evals are excluded from the rate entirely, and so are evals awaiting human review: the
-rate is computed over the **graded** set — pass, fail, and error.
+Skipped evals are excluded from the rate entirely, and so are evals awaiting human review. The
+rate is computed over the **graded** set, which is pass, fail, and error.
 
 ### Not every eval has to count the same
 
 By default each eval contributes 1. `weight` changes how much an outcome moves the rate, and
-nothing else — the eval still passes or fails on its own terms, and the counts stay counts.
+nothing else. The eval still passes or fails on its own terms, and the counts stay counts.
 
 ```yaml
 docevals:
@@ -123,8 +123,8 @@ docevals:
 ```
 
 Members keep their own results, so a report still says which one failed. A criterion whose members
-were not all graded — a filtered run, or a skipped member — is **suspended** rather than failed: a
-group measured in part has numbers but no verdict.
+were not all graded, through a filtered run or a skipped member, is **suspended** rather than failed.
+A group measured in part has numbers but no verdict.
 
 ## Run one suite
 
@@ -135,13 +135,13 @@ npx moose-docevals list --suite reference
 npx moose-docevals run --suite reference --deterministic-only
 ```
 
-It selects the evals that **report under** that suite — the same suite you see in `list` output and
-in the summary, which a page gets from its own `eval-suite` or from `defaults.suite`. So `--suite
+It selects the evals that **report under** that suite. That is the same suite you see in `list`
+output and in the summary. A page gets it from its own `eval-suite` or from `defaults.suite`. So `--suite
 reference` runs everything on the reference pages and nothing on a `how-to` page, even where the two
 suites are composed of overlapping evals.
 
 Two things it does *not* do. It does not redefine anything: `target-pass-rate` is untouched, and a
-page still reports under its own suite. And it does not measure a target — the run saw only part of
+page still reports under its own suite. And it does not measure a target. The run saw only part of
 the corpus, so the summary comes back `partial`, printing its numbers and withholding the verdict:
 
 ```console
@@ -149,9 +149,9 @@ Suites
   reference: 14/15 passed — 93% vs target 100% partial — filtered run, target not evaluated (6 skipped)
 ```
 
-That run still exits `1` — one of the fifteen genuinely failed. Suspending the *target* does not
-suspend the findings: what a filtered run stops claiming is that the suite as a whole is in good
-standing, not that nothing it looked at was wrong.
+That run still exits `1`, because one of the fifteen genuinely failed. Suspending the *target* does
+not suspend the findings. A filtered run stops claiming that the suite as a whole is in good
+standing. It does not stop reporting that something it looked at was wrong.
 
 Naming a suite the config does not define is exit 2, with the defined names in the message. Full
 behavior, including the per-eval `--eval` filter, in
@@ -198,7 +198,7 @@ test/fixtures/pages/docs/actions/goTo.mdx (suite: reference)
 1 pages, 4 evals resolved
 ```
 
-`source` — the third item — is `config` or `page`, which is exactly what you need when one page
+`source`, the third item, is `config` or `page`, which is exactly what you need when one page
 behaves unlike its neighbours.
 
 {/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
