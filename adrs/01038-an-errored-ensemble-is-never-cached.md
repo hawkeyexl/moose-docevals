@@ -29,7 +29,7 @@ That became concrete rather than theoretical while judging this repo's own docs 
 
 ## Decision Outcome
 
-The chosen option is to **decline the write locally**, via a `VerdictCache` subclass in [src/judge/cache.ts](../src/judge/cache.ts) that drops any ensemble containing a run with an `error`.
+The chosen option is to **decline the write locally**. A `VerdictCache` subclass in [src/judge/cache.ts](../src/judge/cache.ts) drops any ensemble containing a run with an `error`.
 
 This does not violate the standing rule that providers, ensembles, caches, and price tables are the library's. The mechanism stays the library's `JsonCache` and the library's `runEnsemble`; what changes is *moose-docevals' policy about what is worth persisting*, which sits alongside the cache-key composition that already lives here. It is subclassed rather than wrapped because `JsonCache` has private fields and is therefore nominally typed. A structurally identical object does not satisfy `EnsembleOptions.cache`.
 

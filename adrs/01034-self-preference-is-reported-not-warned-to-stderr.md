@@ -12,7 +12,7 @@ A model judging its own output favours it. moose-docevals knew this: `judge.ts` 
 "Safeguard layer 1" that compared a page's `generated-by` against the judge model and called
 `console.warn`. Four things were wrong with it.
 
-1. **stderr only.** The warning reached no reporter — not JSON, not SARIF, not JUnit, not the HTML
+1. **stderr only.** The warning reached no reporter, not JSON, not SARIF, not JUnit, and not the HTML
    report. A verdict formed under self-preference looked identical to every other verdict in every
    consumable output.
 2. **It compared against the run-wide model.** Once an eval can pin its own `model` (ADR 01035), an
@@ -25,7 +25,7 @@ A model judging its own output favours it. moose-docevals knew this: `judge.ts` 
 ## Decision Drivers
 
 - A bias marker that only reaches stderr is invisible to CI, to a PR comment, and to anyone reading
-  a report later — which is everyone who matters.
+  a report later. That is everyone who matters.
 - Self-preference has more than one axis, and the axes have different remedies.
 - ADR 01022's "no verdict fails" rule is about verdicts that never formed. A biased verdict formed.
 
@@ -37,13 +37,13 @@ A model judging its own output favours it. moose-docevals knew this: `judge.ts` 
 
 ## Decision Outcome
 
-Chosen option: **mark the result and emit a run problem**, still a warning.
+The chosen option is to **mark the result and emit a run problem**, still a warning.
 `EvalResult.selfPreference` carries `{ axis, model }`, and the engine turns each into a
 warning-level `RunProblem`, so it reaches every reporter. Two axes, reported apart:
 
-- **`content`** — the page's `generated-by` (`docmeta:ai-context`) is the judging model. The judge
+- **`content`.** The page's `generated-by` (`docmeta:ai-context`) is the judging model. The judge
   wrote the prose. Remedy: judge with a different model, or pin `model:` on the eval.
-- **`criterion`** — `eval-provenance` records this model proposing *this* assertion. The judge
+- **`criterion`.** `eval-provenance` records this model proposing *this* assertion. The judge
   wrote the question. Remedy: have a human confirm the assertion, which is what `calibrate`'s
   `reviewed` bit is for.
 
@@ -55,12 +55,12 @@ warning-level `RunProblem`, so it reaches every reporter. Two axes, reported apa
 - Good, because it reports per affected eval instead of naming one page and going quiet.
 - Good, because the criterion axis is free: the data was already on disk and simply unused.
 - Neutral, because it stays a **warning**. Bias skews a verdict; it does not prevent one forming,
-  so ADR 01022 does not apply — and erroring would punish the legitimate single-model corpus that
+  so ADR 01022 does not apply. Erroring would also punish the legitimate single-model corpus that
   has no second provider configured.
 
 ### Confirmation
 
-`test/unit/self-preference.test.ts` pins both axes, the absence of a flag when the models differ or
-the page declares no author, that provenance for a *different* eval on the same page does not
-trigger it, and — the regression that motivated point 2 — that an eval pinning its own model is
-compared against that model rather than the run default.
+`test/unit/self-preference.test.ts` pins both axes, and the absence of a flag when the models
+differ or the page declares no author. It pins that provenance for a *different* eval on the same
+page does not trigger it. It also pins the regression that motivated point 2. An eval pinning its
+own model is compared against that model rather than the run default.

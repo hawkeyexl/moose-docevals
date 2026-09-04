@@ -8,9 +8,9 @@ decision-makers: [hawkeyexl]
 
 ## Context and Problem Statement
 
-moose-docevals declares its evals in page frontmatter under the `evals` key, and that shape needs a JSON Schema so authors get validation and editor support. docmeta already validates documentation frontmatter against JSON Schema and ships built-in schemas addressed by `vendor:name:version` ids, so registering `docevals:frontmatter:0.1` as a docmeta built-in was the obvious first move — and was built, reviewed, and opened as a pull request before being reversed.
+moose-docevals declares its evals in page frontmatter under the `evals` key, and that shape needs a JSON Schema so authors get validation and editor support. docmeta already validates documentation frontmatter against JSON Schema, and ships built-in schemas addressed by `vendor:name:version` ids. Registering `docevals:frontmatter:0.1` as a docmeta built-in was the obvious first move. It was built, reviewed, and opened as a pull request before being reversed.
 
-Where should the schema for a tool's own frontmatter live: inside the validator that happens to be popular, or inside the tool that defines the fields?
+Where should the schema for a tool's own frontmatter live? Inside the validator that happens to be popular, or inside the tool that defines the fields?
 
 ## Decision Drivers
 
@@ -26,7 +26,7 @@ Where should the schema for a tool's own frontmatter live: inside the validator 
 
 ## Decision Outcome
 
-Chosen option: **publish from this repo**. `schemas/frontmatter-0.1.json` ships in the package via `files`/`exports`, and consumers point any JSON Schema validator at it:
+The chosen option is to **publish from this repo**. `schemas/frontmatter-0.1.json` ships in the package via `files`/`exports`, and consumers point any JSON Schema validator at it:
 
 ```bash
 docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-0.1.json docs/
@@ -36,7 +36,7 @@ This works through docmeta's existing `file` and `url` reference kinds, so nothi
 
 ### Consequences
 
-- Good, because schema versioning stays in this repo — a field change ships with the release that introduces it, with no docmeta release in the loop.
+- Good, because schema versioning stays in this repo. A field change ships with the release that introduces it, with no docmeta release in the loop.
 - Good, because the schema is usable by any validator, not only docmeta.
 - Good, because it generalizes: every tool owns its own schema, and docmeta stays a general validator rather than accumulating a registry of tool-specific entries.
 - Bad, because consumers reference a longer path instead of a short built-in id.
@@ -44,7 +44,7 @@ This works through docmeta's existing `file` and `url` reference kinds, so nothi
 
 ### Confirmation
 
-`test/unit/schema.test.ts` pins the schema's behavior. `package.json` `files`/`exports` keep it in the published tarball. The `$id` must stay a resolvable URL so the schema remains self-describing when referenced remotely — see the invariant in [CLAUDE.md](../CLAUDE.md#invariants).
+`test/unit/schema.test.ts` pins the schema's behavior. `package.json` `files`/`exports` keep it in the published tarball. The `$id` must stay a resolvable URL so the schema remains self-describing when referenced remotely. See the invariant in [CLAUDE.md](../CLAUDE.md#invariants).
 
 ## Pros and Cons of the Options
 
@@ -54,7 +54,7 @@ This works through docmeta's existing `file` and `url` reference kinds, so nothi
 - Good, because `docmeta schemas` lists it, aiding discovery.
 - Bad, because every schema revision requires a docmeta release.
 - Bad, because it inverts ownership: the validator would version a schema it does not define.
-- Bad, because it does not scale — each new tool adds a registry entry and a docs page to an unrelated repo.
+- Bad, because it does not scale. Each new tool adds a registry entry and a docs page to an unrelated repo.
 
 ### Publish from the owning repo
 

@@ -14,9 +14,9 @@ succeeded.
 Two pieces of code counted the same work differently. `runGenerate`
 (`src/commands/generate.ts`) pushed one `GraderTarget` per *(page, eval)* pair.
 `makeGenerateScripts` (`src/graders/scriptgen.ts`) carries a `doneConfigEvals`
-set and generates a config-sourced eval exactly once — correctly, because a
+set and generates a config-sourced eval exactly once. That is correct. A
 config eval's script is written to one shared location under
-`config.scripts.configDir`, and the command reference persisted back into the
+`config.scripts.configDir`. The command reference persisted back into the
 config points at that one path.
 
 So a config-defined eval used by two pages produced
@@ -32,7 +32,7 @@ if (result.generatedPaths.length < result.targets) {
 The second failure is the worse one. The first is a false red on a working
 command; the second is that `generatedPaths.length < targets` stopped being able
 to mean anything. It is the only signal `generate` has for "some generations
-actually failed", and once it fires on a healthy run, nobody can act on it — the
+actually failed". Once it fires on a healthy run, nobody can act on it, and the
 comparison is spent.
 
 `runPromote` (`src/commands/promote.ts`) has carried a `seenConfigEvals` guard
@@ -50,14 +50,14 @@ against exactly this since it was written; `runGenerate` never got one.
 
 ## Considered Options
 
-1. **Dedupe config-sourced evals in `runGenerate`** — chosen.
+1. **Dedupe config-sourced evals in `runGenerate`.** Chosen.
 2. Generate one script per page for a config eval.
 3. Weaken the CLI comparison to `generatedPaths.length === 0 && targets > 0`.
 4. Drop the exit-code comparison entirely.
 
 ## Decision Outcome
 
-Chosen: **option 1**. `runGenerate` mirrors `runPromote` — a config-sourced eval
+**Option 1 wins.** `runGenerate` mirrors `runPromote`. A config-sourced eval
 becomes a target the first time it is seen and is skipped thereafter:
 
 ```ts
@@ -82,7 +82,7 @@ page genuinely gets its own script beside it.
 - A user watching the count will see a smaller `M` than before on a corpus with
   shared config evals. That is the correction, but it does look like a change in
   scope to someone who had learned to read the old number.
-- The two commands that walk plans looking for work — `promote` and `generate` —
+- The two commands that walk plans looking for work, `promote` and `generate`,
   now agree. `runEvals` deliberately does not dedupe: it grades a config eval
   once *per page*, because the finding is about the page.
 
