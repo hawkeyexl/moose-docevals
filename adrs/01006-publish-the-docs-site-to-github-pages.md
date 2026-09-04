@@ -9,10 +9,10 @@ decision-makers: [hawkeyexl]
 ## Context and Problem Statement
 
 ADRs 01003 and 01004 produced a 34-page documentation site that builds and is verified on every pull
-request — and that **no reader could reach**. Deployment was deliberately deferred so that publishing
+request, and that **no reader could reach**. Deployment was deliberately deferred so that publishing
 was its own decision rather than a side effect of writing the content.
 
-Two questions: where the site is hosted, and what must hold before it ships.
+There are two questions. Where is the site hosted, and what must hold before it ships?
 
 ## Decision Drivers
 
@@ -41,20 +41,20 @@ C. Build and deploy without re-verifying.
 
 ## Decision Outcome
 
-Chosen: **option 1** for hosting and **option A** for gating, plus a new link check.
+**Option 1** wins for hosting and **option A** for gating, plus a new link check.
 
 `docs.yml` runs `verify-docs → build → deploy` on every push to `main` and on manual dispatch. Pages
-is configured with `build_type: workflow`, publishing to `https://hawkeyexl.github.io/moose-docevals/` —
-which is exactly what `docs/astro.config.mjs` already declared as `site` + `base`, so no config
+is configured with `build_type: workflow`, publishing to `https://hawkeyexl.github.io/moose-docevals/`.
+That is exactly what `docs/astro.config.mjs` already declared as `site` + `base`, so no config
 changed to make this work.
 
 **Why the verification is duplicated (option A over B).** `ci.yml` already runs `verify-docs`, and
 repeating it costs about six minutes per push to `main`. It is still the right call: `main` accepts
-direct pushes, so a commit can reach `deploy` having never been verified at all. Option B —
-`workflow_run` chaining — avoids the duplication but adds indirection, runs the workflow definition
-from the default branch rather than the commit, and makes "did the thing that gates this actually
-pass for *this* SHA?" a question rather than a fact. For the job that publishes, self-contained beats
-fast.
+direct pushes, so a commit can reach `deploy` having never been verified at all. Option B is
+`workflow_run` chaining. It avoids the duplication but adds indirection, and it runs the workflow
+definition from the default branch rather than the commit. It also makes "did the thing that gates
+this actually pass for *this* SHA?" a question rather than a fact. For the job that publishes,
+self-contained beats fast.
 
 **A new gate: internal links.** Writing this ADR's companion workflow surfaced that no check covered
 links. `scripts/check-docs-links.mjs` walks the built HTML, resolves every internal `href` against
@@ -63,32 +63,34 @@ links. `scripts/check-docs-links.mjs` walks the built HTML, resolves every inter
 directions: removing one built route makes it exit 1 and name all 33 pages that link there.
 
 The `docs.yml` `verify-docs` job carries **no fork gate**, unlike its `ci.yml` twin. That is
-deliberate and safe: this workflow triggers only on `push` to `main` and `workflow_dispatch`, never
-on `pull_request`, so the page-embedded commands it executes are always already in the repository.
+deliberate and safe. This workflow triggers only on `push` to `main` and `workflow_dispatch`, never
+on `pull_request`. The page-embedded commands it executes are always already in the repository.
 
 ### Consequences
 
-- Good: the content set is reachable. Everything before this was infrastructure nobody could read.
-- Good: a documented command that drifts from the code, a page whose frontmatter stops validating, or
-  a renamed route now each block the deploy rather than shipping.
-- Good: no new hosting dependency, and the URL was already assumed by the Astro config.
-- Bad: ~6 minutes of duplicated verification per push to `main`. Revisit if `main` ever gains a
-  ruleset requiring pull requests — that is the condition under which option B becomes safe.
-- Bad: the site ships from `main` immediately, so a bad merge is publicly visible until the next
-  push. Acceptable for a project at this stage; a staging environment is the answer if it stops
+- Good, because the content set is reachable. Everything before this was infrastructure nobody could
+  read.
+- Good, because a documented command that drifts from the code now blocks the deploy. So does a page
+  whose frontmatter stops validating, and so does a renamed route.
+- Good, because there is no new hosting dependency, and the URL was already assumed by the Astro
+  config.
+- Bad, because ~6 minutes of verification is duplicated per push to `main`. Revisit if `main` ever
+  gains a ruleset requiring pull requests, which is the condition under which option B becomes safe.
+- Bad, because the site ships from `main` immediately, so a bad merge is publicly visible until the
+  next push. Acceptable for a project at this stage; a staging environment is the answer if it stops
   being.
-- Neutral: this publishes documentation, not the package. npm releases remain gated behind the
-  unset `RELEASE_ENABLED` variable — deploying docs and publishing a first npm version are separate
-  irreversible decisions, and only the first is being made here.
+- Neutral, because this publishes documentation, not the package. npm releases remain gated behind
+  the unset `RELEASE_ENABLED` variable. Deploying docs and publishing a first npm version are
+  separate irreversible decisions, and only the first is being made here.
 
 ### Confirmation
 
 - `docs.yml` on push to `main`: `verify-docs` (including the step-validity guard from ADR 01005),
   then `build` + link check, then `deploy`. Any failure stops the deploy.
 - `npm run docs:check-links` locally after `npm run build` in `docs/`.
-- The built output was checked before enabling anything: base prefix applied to all 1,354 internal
-  links and assets, sitemap emitting absolute `https://hawkeyexl.github.io/moose-docevals/...` URLs, and
-  deep routes present.
+- The built output was checked before enabling anything. The base prefix applied to all 1,354
+  internal links and assets, the sitemap emitted absolute
+  `https://hawkeyexl.github.io/moose-docevals/...` URLs, and deep routes were present.
 
 ## Pros and Cons of the Options
 
@@ -97,13 +99,13 @@ on `pull_request`, so the page-embedded commands it executes are always already 
 - Good, because it needs no account, no secret, and no third-party service; the artifact is already
   built in CI.
 - Good, because the sibling repo uses the same shape, so the two are maintained the same way.
-- Bad, because Pages offers no preview deployments — a change is verified, then live.
+- Bad, because Pages offers no preview deployments. A change is verified, then live.
 
 ### Hosting, option 2, a third-party host
 
 - Good, because per-PR preview deployments are genuinely useful for a docs site.
-- Bad, because it adds an account, a token, and a second place where the build is configured, for a
-  project whose docs currently ship from one branch.
+- Bad, because it adds an account, a token, and a second place where the build is configured. The
+  project's docs currently ship from one branch.
 
 ### Hosting, option 3, leave it unpublished
 
