@@ -3,7 +3,7 @@
 Deterministic and LLM-as-judge evals for documentation pages, driven by frontmatter.
 
 Every quality check on a documentation page is an **eval**: a named, testable assertion with a
-**grader** that decides pass or fail. Graders run in preference order — code first, an AI judge
+**grader** that decides pass or fail. Graders run in preference order. Code first, an AI judge
 second, a human last.
 
 ## Quickstart
@@ -16,7 +16,7 @@ npx moose-docevals init
 npx moose-docevals run --deterministic-only
 ```
 
-That last command needs no API key and costs nothing — it runs the deterministic graders only. On a
+That last command needs no API key and costs nothing, because it runs the deterministic graders only. On a
 corpus that has never been checked, it usually finds something.
 
 Declare an assertion in a page's frontmatter:
@@ -51,7 +51,7 @@ Exit `1`. A docs regression, caught the way a test catches a code one.
 
 **<https://hawkeyexl.github.io/moose-docevals/>**
 
-Published from `main` on every push, gated on moose-docevals evaluating its own documentation — the
+Published from `main` on every push, gated on moose-docevals evaluating its own documentation. The
 commands these pages present are executed against the fixture corpus before the site ships.
 
 | Section | Covers |
@@ -75,8 +75,8 @@ cd docs && npm ci && npm run dev
 
 | Command | Purpose |
 |---|---|
-| `moose-docevals run [globs]` | Run all evals: deterministic graders first, then the AI judge |
-| `moose-docevals list` | Dry run — show each page's resolved eval plan |
+| `moose-docevals run [globs]` | Run all evals, deterministic graders first, then the AI judge |
+| `moose-docevals list` | Dry run, showing each page's resolved eval plan |
 | `moose-docevals generate` | Generate scripts for command evals missing a command |
 | `moose-docevals fill [--dry-run]` | Propose new frontmatter evals with an LLM, gated on confidence |
 | `moose-docevals promote [--write]` | Convert ai evals that could be deterministic |
@@ -102,8 +102,8 @@ import { frontmatterSchema, frontmatterSchemaPath } from "moose-docevals";
 
 ## Contributing
 
-See [CLAUDE.md](CLAUDE.md) for repo conventions — red/green TDD, Conventional Commits, and the ADR
-rule. Decisions live in [`adrs/`](adrs); the docs content strategy lives in
+See [CLAUDE.md](CLAUDE.md) for repo conventions, including red/green TDD, Conventional Commits, and
+the ADR rule. Decisions live in [`adrs/`](adrs); the docs content strategy lives in
 [`docs/content-strategy/`](docs/content-strategy/).
 
 ## License
