@@ -172,7 +172,7 @@ against fixing the filtered case by weakening the normal one.
 
 ## Pros and Cons of the Options
 
-### Option 1 — filter, and suspend suite enforcement
+### Option 1, filter, and suspend suite enforcement
 
 - Good, because a filtered run cannot report a gate as met on evidence it never
   gathered. The property is structural: there is no code path from a partial
@@ -188,7 +188,7 @@ against fixing the filtered case by weakening the normal one.
   reading `meetsTarget` without `partial` sees a filtered run's clean suite as
   failed. That is the safe direction to be wrong in, but it is still wrong.
 
-### Option 2 — filter, and enforce suite targets over whatever ran
+### Option 2, filter, and enforce suite targets over whatever ran
 
 - Good, because it is the least code: `summarizeSuites` needs no change at all.
 - Bad, because it is precisely the false green described above — `1/1 = 100%`
@@ -199,7 +199,7 @@ against fixing the filtered case by weakening the normal one.
   number came from a sample, so nobody discovers it until a regression ships behind
   it.
 
-### Option 3 — score against full declared membership, counting unrun evals as failures
+### Option 3, score against full declared membership, counting unrun evals as failures
 
 - Good, because it never over-reports, which is the right direction to err.
 - Bad, because it makes **every** filtered run red, so the flag is useless for the
@@ -211,7 +211,7 @@ against fixing the filtered case by weakening the normal one.
   distinction to make an arithmetic identity work trades one dishonest number for
   another.
 
-### Option 4 — no selection; narrow by file glob
+### Option 4, no selection; narrow by file glob
 
 - Good, because it is zero new surface: the glob argument already exists on `run`
   and `list`.

@@ -129,7 +129,7 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 
 ## Pros and Cons of the Options
 
-### Option 1 — shared parser plus renderer guard
+### Option 1, shared parser plus renderer guard
 
 - Good, because one module owns the allowed values, the type, and the message.
 - Good, because it matches the existing `parseIntArg` / `parseFloatArg` precedent in `cli.ts`, so
@@ -137,7 +137,7 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 - Good, because it covers the library path as well as the CLI.
 - Neutral, because it adds a small module for what is currently two string arrays.
 
-### Option 2 — per-command inline validation
+### Option 2, per-command inline validation
 
 - Good, because it is the smallest possible diff.
 - Bad, because the allowed set is then written out three times and drifts the first time a format is
@@ -145,7 +145,7 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 - Bad, because validation lands after commander has parsed, so each `.action()` carries a guard
   clause before its real work.
 
-### Option 3 — commander's `.choices()`
+### Option 3, commander's `.choices()`
 
 - Good, because it is one chained call per option and needs no new code.
 - Bad, because commander exits **1** with its own `error: option '-f, --format <format>' argument
@@ -154,7 +154,7 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 - Bad, because the message is not a `DocevalsError` and does not match the `moose-docevals: …` prefix
   every other error uses.
 
-### Option 4 — make the renderers total, with no CLI parsing
+### Option 4, make the renderers total, with no CLI parsing
 
 - Good, because there is exactly one enforcement point and it is closest to the data.
 - Bad, because the error surfaces *after* the work is done — `run` would discover a typo only after

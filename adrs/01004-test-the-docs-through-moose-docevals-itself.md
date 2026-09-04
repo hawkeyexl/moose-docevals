@@ -104,13 +104,13 @@ they are safe against a hostile fork is wrong in the most dangerous possible way
 
 ## Pros and Cons of the Options
 
-### Option 1 — Composed through `moose-docevals run`
+### Option 1, Composed through `moose-docevals run`
 
 - Good, because it is the strongest dogfood: the tool gates its own docs using its own grader.
 - Good, because one job and one config surface, and prose evals and command tests report together.
 - Bad, because the layers are coupled — a moose-docevals regression could mask a doc-test regression.
 
-### Option 2 — Standalone, mirroring docmeta
+### Option 2, Standalone, mirroring docmeta
 
 - Good, because independence: a broken judge can never hide a broken doc test.
 - Good, because it is a proven, copyable configuration.
@@ -118,24 +118,24 @@ they are safe against a hostile fork is wrong in the most dangerous possible way
   ("why doesn't moose-docevals test its own docs?") unanswered on the highest-visibility surface there is.
 - Bad, because two workflows and two config surfaces to keep in step.
 
-### Option 3 — Both layers
+### Option 3, Both layers
 
 - Good, because the most complete coverage and the clearest separation of concerns.
 - Bad, because it is the most CI surface to maintain for a site that currently has eight stub pages.
   Revisit once the P0 content set exists.
 
-### Option A — Deterministic subset only
+### Option A, Deterministic subset only
 
 - Good, because zero flake, zero cost, and no maintenance duty.
 - Bad, because the pages most likely to be wrong — `fill`, `promote`, `calibrate`, judged `run` — are
   exactly the ones left untested.
 
-### Option B — Committed cache fixtures
+### Option B, Committed cache fixtures
 
 - Good, because the LLM-path docs are genuinely tested, offline, for free, on every run.
 - Bad, because prompt bumps invalidate the fixtures and require regeneration.
 
-### Option C — Live calls, gated
+### Option C, Live calls, gated
 
 - Good, because truest coverage, and it mirrors the existing `test/integration/live.test.ts` pattern.
 - Bad, because it costs money per run, needs a secret the repo does not have, and can flake on model

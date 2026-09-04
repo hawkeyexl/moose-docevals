@@ -83,14 +83,14 @@ Chosen: **option 1**, with docmeta's *location and spirit* and the skill's *stru
 
 ## Pros and Cons of the Options
 
-### Option 1 — CUJ-first with a co-located strategy
+### Option 1, CUJ-first with a co-located strategy
 
 - Good, because structure follows what readers must accomplish, so gaps surface as missing journey
   steps rather than as missing topics.
 - Good, because IDs and frontmatter make the artifact checkable, which is what keeps it true.
 - Bad, because it is more artifact than docmeta's four prose files, and it can rot.
 
-### Option 2 — Diátaxis
+### Option 2, Diátaxis
 
 - Good, because it is well-known and needs no local explanation.
 - Bad, because it splits a single journey across four sections: standing up a first gate becomes a
@@ -99,14 +99,14 @@ Chosen: **option 1**, with docmeta's *location and spirit* and the skill's *stru
 - Bad, because it gives no signal about what is missing — every quadrant can look full while a
   journey is unwalkable.
 
-### Option 3 — Command-per-section
+### Option 3, Command-per-section
 
 - Good, because it maps mechanically to `src/cli.ts` and is impossible to get wrong.
 - Bad, because nobody's job is "use the `promote` command." It optimizes for the author's model of
   the tool over the reader's model of their problem, and it buries `fill` — the feature that decides
   whether the solo owner adopts at all — behind a command name they have no reason to look up.
 
-### Option 4 — Port docmeta's flat files verbatim
+### Option 4, Port docmeta's flat files verbatim
 
 - Good, because it is the smallest change and maximally consistent with the sibling repo.
 - Good, because prose files are faster to read end-to-end.

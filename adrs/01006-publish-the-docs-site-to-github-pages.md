@@ -92,37 +92,37 @@ on `pull_request`, so the page-embedded commands it executes are always already 
 
 ## Pros and Cons of the Options
 
-### Hosting — option 1, GitHub Pages via Actions
+### Hosting, option 1, GitHub Pages via Actions
 
 - Good, because it needs no account, no secret, and no third-party service; the artifact is already
   built in CI.
 - Good, because the sibling repo uses the same shape, so the two are maintained the same way.
 - Bad, because Pages offers no preview deployments — a change is verified, then live.
 
-### Hosting — option 2, a third-party host
+### Hosting, option 2, a third-party host
 
 - Good, because per-PR preview deployments are genuinely useful for a docs site.
 - Bad, because it adds an account, a token, and a second place where the build is configured, for a
   project whose docs currently ship from one branch.
 
-### Hosting — option 3, leave it unpublished
+### Hosting, option 3, leave it unpublished
 
 - Good, because it is free and nothing can break.
 - Bad, because it makes the whole content set inert. Documentation nobody can reach is not
   documentation.
 
-### Gating — option A, re-verify in the deploy workflow
+### Gating, option A, re-verify in the deploy workflow
 
 - Good, because it holds regardless of how the commit reached `main`.
 - Bad, because it duplicates six minutes of work per push.
 
-### Gating — option B, `workflow_run` chaining
+### Gating, option B, `workflow_run` chaining
 
 - Good, because no duplicated runtime.
 - Bad, because it evaluates the workflow file from the default branch, not the commit, and turns a
   direct-push bypass into a silent one.
 
-### Gating — option C, deploy without verifying
+### Gating, option C, deploy without verifying
 
 - Good, because it is the fastest.
 - Bad, because it removes the only thing that makes publishing safe. The point of this project is

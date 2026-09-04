@@ -214,7 +214,7 @@ and an added finding still fails.
 
 ## Pros and Cons of the Options
 
-### Option 1 — port docmeta's baseline
+### Option 1, port docmeta's baseline
 
 - Good, because it separates "already there" from "doesn't matter", which is the
   distinction severity cannot express and the reason the retrofit journey has no
@@ -230,7 +230,7 @@ and an added finding still fails.
 - Bad, because it adds a committed file that is stale the moment the corpus
   changes and that nobody reads until it misbehaves.
 
-### Option 2 — per-finding waivers in page frontmatter
+### Option 2, per-finding waivers in page frontmatter
 
 - Good, because the waiver sits next to the thing it forgives, and needs no new
   file, flag, or config key.
@@ -242,7 +242,7 @@ and an added finding still fails.
   reading the prose. A separate committed file makes the same act a visible,
   reviewable change to the gate.
 
-### Option 3 — a `since:` date
+### Option 3, a `since:` date
 
 - Good, because it needs no per-finding identity at all, which sidesteps the
   entire fingerprint problem.
@@ -252,7 +252,7 @@ and an added finding still fails.
 - Bad, because it forgives genuinely new findings on pages nobody has touched: an
   eval added after the date is not scored at all on the pages the date excused.
 
-### Option 4 — keep severity inversion as the only lever
+### Option 4, keep severity inversion as the only lever
 
 - Good, because it is what ships today and costs nothing.
 - Bad, because it is corpus-wide per eval and cannot ratchet. Nothing gets

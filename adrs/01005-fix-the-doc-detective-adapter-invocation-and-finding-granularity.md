@@ -143,30 +143,30 @@ does put a blob on stdout. If a future release restores that, per-step findings 
 
 ## Pros and Cons of the Options
 
-### Invocation — option 1, drop the subcommand
+### Invocation, option 1, drop the subcommand
 
 - Good, because it matches the tool's actual CLI and needs no configuration.
 - Bad, because it is version-coupled; mitigated by a pinned devDependency and an argv assertion.
 
-### Invocation — option 2, document the override
+### Invocation, option 2, document the override
 
 - Good, because it is a zero-code change.
 - Bad, because it makes every user configure a workaround for a bug, and a grader whose default is
   known-broken is not a grader.
 
-### Invocation — option 3, version detection
+### Invocation, option 3, version detection
 
 - Good, because it would span major versions.
 - Bad, because it means spawning the tool twice, or parsing `--version` output, to work around a
   problem that only exists because the default was never verified. Complexity with no current payoff.
 
-### Granularity — option A, deepest FAIL only
+### Granularity, option A, deepest FAIL only
 
 - Good, because it is a one-line rule.
 - Bad, because in this shape the deepest node is the unlabelled assertion, so it produces exactly one
   finding and throws away the message that makes it useful.
 
-### Granularity — option B, labelled-and-deepest
+### Granularity, option B, labelled-and-deepest
 
 - Good, because it lands on the step — the node with both the description and the failure detail.
 - Good, because it stays shape-agnostic: no hardcoded key path, so a results-format change degrades
@@ -174,7 +174,7 @@ does put a blob on stdout. If a future release restores that, per-step findings 
 - Neutral, because "can name itself" is a heuristic. It matches the fallback chain the adapter
   already used for labels, so it introduces no new concept.
 
-### Granularity — option C, hardcode the key path
+### Granularity, option C, hardcode the key path
 
 - Good, because it is unambiguous for the current format.
 - Bad, because it couples the adapter to an internal shape of a third-party tool; a renamed key

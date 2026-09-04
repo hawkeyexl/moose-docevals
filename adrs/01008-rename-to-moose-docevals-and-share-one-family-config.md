@@ -168,7 +168,7 @@ Deliberately **not** renamed:
 
 ## Pros and Cons of the Options
 
-### Option 1 — Full rename, shared `moose.config.yaml` with a `docevals:` key
+### Option 1, Full rename, shared `moose.config.yaml` with a `docevals:` key
 
 - Good, because it is the only option where a second family tool costs a key instead of a file.
 - Good, because the namespace boundary is explicit, so `moose-docevals` can validate its own subtree
@@ -177,7 +177,7 @@ Deliberately **not** renamed:
 - Bad, because it is the largest single change of the four — 130 tracked files.
 - Bad, because it breaks every existing config file. (There are none outside this repo.)
 
-### Option 2 — Rename the package only, keep `docevals` command and config
+### Option 2, Rename the package only, keep `docevals` command and config
 
 - Good, because it is nearly free and breaks nothing.
 - Good, because the short command survives.
@@ -186,7 +186,7 @@ Deliberately **not** renamed:
 - Bad, because the identity splits: users install `moose-docevals` and then type `docevals`, which is
   the kind of mismatch that generates a support question every time.
 
-### Option 3 — Full rename, flat `moose-docevals.config.yaml`
+### Option 3, Full rename, flat `moose-docevals.config.yaml`
 
 - Good, because the file name states exactly which tool reads it; no namespacing subtlety.
 - Good, because the schema root can stay `additionalProperties: false`, keeping typo detection at every
@@ -194,7 +194,7 @@ Deliberately **not** renamed:
 - Bad, because it is the status quo with a longer name — three tools still mean three files and three
   copies of the provider block.
 
-### Option 4 — Full rename, support both filenames indefinitely
+### Option 4, Full rename, support both filenames indefinitely
 
 - Good, because nobody is ever broken.
 - Bad, because it maintains two config paths forever to protect an installed base of zero.

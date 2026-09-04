@@ -164,7 +164,7 @@ reproduction, end to end.
 
 ## Pros and Cons of the Options
 
-### Option 1 — the engine partitions and isolates per group
+### Option 1, the engine partitions and isolates per group
 
 - Good, because no adapter can forget the boundary, and none has to implement
   it.
@@ -178,7 +178,7 @@ reproduction, end to end.
 - Bad, because a throw part-way through a group still discards that group's
   earlier findings.
 
-### Option 2 — push isolation into each grader
+### Option 2, push isolation into each grader
 
 - Good, because the engine keeps its current, simpler contract and the graders
   keep sole ownership of grouping.
@@ -190,7 +190,7 @@ reproduction, end to end.
 - Bad, because it does not protect a grader registered by a third party through
   `registerGrader`.
 
-### Option 3 — a per-target result contract
+### Option 3, a per-target result contract
 
 - Good, because it is the only option that expresses partial failure honestly:
   a grader could report findings for pages 1–6 and an error for page 7.
@@ -204,7 +204,7 @@ reproduction, end to end.
   what a target's outcome is, which is the centralization ADR 01023 spent effort
   establishing, given up.
 
-### Option 4 — isolate per target
+### Option 4, isolate per target
 
 - Good, because it is the finest boundary and no failure can reach a page it
   did not concern.
@@ -216,7 +216,7 @@ reproduction, end to end.
   invocation would silently convert it into a pass, the precise hazard
   ADR 01040 was written to prevent.
 
-### Option 5 — leave it, and document it
+### Option 5, leave it, and document it
 
 - Good, because it costs nothing and the workaround (`--eval` the working one)
   exists.

@@ -143,7 +143,7 @@ the step cannot pass by a key being present.
 
 ## Pros and Cons of the Options
 
-### Option 1 — warn only when the judge was wanted
+### Option 1, warn only when the judge was wanted
 
 - Good, because the condition is expressible, minimal, and matches what the
   sentence says.
@@ -153,7 +153,7 @@ the step cannot pass by a key being present.
   `--deterministic-only` when nothing needs generating. Acceptable — the flag
   asked for that.
 
-### Option 2 — add a real `--generate` flag
+### Option 2, add a real `--generate` flag
 
 - Good, because it makes "generation was explicitly requested" a thing a user
   can actually say, which is what the original code wanted.
@@ -165,7 +165,7 @@ the step cannot pass by a key being present.
   "do not disable generation", not "there is something to generate", so the
   warning would still fire on a corpus with nothing to generate.
 
-### Option 3 — read commander's option-value source
+### Option 3, read commander's option-value source
 
 - Good, because it needs no new flag and the CLI layer is a legitimate place to
   read parser state.
@@ -174,7 +174,7 @@ the step cannot pass by a key being present.
 - Bad, because it would add a CLI-only input to `runRun`, which is also a
   library entry point, so a library caller could not reach the same behavior.
 
-### Option 4 — defer the warning into the engine
+### Option 4, defer the warning into the engine
 
 - Good, because the engine is where the generation targets are known, so the
   warning could be exactly right.
@@ -185,7 +185,7 @@ the step cannot pass by a key being present.
   `generateScripts` as an injected function and has no business knowing why it
   is absent.
 
-### Option 5 — keep the clause and document the quirk
+### Option 5, keep the clause and document the quirk
 
 - Good, because it is no work.
 - Bad, because the documented behavior would be "the warning is suppressed by a
