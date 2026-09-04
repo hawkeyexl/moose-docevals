@@ -5,7 +5,7 @@ description: Your pull request went red on a moose-docevals check. Work out whic
 
 You did not configure this check and you do not need to learn the tool. Start with the table.
 
-**moose-docevals** runs quality checks — called **evals** — against documentation pages. Each eval is one
+**moose-docevals** runs quality checks, called **evals**, against documentation pages. Each eval is one
 assertion about a page, decided either by a script or by an AI judge.
 
 ## Which failure is this?
@@ -20,7 +20,7 @@ Find your CI output in the left column.
 | Something about a **stale `assertion-hash`** | A generated script is out of date | [Not yours to fix](#stale-generated-script) |
 | **Exit code 2**, or "could not run" / missing key / bad config | The tool itself failed | [Not your fault](#exit-2) |
 
-The distinction that matters most: **exit 1 means a docs problem, exit 2 means a pipeline problem.**
+The distinction that matters most is this. **Exit 1 means a docs problem, exit 2 means a pipeline problem.**
 If you are looking at exit 2, stop and tell whoever owns CI.
 
 ---
@@ -37,13 +37,13 @@ Read it as `severity:line [rule] message`. A script found something specific at 
 
 - Go to that line and make the change the message describes, then
   [re-run that one eval locally](#re-run-only-the-eval-that-failed) before you push.
-- `freshness/stale` means the page's review date is too old — update `last-reviewed` in the
+- `freshness/stale` means the page's review date is too old. Update `last-reviewed` in the
   frontmatter, **after** checking the page is actually still accurate.
 - Rules starting `MD…` are markdownlint; ones like `remark-lint/no-undefined-references` are remark;
   rules with a dot like `Vale.Spelling` are Vale.
 
 Only `error` fails the build. If your message says `warning` or `info`, that check is not what turned
-the build red — keep reading the log.
+the build red. Keep reading the log.
 
 ---
 
@@ -61,7 +61,7 @@ No line number, because the judgement is about the page rather than a character 
 npx moose-docevals list docs/tutorial.mdx
 ```
 
-That prints which evals apply. Find the named eval — here `no-future-promises` — in
+That prints which evals apply. Find the named eval, here `no-future-promises`, in
 `moose.config.yaml`, or inline in the page's own frontmatter. It looks like this:
 
 ```yaml
@@ -72,7 +72,7 @@ That prints which evals apply. Find the named eval — here `no-future-promises`
       fail: Says "coming soon" or references an unreleased version.
 ```
 
-The `examples.fail` line is the useful one — it shows what violating this looks like. Between the
+The `examples.fail` line is the useful one. It shows what violating this looks like. Between the
 rationale and that example, the offending sentence is usually obvious.
 
 If you genuinely disagree with the verdict, that is a conversation with whoever owns the eval, not a
@@ -84,7 +84,7 @@ thing to work around. Say so in the pull request.
 
 The judge was not confident enough either way, so the eval is waiting on a person.
 
-**You cannot resolve this yourself** — it needs someone with standing to record a verdict. Ask
+**You cannot resolve this yourself.** It needs someone with standing to record a verdict. Ask
 whoever owns the docs quality checks in your repo; the command they run is
 `moose-docevals review <file> <eval> pass|fail`.
 
@@ -97,7 +97,7 @@ This is a legitimate outcome, not you having done something wrong.
 Some checks are scripts generated from a plain-language assertion. If someone edited the assertion
 without regenerating, the script no longer matches it.
 
-Not yours to fix unless you were the one who edited the assertion — in which case, regenerate:
+Not yours to fix unless you were the one who edited the assertion. In that case, regenerate:
 
 ```bash
 npx moose-docevals generate <the file>
@@ -114,8 +114,8 @@ Bad config, a missing provider key, a malformed flag, or a run that would have c
 job will not help.
 
 `No evals resolved` is the one worth naming, because it looks like the tool is complaining about
-your pages. It is not: it means nothing in the config attaches an eval to any page the run would
-check, so the job stopped rather than reporting success over an empty report. That is a
+your pages. It is not. Nothing in the config attaches an eval to any page the run would check. The job stopped
+rather than reporting success over an empty report. That is a
 configuration fix, not a content fix.
 
 ---
@@ -148,7 +148,7 @@ Two things about that output:
 
 - **The `Suites` lines will say `partial — filtered run, target not evaluated`.** That is not a
   failure. A filtered run only measured part of the suite, so it prints the numbers and withholds
-  the verdict. Read the eval lines above it — those are yours.
+  the verdict. Read the eval lines above it; those are yours.
 - **A name that matches nothing is exit 2, not a clean run.** `matched no evals` means you mistyped
   the name, or that eval does not apply to this page. Check with `list`, below.
 
@@ -167,7 +167,7 @@ Exit `0` means clean.
 
 ## Still stuck?
 
-- [FAQ](/moose-docevals/fix/faq/) — the recurring questions
+- [FAQ](/moose-docevals/fix/faq/), the recurring questions
 - Ask whoever configured the check. A check that blocks contributors who cannot self-serve is a
   problem with the check, and worth saying so.
 

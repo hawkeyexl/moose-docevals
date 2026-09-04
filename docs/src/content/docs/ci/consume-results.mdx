@@ -3,8 +3,8 @@ title: Consume results programmatically
 description: JSON output and the TypeScript API, for dashboards and custom tooling.
 ---
 
-When the report needs to feed something other than a human — a dashboard, a PR bot, a quality
-scorecard — use `--format json` or the library directly.
+Sometimes the report needs to feed something other than a human: a dashboard, a PR bot, a quality
+scorecard. Use `--format json` or the library directly.
 
 ## `--format json`
 
@@ -46,7 +46,7 @@ npx moose-docevals run --format json \
            | "\(.suite): \(.passRate * 100 | floor)% vs \(.targetPassRate * 100)%"'
 ```
 
-Cache effectiveness — the number that tells you whether your CI cache is working:
+Cache effectiveness, the number that tells you whether your CI cache is working:
 
 ```bash
 npx moose-docevals run --format json | jq '.usage | {cachedEvals, judgedEvals, totalTokens}'
@@ -69,7 +69,7 @@ npx moose-docevals run --format json \
   >> metrics/docs-quality.jsonl
 ```
 
-Capability suites are the interesting series — a regression suite should sit flat at 1.0, while a
+Capability suites are the interesting series. A regression suite should sit flat at 1.0, while a
 capability suite's rate is the actual measure of a quality goal spreading. See
 [Regression vs capability](/moose-docevals/evals/regression-vs-capability/).
 
@@ -87,8 +87,9 @@ disk, for handing to another validator.
 ## For a person rather than a pipeline
 
 `--format json` is for scripts. When the audience is a human who wants to see what the judge
-actually said, `--format html` writes one self-contained file — no CDN, no external stylesheet —
-that survives being attached to a pull request or opened from an artifact directory:
+actually said, use `--format html`. It writes one self-contained file, with no CDN and no external
+stylesheet. That file survives being attached to a pull request or opened from an artifact
+directory:
 
 ```bash
 npx moose-docevals run --format html > moose-docevals.html
@@ -102,7 +103,7 @@ and the wording can change in any release. Parse `json`; it is the shape that is
 ## Exit codes still apply
 
 The JSON carries `exitCode`, and the process exits with it. Scripts should branch on the process exit
-code rather than re-deriving pass/fail from the report — and keep `1` and `2` distinct. See
+code rather than re-deriving pass/fail from the report. Keep `1` and `2` distinct. See
 [Exit codes and annotations](/moose-docevals/ci/exit-codes-and-annotations/).
 
 {/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}

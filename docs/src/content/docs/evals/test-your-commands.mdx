@@ -4,7 +4,7 @@ description: Embed Doc Detective steps in a page so a documented command that dr
 ---
 
 A page that shows a command is making a claim. `tool:doc-detective` runs that command and checks the
-claim — so documentation drift becomes a build failure rather than a support ticket.
+claim, so documentation drift becomes a build failure rather than a support ticket.
 
 This page describes the convention **this site runs on**. The commands you see throughout these docs
 are executed on every pull request.
@@ -24,7 +24,7 @@ Then put it in the suite your doc pages use, or set `defaults.suite` so every pa
 
 ## Embed the steps
 
-Steps go at the foot of the `.mdx`, as MDX comments — invisible to readers, visible to the grader:
+Steps go at the foot of the `.mdx`, as MDX comments that are invisible to readers and visible to the grader:
 
 ```mdx
 {/* STEP {"description":"Exit 0 when every eval passes.","runShell":{"command":"npx moose-docevals run docs/intro.md --deterministic-only","exitCodes":[0]}} */}
@@ -32,7 +32,7 @@ Steps go at the foot of the `.mdx`, as MDX comments — invisible to readers, vi
 
 :::note[Why this page writes `STEP` instead of `step`]
 Doc Detective extracts step comments from the **raw file**, including inside fenced code blocks. A
-page documenting the convention therefore executes its own examples — which is how the first draft of
+page documenting the convention therefore executes its own examples. That is how the first draft of
 this page failed CI, trying to run a command against a file that does not exist.
 
 Write `step` in a real page. The examples here say `STEP` so they stay inert. If you are writing
@@ -61,7 +61,7 @@ depends on the environment is a flaky doc test, and a flaky gate gets disabled.
 }
 ```
 
-`detectSteps: false` means explicit steps only — no inference from prose. Add the output directory to
+`detectSteps: false` means explicit steps only, with no inference from prose. Add the output directory to
 `.gitignore`.
 
 ## Two sharp edges
@@ -74,8 +74,8 @@ depends on the environment is a flaky doc test, and a flaky gate gets disabled.
 ```
 
 `--input <page>` and `--exit-on-fail` are appended to whatever you supply. `--exit-on-fail` is not
-optional and not yours to drop: **Doc Detective exits 0 even when steps fail**, and 4.x keeps its
-results JSON out of stdout, so without the flag a failing doc test is undetectable and passes
+optional and not yours to drop. **Doc Detective exits 0 even when steps fail**, and 4.x keeps its
+results JSON out of stdout. Without the flag a failing doc test is undetectable and passes
 silently. Your array is the prefix of the argv, not the whole of it.
 
 ### It executes code from page bodies
@@ -98,8 +98,8 @@ build on `PATH` before running:
 npm run build && npm link && npm link moose-docevals
 ```
 
-Otherwise `npx <your-cli>` in a documented command resolves to whatever is installed globally — or
-nothing.
+Otherwise `npx <your-cli>` in a documented command resolves to whatever is installed globally, or
+to nothing.
 
 ## Verify the gate fails
 
@@ -125,5 +125,5 @@ docs/reference/cli.mdx
    Error: Returned exit code 9. Expected one of [0]
 ```
 
-The `description` you wrote is what makes that line actionable — which is why it is worth writing
+The `description` you wrote is what makes that line actionable. That is why it is worth writing
 properly.

@@ -4,7 +4,7 @@ description: Deterministic and LLM-as-judge evals for documentation pages, drive
 ---
 
 Every quality check on a documentation page is an **eval**: a named, testable assertion with a
-**grader** that decides pass or fail. Graders run in preference order — code first, an AI judge
+**grader** that decides pass or fail. Graders run in preference order. Code first, an AI judge
 second, a human last.
 
 ## The 60-second version
@@ -37,7 +37,7 @@ Suites
   reference: 2/3 passed — 67% vs target 100% below target (1 skipped)
 ```
 
-Exit `1`. That's a docs regression, caught the way a test would catch a code one — and this run
+Exit `1`. That's a docs regression, caught the way a test would catch a code one. This run
 needed no API key.
 
 ## What are you trying to do?
@@ -56,13 +56,13 @@ needed no API key.
 ## What makes it different
 
 **It orchestrates; it doesn't reimplement.** remark, markdownlint, Vale, docmeta,
-doc-structure-lint, and Doc Detective keep doing their jobs — their findings arrive as named evals
+doc-structure-lint, and Doc Detective keep doing their jobs. Their findings arrive as named evals
 with severities, in one report with one exit code. Three native checks fill gaps nothing else
 covers: freshness, reading level, and cross-page differentiation.
 
 **The judge is the last resort, not the pitch.** If a criterion can be expressed as code, it should be.
 `moose-docevals promote` finds ai evals that could be deterministic, and `moose-docevals generate` writes the
-scripts — as reviewable files beside your docs, never inline in frontmatter.
+scripts as reviewable files beside your docs, never inline in frontmatter.
 
 **The judge has safeguards, and you can audit them.** Temperature 0, pinned models, a 3-run ensemble,
 and confidence zones that route the uncertain cases to a person instead of guessing. `moose-docevals
@@ -70,12 +70,12 @@ calibrate` scores the judge against your own human-verified set, so "is this tru
 number rather than an opinion.
 
 **Adoption is incremental.** `moose-docevals fill` proposes evals for a whole corpus with a confidence
-gate; severity levels and capability suites let you land an honest standard on a legacy corpus
+gate. Severity levels and capability suites let you land an honest standard on a legacy corpus
 without a day-one wall of red.
 
 ## Requirements
 
-Node.js 24+. No hosted service, no account — it runs in your existing pipeline.
+Node.js 24+. No hosted service, no account. It runs in your existing pipeline.
 
 ```bash
 npm i -D moose-docevals

@@ -4,13 +4,13 @@ description: Wrap the linters you already run, add the native checks, and let mo
 ---
 
 Deterministic graders are free, fast, and arguable in a pull request. Prefer them. This page covers
-folding in the tools you already run, the three native checks, and arbitrary `command` evals —
+folding in the tools you already run, the three native checks, and arbitrary `command` evals,
 including the ones moose-docevals writes for you.
 
 ## moose-docevals orchestrates; it does not reimplement
 
 If you expect moose-docevals to replace Vale, you will evaluate it against the wrong competitors. Vale
-keeps doing what Vale does — its findings arrive as a named eval with a severity, alongside a
+keeps doing what Vale does. Its findings arrive as a named eval with a severity, alongside a
 freshness check and an AI verdict, in one report with one exit code.
 
 ```yaml
@@ -42,8 +42,8 @@ Five CI steps and five output formats become one. Full option tables in
 
 ### Severity is what makes consolidation safe
 
-A newly wrapped linter enters at `severity: warning` — it reports without failing — and gets promoted
-to `error` once its findings are clean. Only `error` findings fail the build.
+A newly wrapped linter enters at `severity: warning`, where it reports without failing, and gets
+promoted to `error` once its findings are clean. Only `error` findings fail the build.
 
 Vale's own severities map through `severity-map`, defaulting to `error`→`error`,
 `warning`→`warning`, `suggestion`→`info`.
@@ -72,10 +72,10 @@ linter.
       max-similarity: 0.85
 ```
 
-**Freshness** is a frontmatter-driven staleness contract — no linter reads your review dates.
+**Freshness** is a frontmatter-driven staleness contract, and no linter reads your review dates.
 **Reading level** is Flesch–Kincaid over the prose with code and markup stripped (English only).
 **Differentiation** catches the copy-paste drift that makes per-endpoint reference pages 90%
-identical — the failure nobody notices because each page looks fine alone.
+identical. That is the failure nobody notices, because each page looks fine alone.
 
 ## Arbitrary `command` evals
 
@@ -95,8 +95,9 @@ output tail as the message. Timeouts are reported distinctly.
 ## Plain-language checks moose-docevals writes for you
 
 A `command` eval with an assertion and **no** `command` is a deterministic check you have described
-but not implemented. `moose-docevals run` — or `moose-docevals generate` — has your configured LLM write a small
-Node script for it, saves it beside the doc, and records the command back into frontmatter:
+but not implemented. `moose-docevals run`, or `moose-docevals generate`, has your configured LLM write a small
+Node script for it. It saves the script beside the doc and records the command back into
+frontmatter:
 
 ```yaml
     - id: install-command-present
@@ -107,13 +108,13 @@ Node script for it, saves it beside the doc, and records the command back into f
         assertion-hash: aefaa89e…
 ```
 
-The model is used **once**, at generation time. After that the check is fully deterministic — no model
-in the loop, no per-run cost.
+The model is used **once**, at generation time. After that the check is fully deterministic, with no model
+in the loop and no per-run cost.
 
 Three consequences worth internalising:
 
 - **The script is ordinary source.** It lands in the repo beside the page, shows up in pull requests,
-  and you can edit it by hand. Review it — a generated script that passes for the wrong reason is
+  and you can edit it by hand. Review it. A generated script that passes for the wrong reason is
   worse than the ai eval it replaced, because it is now silent and cheap.
 - **`assertion-hash` keeps them honest.** Edit the assertion and the hash no longer matches, so the
   script regenerates rather than quietly checking the old thing.
@@ -126,7 +127,7 @@ finds them.
 ## Test the commands your docs present
 
 `tool:doc-detective` runs procedure tests embedded in a page, so a documented command that drifts
-from the code fails the build. That is how this site checks itself — see
+from the code fails the build. That is how this site checks itself. See
 [Test your commands](/moose-docevals/evals/test-your-commands/).
 
 {/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}

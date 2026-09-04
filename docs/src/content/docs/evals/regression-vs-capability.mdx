@@ -20,13 +20,13 @@ deliberately.
 ## Why the default is regression
 
 A regression eval is the docs equivalent of a failing test: it was true, now it is not, and someone
-should look. That is what most people want when they add a check — the install command matching the
-CLI, no promises about unreleased features, frontmatter validating.
+should look. That is what most people want when they add a check. The install command matches the
+CLI, no promises are made about unreleased features, and frontmatter validates.
 
 Capability evals answer a different question: *how far has this quality goal spread?* "Do our
 tutorials explain why before how?" has a useful answer of 70%, and a useless answer of pass/fail.
 
-## The trap: capability evals in a 1.0 suite
+## Capability evals in a 1.0 suite are the trap
 
 An eval's `type` is documentation of intent. **The target that actually gates your build is the
 suite's.**
@@ -43,7 +43,7 @@ docevals:
 ```
 
 Put a capability eval in a suite left at the default `1.0` and every page short of the goal fails the
-build. The usual response is to weaken the assertion until things go green — which permanently
+build. The usual response is to weaken the assertion until things go green. That permanently
 encodes the corpus's current state as the standard.
 
 Keep the assertion honest. Move the eval to a suite with an appropriate target, or lower the
@@ -63,7 +63,7 @@ on it, and next quarter the number should be higher. Raising the target is how y
 ## Moving between types
 
 An eval can graduate. A capability goal that reaches 100% and should never regress becomes a
-regression eval in a 1.0 suite — that is the ratchet completing, and it is worth doing deliberately
+regression eval in a 1.0 suite. That is the ratchet completing, and it is worth doing deliberately
 rather than leaving the corpus permanently "measured".
 
 Override the type per page when one page genuinely differs:
@@ -76,6 +76,6 @@ evals:
 
 ## Related
 
-- [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/) — where targets are set
-- [Write good assertions](/moose-docevals/evals/write-good-assertions/) — phrasing for each type
-- [Severity and findings](/moose-docevals/evals/severity-and-findings/) — the deterministic analog
+- [Named evals and suites](/moose-docevals/evals/named-evals-and-suites/), where targets are set
+- [Write good assertions](/moose-docevals/evals/write-good-assertions/), phrasing for each type
+- [Severity and findings](/moose-docevals/evals/severity-and-findings/), the deterministic analog

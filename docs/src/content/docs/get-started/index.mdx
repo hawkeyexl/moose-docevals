@@ -3,7 +3,7 @@ title: Get started
 description: Install moose-docevals, declare one assertion, and get a real finding on a real page.
 ---
 
-Zero to a real finding. No concepts first — those are on the
+Zero to a real finding. No concepts first. Those are on the
 [next page](/moose-docevals/get-started/how-moose-docevals-works/), and you will understand them faster having
 seen a run.
 
@@ -20,7 +20,7 @@ npx moose-docevals init
 ```
 
 `init` writes a starter `moose.config.yaml`: a `files.include` glob, a pinned judge model, and a
-few named evals to start from — including `no-future-promises` and `fresh-enough`.
+few named evals to start from, including `no-future-promises` and `fresh-enough`.
 
 ## 2. Get a finding without spending anything
 
@@ -47,7 +47,7 @@ Suites
   reference: 2/3 passed — 67% vs target 100% below target (1 skipped)
 ```
 
-Read the finding line as `severity:line [ruleId] message`. The exit code is `1` — a finding, not an
+Read the finding line as `severity:line [ruleId] message`. The exit code is `1`, a finding rather than an
 error. [Exit codes](/moose-docevals/reference/output-and-exit-codes/) explains why that distinction
 matters.
 
@@ -68,8 +68,8 @@ evals:
 ```
 
 Two entries, two different things. `no-future-promises` **references** a named eval from your
-config. The second **defines** one inline — and being `command`-graded with an assertion but no
-command, moose-docevals will write the check script for it.
+config. The second **defines** one inline. Being `command`-graded with an assertion but no
+command, it makes moose-docevals write the check script for it.
 
 Check what resolved before running anything:
 
