@@ -10,7 +10,7 @@ decision-makers: [hawkeyexl]
 
 Three commands take `-f/--format`: `list` and `fill` (`human | json`), and `run` (`human | json |
 markdown | github`). None of them validated the value. `src/cli.ts` cast the raw string straight
-through — `opts.format as "human" | "json"` — so the type assertion was the *only* thing standing
+through, as `opts.format as "human" | "json"`, so the type assertion was the *only* thing standing
 between a typo and the renderer.
 
 Each command then degraded differently, and all three degraded silently:
@@ -22,10 +22,10 @@ Each command then degraded differently, and all three degraded silently:
 | `run` | `render()` is a `switch` with a case per format and no `default`. Falls off the end, returns `undefined`, and the CLI prints the literal string `undefined`. | `0` |
 
 So a CI job piping `--format json` into `jq` with the flag misspelled gets human-formatted colour
-codes and a green exit, and a misspelled `run --format` writes the word `undefined` to the report
+codes and a green exit. A misspelled `run --format` writes the word `undefined` to the report
 file and still exits 0. `run`'s exhaustive `switch` looked safe because TypeScript proves it
-exhaustive over `ReportFormat` — but the cast at the call site is what admits the value that escapes
-it, so the compile-time guarantee buys nothing at the boundary where the string actually arrives.
+exhaustive over `ReportFormat`. The cast at the call site is what admits the value that escapes
+it. The compile-time guarantee buys nothing at the boundary where the string actually arrives.
 
 This surfaced while writing inline Doc Detective steps for the docs site (ADR 01004). A step
 asserting exit 2 for `moose-docevals list --format xml` failed, because the real behavior is exit 0. The
@@ -37,7 +37,7 @@ unrecognized flag value is squarely the third.
 
 ## Decision Drivers
 
-- The exit-code contract is a **published promise** — `reference/output-and-exit-codes.mdx` and
+- The exit-code contract is a **published promise**. `reference/output-and-exit-codes.mdx` and
   `reference/cli.mdx` both state that `2` covers a "malformed flag". A silent fallback breaks it.
 - **Silent format degradation is worse than a crash in CI**, the primary consumer of `--format
   json` and `--format github`. Wrong-format output that exits 0 is indistinguishable from success.
@@ -46,17 +46,17 @@ unrecognized flag value is squarely the third.
 - CLAUDE.md's config ↔ CLI pattern favors **one source of truth** per knob. Three commands each
   re-listing their allowed formats is three places to drift.
 - The `undefined` return from `render()` is reachable by **library** consumers too, not only the
-  CLI, so validation at the CLI boundary alone leaves a real defect in place.
+  CLI. Validation at the CLI boundary alone leaves a real defect in place.
 
 ## Considered Options
 
-1. **A shared parser module plus an exhaustive guard in `render()`** — one module owns the allowed
-   sets and the error message; `cli.ts` wires it into all three commands as a commander argument
-   parser; `render()` grows a `default:` that throws instead of returning `undefined`.
-2. **Per-command inline validation** — an `if (!["human","json"].includes(opts.format))` at the top
+1. **A shared parser module plus an exhaustive guard in `render()`.** One module owns the allowed
+   sets and the error message. `cli.ts` wires it into all three commands as a commander argument
+   parser, and `render()` grows a `default:` that throws instead of returning `undefined`.
+2. **Per-command inline validation.** An `if (!["human","json"].includes(opts.format))` at the top
    of each `.action()`.
-3. **Commander's `.choices()`** — let commander reject the value itself.
-4. **Make the renderers total** — have `renderList`/`renderFill`/`render` throw on an unknown
+3. **Commander's `.choices()`.** Let commander reject the value itself.
+4. **Make the renderers total.** Have `renderList`/`renderFill`/`render` throw on an unknown
    format, with no CLI-level parsing.
 
 ## Decision Outcome
@@ -65,17 +65,17 @@ Chosen option: **Option 1**, a shared parser plus a renderer guard.
 
 `src/reporters/format.ts` becomes the single source of truth:
 
-- `REPORT_FORMATS` — `run`'s four formats; `ReportFormat` is now derived from it rather than
+- `REPORT_FORMATS` holds `run`'s four formats. `ReportFormat` is now derived from it rather than
   declared separately, so the constant and the type cannot disagree.
-- `SUMMARY_FORMATS` / `SummaryFormat` — the `human | json` pair that `list` and `fill` emit.
-- `parseFormat(value, allowed, flag)` — returns the narrowed value or throws `DocevalsError` with
+- `SUMMARY_FORMATS` / `SummaryFormat` is the `human | json` pair that `list` and `fill` emit.
+- `parseFormat(value, allowed, flag)` returns the narrowed value or throws `DocevalsError` with
   the flag name, the received value, and the full allowed set.
 
 `cli.ts` wraps it in `parseFormatArg(flag, allowed)` and passes that as commander's argument-parser
 callback for `list`, `run`, and `fill`. The wrapper routes through the existing `fail()` helper, for
-the same reason `parseIntArg` does: commander only gives `InvalidArgumentError` special handling, so
-any other exception thrown from an option parser escapes `program.parse()` uncaught and would print
-a stack trace and exit 1 — the wrong code and the wrong presentation for a usage error. Validation
+the same reason `parseIntArg` does. Commander only gives `InvalidArgumentError` special handling, so
+any other exception thrown from an option parser escapes `program.parse()` uncaught. It would print
+a stack trace and exit 1, the wrong code and the wrong presentation for a usage error. Validation
 happens at parse time, so the value reaching each `.action()` is already narrowed and the casts are
 gone.
 
@@ -88,11 +88,11 @@ caller reaches them with no parser in front.
 - `renderList` and `renderFill` are re-typed to `SummaryFormat` and call `parseFormat` on entry.
 
 Guarding all three rather than only `render()` is deliberate. The first draft of this decision
-guarded `render()` alone, on the grounds that the summary renderers' fallback is "benign" — a real
-report in the other shape rather than `undefined`. That reasoning does not survive contact with the
-actual failure: a library caller doing `renderFill(report, userFormat as SummaryFormat)` gets human
-output where it asked for JSON, with no error — which is precisely the silent degradation this ADR
-exists to remove. Being reached from a library instead of the CLI does not make it quieter. Three
+guarded `render()` alone, on the grounds that the summary renderers' fallback is "benign". It gives
+a real report in the other shape rather than `undefined`. That reasoning does not survive contact
+with the actual failure. A library caller doing `renderFill(report, userFormat as SummaryFormat)`
+gets human output where it asked for JSON, with no error. That is precisely the silent degradation
+this ADR exists to remove. Being reached from a library instead of the CLI does not make it quieter. Three
 equally public functions taking the same flag's value should fail the same way.
 
 The error is a `DocevalsError`, so `fail()` prints `moose-docevals: --format must be one of human | json,
@@ -108,10 +108,10 @@ got "xml"` and exits 2.
   a cast asserting it.
 - Bad, because a script that today passes a bogus `--format` and tolerates human output starts
   failing at exit 2. That is the intent, but it is a behavior change for anyone relying on the
-  fallback. Deliberately shipped as `fix:` rather than `feat!:` — the previous behavior contradicted
-  documented behavior, so no documented contract is broken.
+  fallback. Deliberately shipped as `fix:` rather than `feat!:`, because the previous behavior
+  contradicted documented behavior, so no documented contract is broken.
 - Neutral, because `--format` still has no config-file counterpart. CLAUDE.md's rule that a CLI flag
-  needs a matching config field applies to *new* knobs; `--format` predates it and is a
+  needs a matching config field applies to *new* knobs. `--format` predates it and is a
   per-invocation output choice rather than project policy. Adding `output.format` to the config
   schema is a separate decision, not smuggled in here.
 
@@ -140,8 +140,8 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 ### Option 2, per-command inline validation
 
 - Good, because it is the smallest possible diff.
-- Bad, because the allowed set is then written out three times and drifts the first time a format is
-  added — exactly what happened when `markdown` and `github` were added to `run` alone.
+- Bad, because the allowed set is then written out three times. It drifts the first time a format is
+  added, exactly what happened when `markdown` and `github` were added to `run` alone.
 - Bad, because validation lands after commander has parsed, so each `.action()` carries a guard
   clause before its real work.
 
@@ -149,15 +149,15 @@ A regression that restores the silent fallback fails the unit test, the dogfood 
 
 - Good, because it is one chained call per option and needs no new code.
 - Bad, because commander exits **1** with its own `error: option '-f, --format <format>' argument
-  'xml' is invalid` — the code reserved for findings. Distinguishing usage errors from findings is
-  the entire point of the contract, and a CI job cannot tell the two apart.
+  'xml' is invalid`, and 1 is the code reserved for findings. Distinguishing usage errors from
+  findings is the entire point of the contract, and a CI job cannot tell the two apart.
 - Bad, because the message is not a `DocevalsError` and does not match the `moose-docevals: …` prefix
   every other error uses.
 
 ### Option 4, make the renderers total, with no CLI parsing
 
 - Good, because there is exactly one enforcement point and it is closest to the data.
-- Bad, because the error surfaces *after* the work is done — `run` would discover a typo only after
+- Bad, because the error surfaces *after* the work is done. `run` would discover a typo only after
   a full judging pass, having spent tokens and money on a report it then refuses to print. This is
-  the decisive objection, and it is why the renderer guards adopted above are a *second* line rather
-  than the only one: they catch the library caller, but the CLI must still fail before spending.
+  the decisive objection. It is why the renderer guards adopted above are a *second* line rather
+  than the only one. They catch the library caller, but the CLI must still fail before spending.
