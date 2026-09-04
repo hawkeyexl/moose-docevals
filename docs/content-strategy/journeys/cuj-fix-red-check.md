@@ -20,7 +20,7 @@ steps:
 # CUJ: Fix a failing eval fast
 
 **Scope:** one contributor, one red check, one page. This journey ends when the pull request is green
-or correctly escalated. It never expands into configuring, authoring, or operating moose-docevals — those
+or correctly escalated. It never expands into configuring, authoring, or operating moose-docevals. Those
 belong to journeys this reader will not take.
 
 **Trigger.** [Theo](../personas/theo-contributor.md) pushed a change and a check he did not configure
@@ -29,7 +29,7 @@ minutes later.
 
 **Narrative.** By page views this is the **highest-traffic journey on the site**, and by depth the
 shallowest. Every contributor who ever trips a check arrives here, most of them once. Serving them
-well is also how the gate survives its first month: a blocked contributor who cannot self-serve
+well is also how the gate survives its first month. A blocked contributor who cannot self-serve
 escalates to the docs team, and enough of that gets the check removed.
 
 **Triage is the first screen and nothing else works until it is solved.** moose-docevals produces at least
@@ -39,18 +39,18 @@ five failures that look alike in a CI log and have unrelated remedies:
 |---|---|---|
 | A finding with a file and line | A deterministic tool or command eval | Fix the line |
 | A rationale, no line | An AI verdict | Read the assertion and its `examples.fail`, then edit |
-| "needs review" | A split ensemble, awaiting a person | Escalate — he cannot resolve it |
+| "needs review" | A split ensemble, awaiting a person | Escalate; he cannot resolve it |
 | A stale-hash message | The assertion changed; the generated script did not | Escalate or regenerate |
-| Exit 2 | Operational — missing key, bad config | Not his fault; tell the platform team |
+| Exit 2 | Operational, such as a missing key or bad config | Not his fault; tell the platform team |
 
 The second problem is that **a rationale is not a remediation.** "The page promises unreleased
 functionality" names the defect without pointing at the sentence. The repair is to teach him to read
-the *assertion* and its `examples.fail` next to the rationale — the assertion says what was required,
-the failing example shows what violating it looks like, and between them the offending sentence is
+the *assertion* and its `examples.fail` next to the rationale. The assertion says what was required,
+and the failing example shows what violating it looks like. Between them the offending sentence is
 usually obvious. That move is the single most valuable thing his page teaches.
 
-Third: **reproducing locally is not obvious.** CI had a provider key and a warm cache; his laptop has
-neither, so a naive local run either fails on a missing credential or costs him money. `moose-docevals run
+Third, **reproducing locally is not obvious.** CI had a provider key and a warm cache; his laptop has
+neither. A naive local run either fails on a missing credential or costs him money. `moose-docevals run
 --deterministic-only <one file>` is nearly always the right local check, and he will never guess it.
 
 This journey enforces the site's one hard structural constraint: **`fix/index.mdx` has no subject
@@ -58,4 +58,4 @@ dependencies.** It must be reachable cold from an annotation link and fully usef
 read nothing else. Every term is defined inline or linked. Any change that gives that page a
 prerequisite is a defect.
 
-**Status.** All 6 steps are served by written pages (2 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.
+**Status.** All 6 steps are served by written pages (2 distinct). Re-check this when the journey changes. A step whose `doc` no longer resolves signals that this journey has drifted ahead of the docs. So does a new step with no page behind it.

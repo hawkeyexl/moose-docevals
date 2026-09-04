@@ -1,7 +1,7 @@
 ---
 id: persona-standard-owner
 type: persona
-name: "Sara — Docs Quality Standard Owner"
+name: "Sara, Docs Quality Standard Owner"
 audience: aud-quality-standard-owner
 role: Staff writer, content strategist, or docs lead who owns the style guide and the quality bar
 shared_with: docmeta
@@ -33,36 +33,37 @@ journeys:
 means; [Priya](priya-corpus-owner.md) enforces it and [Devin](devin-pipeline-owner.md) operates it.
 Below a certain team size all three are one person, and no page may assume they are separate.
 
-**Deliberately the same Sara as docmeta's**, with a changed subject: there she encodes a metadata
-standard as JSON Schema, here she encodes a prose standard as assertions. Same instinct, same
-seniority, different medium — see [`_overview.md`](_overview.md).
+**Deliberately the same Sara as docmeta's**, with a changed subject. There she encodes a metadata
+standard as JSON Schema; here she encodes a prose standard as assertions. Same instinct, same
+seniority, different medium. See [`_overview.md`](_overview.md).
 
 Sara is a staff writer or content strategist who owns the style guide and the page templates. She is
 fluent in YAML, reasons comfortably about precedence and inheritance, and can read an agreement rate
 and a false-positive rate without a tutorial. She is the persona who read the methodology before she
-found the tool, and she is the one who will be asked, in a review, "why did this fail?"
+found the tool. She is also the one who will be asked, in a review, "why did this fail?"
 
 Her hardest problem is the smallest-looking one: **most assertions people write are unjudgeable.**
 "The page is well-written" cannot be adjudicated by anything. "The page states its prerequisites
 before the first command" can. The distance between those two sentences is where Sara spends her
-effort, and teaching it is the highest-leverage thing the site does for her — which is why
+effort, and teaching it is the most valuable thing the site does for her. That is why
 `evidence`, `examples.pass`, and `examples.fail` are taught as the mechanism that closes the gap,
 not as optional frontmatter fields.
 
 Her second problem is **proof**. A quality bar resting on trust will not survive contact with a
-skeptical engineering org, so she needs the golden set, `calibrate`, the 70% agreement floor, and
+skeptical engineering org. She needs the golden set, `calibrate`, the 70% agreement floor, and
 `judge.false-positive-alert` as artifacts she can take to that conversation. She cares more about false
-positives than about raw accuracy, because a check that fails good pages gets disabled inside a week
+positives than about raw accuracy. A check that fails good pages gets disabled inside a week,
 and a check that misses a few bad ones does not.
 
-Two reframes have to land explicitly or nothing else does. First: binary verdicts are not crude,
-because the nuance lives in the **suite pass rate** — regression suites target ~100%, capability
-suites ~70%. Second: the human-review zone is not a failure of the design, it is the escape hatch that
+Two reframes have to land explicitly or nothing else does. First, binary verdicts are not crude,
+because the nuance lives in the **suite pass rate**. Regression suites target ~100%, capability
+suites ~70%. Second, the human-review zone is not a failure of the design. It is the escape hatch that
 makes a binary verdict acceptable in the first place. Both are counterintuitive on first contact and
 both are load-bearing for her adoption.
 
-She is also the persona who owns the discipline that keeps the tool affordable: if nobody applies
+She is also the persona who owns the discipline that keeps the tool affordable. If nobody applies
 `promote` and `generate`, every eval stays an ai eval and cost grows with the corpus forever.
 
-Success for Sara is a calibration report showing 88% agreement and a 6% false-positive rate, printed
-in a doc she hands to an engineering director who then stops asking whether the check is trustworthy.
+Success for Sara is a calibration report showing 88% agreement and a 6% false-positive rate. She
+prints it in a doc and hands it to an engineering director, who then stops asking whether the check
+is trustworthy.

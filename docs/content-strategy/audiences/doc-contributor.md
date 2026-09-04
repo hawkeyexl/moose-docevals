@@ -3,7 +3,7 @@ id: aud-doc-contributor
 type: audience
 segment: Opened a pull request, hit a red moose-docevals check
 maturity: cross-cutting
-docs_owner: Nobody — passing through
+docs_owner: Nobody, passing through
 firmographics: [any-size, occasional-contributor, engineer-or-writer, no-tool-context]
 relationship_stages: [customer]
 personas: [persona-contributor]
@@ -15,7 +15,7 @@ evidence_basis: [docmeta-content-strategy, moose-docevals-surface]
 
 # Audience: Doc contributor
 
-**Scope:** the highest-traffic and shallowest audience — someone whose pull request went red and who
+**Scope:** the highest-traffic and shallowest audience, someone whose pull request went red and who
 wants it green. They did not install moose-docevals, did not write the eval, and will not read the rest of
 the site. Everyone else here configures the tool; this segment only ever *encounters* it.
 
@@ -37,16 +37,17 @@ back to the work they were actually doing.
 ## Defining pains
 
 - **They cannot tell which kind of failure they are looking at.** moose-docevals has several with different
-  remedies: a deterministic tool finding pinned to a line; an AI verdict with a rationale but no
-  line; an eval sitting in the human-review zone that they cannot resolve themselves; a stale
-  `assertion-hash` meaning the generated script no longer matches its assertion; an operational error
-  that is not their fault at all. Sorting these is step one and nothing else works until it is done.
+  remedies. There is a deterministic tool finding pinned to a line, and an AI verdict with a rationale
+  but no line. There is an eval sitting in the human-review zone that they cannot resolve themselves.
+  There is a stale `assertion-hash` meaning the generated script no longer matches its assertion. And
+  there is an operational error that is not their fault at all. Sorting these is step one and nothing
+  else works until it is done.
 - **A judge rationale is not a remediation.** "The page promises unreleased functionality" identifies
   the problem without pointing at the sentence. The gap between rationale and edit is where this
   audience stalls.
 - **Some failures are not theirs to fix.** A needs-review verdict requires `moose-docevals review` from
-  someone with standing; a stale hash may want regeneration rather than an edit. Being told to escalate
-  — and to whom — is a real, correct outcome that the page must offer without shame.
+  someone with standing; a stale hash may want regeneration rather than an edit. Being told to escalate, and to whom, is a real, correct outcome that the page must offer without
+  shame.
 - **Reproducing locally is not obvious.** The CI run had a provider key and a warm cache; their laptop
   has neither. `--deterministic-only` on a single file is usually the right local check, and they will
   not guess that.
@@ -55,16 +56,16 @@ back to the work they were actually doing.
 
 ## Buying constraints
 
-Not a buying audience — but they are the segment most able to *kill* adoption. A contributor who is
+Not a buying audience, but they are the segment most able to *kill* adoption. A contributor who is
 blocked, confused, and unable to self-serve escalates to the docs team, and enough of that gets the
 check removed. Serving this audience well is how the gate survives its first month.
 
 ## Qualified reader (for docs targeting)
 
-- **Prerequisites they bring:** Git and pull requests; editing a Markdown file; reading a CI log.
-- **Prerequisites they do not bring:** anything about moose-docevals. Assume zero. Every term used on their
-  page must be defined inline or linked, and the page must be reachable and useful from a cold start
+- **Prerequisites they bring.** Git and pull requests; editing a Markdown file; reading a CI log.
+- **Prerequisites they do not bring.** Anything about moose-docevals. Assume zero. Every term used on their
+  page must be defined inline or linked. The page must be reachable and useful from a cold start
   with no prior reading.
-- **Subject dependencies:** none, deliberately. `fix/index.mdx` is the one page in the site that may
-  not depend on any other page having been read — a hard constraint on how it is written, not a
+- **Subject dependencies.** None, deliberately. `fix/index.mdx` is the one page in the site that may
+  not depend on any other page having been read. That is a hard constraint on how it is written, not a
   stylistic preference.

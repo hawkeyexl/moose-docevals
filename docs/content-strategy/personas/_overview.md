@@ -32,27 +32,27 @@ model: qualified-reader
 ## Why three names are borrowed from docmeta
 
 **Devin, Sara, and Theo are deliberately the same people as docmeta's personas of those names.** The
-two tools are adopted by one reader in one pipeline — the engineer who wires up a metadata gate is the
-engineer who wires up an eval gate, and the contributor who hits a red frontmatter check is the
+two tools are adopted by one reader in one pipeline. The engineer who wires up a metadata gate is the
+engineer who wires up an eval gate. The contributor who hits a red frontmatter check is the
 contributor who hits a red eval. Reusing the names keeps that continuity legible to anyone working
 across both repos, and keeps the two strategies comparable rather than parallel-but-unrelated.
 
-The roles are not identical, and the differences are the interesting part: moose-docevals' Devin inherits
-two problems docmeta's Devin never had — a model in the critical path and content-driven code
-execution — and moose-docevals' Sara owns prose assertions rather than JSON Schema. Priya, Nate, and Iris
-are new here; docmeta's lead persona splits into Priya and Nate along the hours-available axis,
-because `fill` makes the one-person case a genuinely different journey rather than a smaller one.
+The roles are not identical, and the differences are the interesting part. moose-docevals' Devin inherits
+two problems docmeta's Devin never had, namely a model in the critical path and content-driven code
+execution. moose-docevals' Sara owns prose assertions rather than JSON Schema. Priya, Nate, and Iris
+are new here. docmeta's lead persona splits into Priya and Nate along the hours-available axis.
+`fill` makes the one-person case a genuinely different journey rather than a smaller one.
 
-## The model: qualified reader, not skill tier
+## The model is a qualified reader, not a skill tier
 
 No persona is labeled beginner, intermediate, or advanced. Those labels describe a person and travel
-badly; what a writer actually needs to know is **what this reader already brings** and **what they
+badly. What a writer actually needs to know is **what this reader already brings** and **what they
 must have read first**. Each persona file therefore carries:
 
-- **Prerequisites they bring** — knowledge assumed on arrival, which the page must not re-teach.
-- **Prerequisites they do not bring** — the trap. Assuming any of these produces a page that reads
+- **Prerequisites they bring**, meaning knowledge assumed on arrival, which the page must not re-teach.
+- **Prerequisites they do not bring**, the trap. Assuming any of these produces a page that reads
   fine to its author and is unusable by its reader.
-- **Subject dependencies** — the pages that must come first for this one to land. These fix the
+- **Subject dependencies**, the pages that must come first for this one to land. These fix the
   reading order inside each section of the IA.
 
 The strictest case is Theo, who has *no* subject dependencies by construction: `fix/index.mdx` may not

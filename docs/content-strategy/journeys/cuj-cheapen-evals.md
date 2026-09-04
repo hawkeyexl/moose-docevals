@@ -28,31 +28,31 @@ ai evals and should not have stayed that way.
 Run time and cost now scale with the corpus, and both are trending the wrong way.
 
 **Narrative.** The grader hierarchy is a claim about *preference*, and preferences decay without a
-mechanism. Left alone every eval stays wherever it was born, and since `ai` is the default grader and
+mechanism. Left alone every eval stays wherever it was born. Since `ai` is the default grader and
 `fill` proposes ai-graded evals by construction, "left alone" means expensive. `promote` and
 `generate` are that mechanism, and this journey is the discipline of applying them.
 
 The saving is observable but not priced. A run reports how many evals it judged, how many of those
-were cache hits, and the token total — never a dollar figure (ADR 01019). A page here that claims a
-percentage saved must derive it from those counts, or from the drop in inference calls, and leave the
-conversion to money to the reader's provider.
+were cache hits, and the token total. It never reports a dollar figure (ADR 01019). A page here that
+claims a percentage saved must derive it from those counts, or from the drop in inference calls. The
+conversion to money is left to the reader's provider.
 
 The rule is the manuscript's: **if you can express the eval criterion as code, do it.** `promote` asks
 the model to apply exactly that test to the existing ai evals and reports which ones pass it.
-Crucially it is **report-only by default** — `--write` is a separate, deliberate act — because
-converting an assertion changes what is being checked, and that deserves a human decision rather than
+Crucially it is **report-only by default**, and `--write` is a separate, deliberate act. Converting
+an assertion changes what is being checked, and that deserves a human decision rather than
 a flag someone set once.
 
 The step readers underestimate is **reviewing the generated script**. Generated scripts are ordinary
 version-controlled source, written to a file parallel to the doc and referenced from frontmatter as a
-`command` — never embedded in the frontmatter itself. That design exists so they show up in pull
-requests and can be edited by hand, and it only pays off if someone actually reads them. A generated
+`command`. They are never embedded in the frontmatter itself. That design exists so they show up in pull
+requests and can be edited by hand. It only pays off if someone actually reads them. A generated
 script that passes for the wrong reason is worse than the ai eval it replaced, because it is now
 silent and cheap.
 
-`generated.assertion-hash` closes the loop: edit the assertion and the hash no longer matches, so the
+`generated.assertion-hash` closes the loop. Edit the assertion and the hash no longer matches, so the
 script is stale and regenerates rather than quietly checking the old thing. Readers meet this field
-first as a confusing failure in [`cuj-fix-red-check`](cuj-fix-red-check.md); explaining it here, where
+first as a confusing failure in [`cuj-fix-red-check`](cuj-fix-red-check.md). Explaining it here, where
 it is created, is what makes that later encounter legible.
 
-**Status.** All 6 steps are served by written pages (5 distinct). Re-check this when the journey changes: a step whose `doc` no longer resolves, or a new step with no page behind it, is the signal that this journey has drifted ahead of the docs.
+**Status.** All 6 steps are served by written pages (5 distinct). Re-check this when the journey changes. A step whose `doc` no longer resolves signals that this journey has drifted ahead of the docs. So does a new step with no page behind it.
