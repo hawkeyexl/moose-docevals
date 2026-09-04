@@ -64,6 +64,7 @@ Numbering starts at `01000`. The `00001`–`00999` range holds decisions that pr
 | [01041](01041-a-run-that-resolved-no-evals-is-a-usage-error.md) | A run that resolved no evals is a usage error; a run that graded none of them is a warning | accepted |
 | [01042](01042-grader-isolation-is-per-eval-group-not-per-kind.md) | Grader isolation is per eval group, and the engine owns the partition | accepted |
 | [01043](01043-the-missing-provider-warning-is-about-the-judge.md) | The missing-provider warning is about the judge; generation reports its own need | accepted |
+| [01044](01044-the-prose-gate-blocks-and-the-fixture-corpus-is-exempt.md) | The prose gate blocks on the whole corpus, and the vendored fixtures are exempt | accepted |
 
 ## The backfilled range
 

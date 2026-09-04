@@ -296,6 +296,7 @@ Durable decisions behind the current shape. **The first four are now backfilled 
 | Convention | Enforced by |
 |---|---|
 | Build, tests, typecheck, lint, dogfood run | [ci.yml](.github/workflows/ci.yml), on ubuntu + windows |
+| House voice in every Markdown and MDX file | [vale.yml](.github/workflows/vale.yml), blocking over the whole corpus (ADR 01044) |
 | Published schema URLs stay live | [published-schemas.yml](.github/workflows/published-schemas.yml), scheduled |
 | Docs correctness and publication | [docs.yml](.github/workflows/docs.yml), which verifies, builds, link-checks, and deploys |
 | Commit messages | husky [`commit-msg`](.husky/commit-msg) hook locally, [commitlint.yml](.github/workflows/commitlint.yml) on PRs |
@@ -336,6 +337,8 @@ The last unported convention was **docs impact**. doc-detective gates behavior c
 - [.github/workflows/release.yml](.github/workflows/release.yml), release pipeline (opt-in)
 - [.github/workflows/commitlint.yml](.github/workflows/commitlint.yml), PR commit-message enforcement
 - [.github/workflows/ci.yml](.github/workflows/ci.yml), build/test matrix, the fixture dogfood gate, and `verify-docs`
+- [.github/workflows/vale.yml](.github/workflows/vale.yml), the blocking prose gate (ADR 01044)
+- [.vale.ini](.vale.ini), the Moose style package and the one exempted path
 - [.github/workflows/docs.yml](.github/workflows/docs.yml), verify → build → link check → deploy to GitHub Pages (ADR 01006)
 - [scripts/check-docs-links.mjs](scripts/check-docs-links.mjs), internal-link check over the built site
 - [.github/workflows/claude-pr-review.yml](.github/workflows/claude-pr-review.yml), automatic review on every PR
