@@ -4,7 +4,7 @@ date: 2026-09-01
 decision-makers: [hawkeyexl]
 ---
 
-# `target` selects the graded bytes — and it is called `target`, not `focus`
+# `target` selects the graded bytes, and it is called `target`, not `focus`
 
 ## Context and Problem Statement
 
