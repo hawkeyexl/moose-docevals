@@ -17,8 +17,17 @@ evals:
   - id: install-command-present
     assertion: The page contains a bash code block with the command npm i -g doc-detective.
     grader: command
+  - use: cited-sources-current
+cites:
+  # MOVED on purpose: this is the hash of lines 7-10 of the frozen fixture
+  # source, recorded against 3-6. The drift check reports the new range as
+  # info and the page still passes (ADR 01045).
+  - id: greeting-usage
+    src: test/fixtures/cited/greeting.sh:3-6
+    sha256: 1ad9d6b2e3ceb6e9f6be7a792a18cab6575871c632e42f61c99daf7349c6a285
 ---
 
+{/* cite: greeting-usage */}
 Downloading and running Doc Detective is straightforward. You can install Doc Detective using NPX (Node.js) or Docker. Follow the instructions for your preferred method:
 
 Choose *NPX* if you have Node.js installed and want to install Doc Detective on your machine locally. Choose *Docker* if you can't install applications locally, prefer containerized environments, need to avoid Node.js installation, or want to isolate Doc Detective from your system.
@@ -173,6 +182,15 @@ To disable auto-update, use any of these methods:
 - Set the `DOC_DETECTIVE_SKIP_AUTO_UPDATE=1` environment variable
 
 CI environments skip the update check automatically whenever the `CI` environment variable has a value.
+
+## A cited example
+
+{/* cite: src=test/fixtures/cited/greeting.sh:11-11 sha256=f97a5e58cd0887fcb42d69a60e652ca3019dc428174fda5131cd6f15ab4c4795 quote */}
+The fixture script greets by name with one line:
+
+```sh
+echo "hello, $NAME"
+```
 
 ## Next steps
 

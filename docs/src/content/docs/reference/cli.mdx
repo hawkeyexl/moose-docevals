@@ -3,7 +3,7 @@ title: CLI reference
 description: Every moose-docevals command and flag, with the exit code each produces.
 ---
 
-Eight commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by
+Nine commands. Every flag below is verified against `src/cli.ts`; the exit codes are exercised by
 the inline tests at the foot of this page.
 
 ## Common conventions
@@ -14,7 +14,7 @@ Commands that operate on pages take **positional globs**. With none given, the c
 | Flag | Commands | Meaning |
 |---|---|---|
 | `-c, --config <path>` | all except `init` | Path to `moose.config.yaml`. Without it, moose-docevals looks for that filename in the working directory. With no file at all, built-in defaults apply and there are no named evals or suites. |
-| `-f, --format <format>` | `list`, `run`, `fill` | Output format. `run` accepts `human`, `json`, `markdown`, `github`, `sarif`, `junit`, `html`; `list` and `fill` accept `human` and `json`. Anything else, including `run`'s `markdown` passed to `list`, is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
+| `-f, --format <format>` | `list`, `run`, `fill`, `cite` | Output format. `run` accepts `human`, `json`, `markdown`, `github`, `sarif`, `junit`, `html`; `list` and `fill` accept `human` and `json`. Anything else, including `run`'s `markdown` passed to `list`, is a usage error: **exit 2**, allowed set in the message. See [Output and exit codes](/moose-docevals/reference/output-and-exit-codes/#which-formats-each-command-accepts). |
 | `--provider <name>` | `run`, `generate`, `fill`, `promote`, `calibrate` | `anthropic`, `openai`, `claude-cli`, or `llama-cpp`. Overrides `provider.default`. |
 | `--model <model>` | same as above | Overrides the model for the selected provider. |
 
@@ -241,6 +241,37 @@ Exits 1 when agreement is below the threshold. Unreviewed and stale cases are ju
 toward that rate, flagged `[unreviewed]` / `[stale]` per case with a summary line naming the counts.
 See [Calibrate](/moose-docevals/judge/calibrate/).
 
+## `moose-docevals cite add <page> <src>`
+
+Mints one citation and appends it to the page's `cites` frontmatter, then prints the comment to
+paste above the sentence it supports. See [Cite your sources](/moose-docevals/evals/cite-your-sources/).
+
+| Flag | Effect |
+|---|---|
+| `--id <id>` | The citation's id. Default: the source's file name and range, as in `install-3-4`. A collision is a usage error naming this flag. |
+| `--quote` | Record that the page reproduces the cited lines in a code block, so the copy is checked too. |
+| `--inline` | Print a minted inline comment in the page's syntax and write nothing. |
+| `--no-commit` | Hash only; record no commit. Without it, a source git does not track, or one with uncommitted changes, is refused: the commit recorded must be true of the bytes hashed. |
+| `--dry-run` | Report the entry without writing the page. |
+
+`src` is `path[:L1-L2]`, an absolute path, or an https URL; the grammar is in the
+[frontmatter reference](/moose-docevals/reference/frontmatter/#cites). Exit 0.
+
+## `moose-docevals cite refresh [globs...]`
+
+Repairs every citation on the discovered pages in place, in either form. An unminted one is minted
+and a moved range is rewritten. A changed or never-true one is re-minted only under
+`--accept-changed`. Missing sources are reported and never rewritten. Only the named frontmatter
+entry, or the characters inside the comment, change.
+
+| Flag | Effect |
+|---|---|
+| `--accept-changed` | Re-mint citations whose source changed or whose hash was never true. A flag you pass after reading the finding, not one a scheduled job passes. |
+| `--no-commit` | Mint without recording a commit. |
+| `--dry-run` | Report every action and write nothing. |
+
+One line per citation with its status and action. Exit 0; the gate is `run`.
+
 ## `moose-docevals init`
 
 Writes a starter `moose.config.yaml` in the working directory. Takes no options.
@@ -270,7 +301,17 @@ Full detail in [Output and exit codes](/moose-docevals/reference/output-and-exit
 {/* Verified by moose-docevals itself during `verify-docs` (see .github/workflows/ci.yml),
     against the committed fixture corpus. Config: .doc-detective.json. */}
 
-{/* step {"description":"The CLI lists all eight commands.","runShell":{"command":"npx moose-docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*init[\\s\\S]*review/"}} */}
+{/* step {"description":"The CLI lists all nine commands.","runShell":{"command":"npx moose-docevals --help","exitCodes":[0],"stdio":"/list[\\s\\S]*run[\\s\\S]*generate[\\s\\S]*fill[\\s\\S]*promote[\\s\\S]*calibrate[\\s\\S]*cite[\\s\\S]*init[\\s\\S]*review/"}} */}
+
+{/* step {"description":"cite has add and refresh.","runShell":{"command":"npx moose-docevals cite --help","exitCodes":[0],"stdio":"/add[\\s\\S]*refresh/"}} */}
+
+{/* step {"description":"cite add --dry-run --no-commit mints the fixture range and writes nothing.","runShell":{"command":"npx moose-docevals cite add test/fixtures/pages/docs/get-started/installation.mdx test/fixtures/cited/greeting.sh:11-11 --dry-run --no-commit","exitCodes":[0],"stdio":"Would add"}} */}
+
+{/* step {"description":"cite add refuses an id the page already has, naming --id.","runShell":{"command":"npx moose-docevals cite add test/fixtures/pages/docs/get-started/installation.mdx test/fixtures/cited/greeting.sh:3-6 --id greeting-usage --dry-run --no-commit","exitCodes":[2],"stdio":"--id"}} */}
+
+{/* step {"description":"cite refresh --dry-run reports the moved fixture citation and writes nothing.","runShell":{"command":"npx moose-docevals cite refresh --dry-run","exitCodes":[0],"stdio":"/rewritten[\\s\\S]*Dry run/"}} */}
+
+{/* step {"description":"cite rejects an unknown --format like every other command.","runShell":{"command":"npx moose-docevals cite refresh --dry-run --format xml","exitCodes":[2],"stdio":"/must be one of human \\| json/"}} */}
 
 {/* step {"description":"calibrate exposes --seed and --max-turns.","runShell":{"command":"npx moose-docevals calibrate --help","exitCodes":[0],"stdio":"/--seed[\\s\\S]*--max-turns/"}} */}
 

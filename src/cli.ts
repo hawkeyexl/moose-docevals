@@ -19,6 +19,12 @@ import {
 } from "./commands/calibrate.js";
 import { runInit } from "./commands/init.js";
 import {
+  runCiteAdd,
+  runCiteRefresh,
+  renderCiteAdd,
+  renderCiteRefresh,
+} from "./commands/cite.js";
+import {
   render,
   parseFormat,
   REPORT_FORMATS,
@@ -467,6 +473,73 @@ program
       }
     },
   );
+
+const cite = program
+  .command("cite")
+  .description("Mint and refresh source citations: a page pins the lines it depends on by hash");
+
+cite
+  .command("add")
+  .description("Mint one citation and append it to the page's frontmatter (or print it with --inline)")
+  .argument("<page>", "The page that depends on the source")
+  .argument("<src>", "path[:L1-L2], an absolute path, or an https URL (#L1-L2 on GitHub)")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
+  .option(
+    "-f, --format <format>",
+    "Output format: human | json",
+    parseFormatArg("--format", SUMMARY_FORMATS),
+    "human" as SummaryFormat,
+  )
+  .option("--id <id>", "Citation id (default: derived from the source's name and range)")
+  .option("--quote", "The page reproduces the cited lines in a code block; check the copy too")
+  .option("--inline", "Print a minted inline comment to paste, and write nothing")
+  .option("--no-commit", "Hash only; record no commit (skips the uncommitted-changes check)")
+  .option("--dry-run", "Report the entry without writing the page")
+  .action(async (page: string, src: string, opts: Record<string, unknown>) => {
+    try {
+      const result = await runCiteAdd(page, src, {
+        config: opts.config as string | undefined,
+        id: opts.id as string | undefined,
+        quote: opts.quote as boolean | undefined,
+        inline: opts.inline as boolean | undefined,
+        noCommit: opts.commit === false ? true : undefined,
+        dryRun: opts.dryRun as boolean | undefined,
+      });
+      console.log(renderCiteAdd(result, opts.format as SummaryFormat));
+    } catch (e) {
+      fail(e);
+    }
+  });
+
+cite
+  .command("refresh")
+  .description(
+    "Mint unminted citations, rewrite moved ranges, and (with --accept-changed) re-mint changed ones, in place",
+  )
+  .argument("[globs...]", "File globs (default: config files.include)")
+  .option("-c, --config <path>", "Path to moose.config.yaml")
+  .option(
+    "-f, --format <format>",
+    "Output format: human | json",
+    parseFormatArg("--format", SUMMARY_FORMATS),
+    "human" as SummaryFormat,
+  )
+  .option("--accept-changed", "Re-mint citations whose source changed or whose hash was never true")
+  .option("--no-commit", "Mint without recording a commit")
+  .option("--dry-run", "Report what would change without writing")
+  .action(async (globs: string[], opts: Record<string, unknown>) => {
+    try {
+      const report = await runCiteRefresh(globs, {
+        config: opts.config as string | undefined,
+        acceptChanged: opts.acceptChanged as boolean | undefined,
+        noCommit: opts.commit === false ? true : undefined,
+        dryRun: opts.dryRun as boolean | undefined,
+      });
+      console.log(renderCiteRefresh(report, opts.format as SummaryFormat));
+    } catch (e) {
+      fail(e);
+    }
+  });
 
 program
   .command("init")

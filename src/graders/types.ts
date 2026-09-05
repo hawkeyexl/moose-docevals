@@ -4,6 +4,7 @@
  * returns normalized findings. AI grading lives in src/judge, not here.
  */
 import type { ExecFn } from "@hawkeyexl/inference";
+import type { FetchLike } from "../citations/source.js";
 import type { Finding } from "../types.js";
 import type { DocevalsConfig } from "../core/config.js";
 import type { OptionCheck, Options } from "./options.js";
@@ -26,6 +27,12 @@ export interface GraderContext {
   /** Discovery root; page paths are relative to it. */
   root: string;
   exec: ExecFn;
+  /**
+   * Network access for graders that follow URLs (`tool:citations`). Injected
+   * for the same reason `exec` is: the suite never leaves the machine, and a
+   * test hands in a fake. Absent means no network at all.
+   */
+  fetch?: FetchLike;
 }
 
 export interface Grader {

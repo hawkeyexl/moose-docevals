@@ -77,6 +77,7 @@ describe("runInit", () => {
     expect(plans).toHaveLength(1);
     expect(plans[0]?.suite).toBe("default");
     expect(plans[0]?.evals.map((e) => e.name).sort()).toEqual([
+      "cited-sources-current",
       "fresh-enough",
       "no-future-promises",
     ]);

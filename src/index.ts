@@ -95,8 +95,28 @@ export {
   updatePageEval,
   updateConfigEval,
   appendPageEvals,
+  appendPageCites,
+  updatePageCite,
 } from "./core/frontmatter-edit.js";
-export type { NewEvalEntry } from "./core/frontmatter-edit.js";
+export type { NewEvalEntry, NewCiteEntry, CiteUpdates } from "./core/frontmatter-edit.js";
+// Citations (ADR 01045, 01046): the hashing rule, the src grammar, the drift
+// classifier, and the cite command. The rule is exported so a script that
+// mints a hash elsewhere computes it with this code rather than reproducing it.
+export { hashRange, hashLines, normalizeLines, parseSrc, formatSrc } from "./citations/hash.js";
+export type { LineRange, SourceSpec, FileSource, UrlSource } from "./citations/hash.js";
+export { classifyCitation } from "./citations/classify.js";
+export type { Classification, ClassifyReaders, DriftStatus } from "./citations/classify.js";
+export { scanCiteComments } from "./citations/comments.js";
+export type { Citation, CitationAnchor, PageCitations } from "./citations/types.js";
+export type { FetchLike } from "./citations/source.js";
+export { runCiteAdd, runCiteRefresh, renderCiteAdd, renderCiteRefresh } from "./commands/cite.js";
+export type {
+  CiteAddOptions,
+  CiteAddResult,
+  CiteRefreshOptions,
+  CiteRefreshReport,
+  CiteRefreshEntry,
+} from "./commands/cite.js";
 export {
   frontmatterSchema,
   frontmatterSchemaPath,

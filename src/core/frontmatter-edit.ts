@@ -357,3 +357,144 @@ export function isScalarEvalEntry(content: string, evalName: string): boolean {
     return false;
   }
 }
+
+/**
+ * A citation to append to a page's `cites` list (ADR 01046). `sha256` and
+ * `commit` are optional so an author can write an unminted entry and let
+ * `cite refresh` fill them in.
+ */
+export interface NewCiteEntry {
+  id: string;
+  src: string;
+  sha256?: string;
+  commit?: string;
+  quote?: boolean;
+}
+
+export interface CiteUpdates {
+  src?: string;
+  sha256?: string;
+  commit?: string;
+}
+
+/**
+ * A hash or a short commit that happens to be all digits would be read back
+ * by YAML as a number. The `yaml` library quotes such strings on its own, but
+ * the schema pins these as strings, so make the intent explicit rather than
+ * relying on a serializer default.
+ */
+function stringScalar(doc: Document, value: string): unknown {
+  const node = doc.createNode(value);
+  if (/^\d+$/.test(value) && isScalar(node)) node.type = "QUOTE_DOUBLE";
+  return node;
+}
+
+function citeObject(doc: Document, entry: NewCiteEntry): YAMLMap {
+  const map = doc.createNode({}) as YAMLMap;
+  map.set("id", entry.id);
+  map.set("src", entry.src);
+  if (entry.sha256 !== undefined) map.set("sha256", stringScalar(doc, entry.sha256));
+  if (entry.commit !== undefined) map.set("commit", stringScalar(doc, entry.commit));
+  if (entry.quote === true) map.set("quote", true);
+  return map;
+}
+
+/** The `cites` list, or undefined when absent. Throws when it is not a list. */
+function citesSeq(doc: Document, path: string): YAMLSeq | undefined {
+  const node = doc.get("cites", true);
+  if (node === undefined) return undefined;
+  if (!(node instanceof YAMLSeq)) {
+    throw new DocevalsError(`${path}: the cites key in frontmatter is not a list`);
+  }
+  return node;
+}
+
+function findCiteNode(seq: YAMLSeq, id: string): YAMLMap | undefined {
+  for (const item of seq.items) {
+    if (isMap(item) && item.get("id") === id) return item;
+  }
+  return undefined;
+}
+
+/**
+ * Append citations to a page's YAML frontmatter, creating the `cites` key —
+ * or the block itself — when missing. The body stays byte-identical.
+ */
+export function appendPageCites(
+  content: string,
+  path: string,
+  entries: NewCiteEntry[],
+): string {
+  const format = leadingFrontmatterFormat(content);
+  if (format === "toml" || format === "json") {
+    throw new DocevalsError(
+      `${path}: only YAML frontmatter can be edited (found ${format} frontmatter)`,
+    );
+  }
+
+  const bom = content.charCodeAt(0) === 0xfeff ? content[0]! : "";
+  const stripped = bom ? content.slice(1) : content;
+  const eol: "\n" | "\r\n" = stripped.includes("\r\n") ? "\r\n" : "\n";
+
+  if (format === undefined) {
+    const doc = new Document({});
+    const seq = doc.createNode([]) as YAMLSeq;
+    for (const entry of entries) seq.add(citeObject(doc, entry));
+    doc.set("cites", seq);
+    let block = doc.toString();
+    if (eol === "\r\n") block = block.replace(/(?<!\r)\n/g, "\r\n");
+    return `${bom}---${eol}${block}---${eol}${stripped}`;
+  }
+
+  const { open, block, suffix, eol: blockEol } = splitYamlFrontmatter(content, path);
+  const doc = parseDocument(block);
+  if (doc.errors.length > 0) {
+    throw new DocevalsError(
+      `${path}: cannot edit frontmatter — ${doc.errors[0]?.message ?? "parse error"}`,
+    );
+  }
+  let seq = citesSeq(doc, path);
+  if (!seq) {
+    seq = doc.createNode([]);
+    doc.set("cites", seq);
+  }
+  for (const entry of entries) {
+    if (findCiteNode(seq, entry.id)) {
+      throw new DocevalsError(`${path}: citation "${entry.id}" already exists in frontmatter`);
+    }
+    seq.add(citeObject(doc, entry));
+  }
+  let newBlock = doc.toString();
+  if (blockEol === "\r\n") newBlock = newBlock.replace(/(?<!\r)\n/g, "\r\n");
+  return open + newBlock + suffix;
+}
+
+/**
+ * Update one `cites` entry in place: a moved `src`, or a fresh `sha256` and
+ * `commit`. Everything else in the block, and the whole body, is untouched.
+ */
+export function updatePageCite(
+  content: string,
+  path: string,
+  id: string,
+  updates: CiteUpdates,
+): string {
+  const { open, block, suffix, eol } = splitYamlFrontmatter(content, path);
+  const doc = parseDocument(block);
+  if (doc.errors.length > 0) {
+    throw new DocevalsError(
+      `${path}: cannot edit frontmatter — ${doc.errors[0]?.message ?? "parse error"}`,
+    );
+  }
+  const seq = citesSeq(doc, path);
+  const node = seq ? findCiteNode(seq, id) : undefined;
+  if (!node) {
+    throw new DocevalsError(`${path}: citation "${id}" not found in frontmatter`);
+  }
+  if (updates.src !== undefined) node.set("src", updates.src);
+  if (updates.sha256 !== undefined) node.set("sha256", stringScalar(doc, updates.sha256));
+  if (updates.commit !== undefined) node.set("commit", stringScalar(doc, updates.commit));
+  let newBlock = doc.toString();
+  if (eol === "\r\n") newBlock = newBlock.replace(/(?<!\r)\n/g, "\r\n");
+  return open + newBlock + suffix;
+}

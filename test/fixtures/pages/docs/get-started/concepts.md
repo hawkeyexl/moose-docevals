@@ -13,6 +13,15 @@ evals:
       pass: Each concept has a heading with a definition, and relationships are stated.
       fail: A core concept is missing or relationships are never explained.
   - use: fresh-enough
+  # Error severity on purpose: this page carries a citation whose hash does
+  # not match anything in the source (CHANGED) and one whose source is gone
+  # (MISSING), so it fails, and CI asserts that it does (ADR 01045).
+  - use: cited-sources-current
+    severity: error
+cites:
+  - id: action-table
+    src: test/fixtures/cited/greeting.sh:6-6
+    sha256: b77077d2f77efc93dac02b913fe9283492790fdfab124ca1198f731a5e4cdb64
 ---
 
 Learn the key concepts that form the foundation of Doc Detective.
@@ -27,10 +36,12 @@ A [test](/docs/get-started/how-testing-works) is a sequence of steps to perform.
 
 ## Step
 
+<!-- cite: src=test/fixtures/cited/missing.sh:1-2 sha256=4795a4d56b39fa1373a5b3b9992dfc059e68490deb4717d70fd426bf4fb05421 -->
 A step is a portion of a test that includes a single action. Conceptually parallel to a step in a procedure.
 
 ## Action
 
+<!-- cite: action-table -->
 An action performs a task in a step. Doc Detective supports a variety of actions:
 
 | Name                                                        | Description                                                                                                                                               |
@@ -54,8 +65,10 @@ An action performs a task in a step. Doc Detective supports a variety of actions
 
 ## Context
 
+<!-- cite: src=test/fixtures/cited/greeting.sh:5 -->
 A [context](/reference/schemas/context) consists of an application and platforms that support the tests.
 
 ## Next steps
 
+<!-- cite: nowhere -->
 - [Create your first test](/docs/get-started/create-your-first-test)

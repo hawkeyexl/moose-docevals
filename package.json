@@ -14,6 +14,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./schemas/frontmatter-1.2.0.json": "./schemas/frontmatter-1.2.0.json",
     "./schemas/frontmatter-1.1.0.json": "./schemas/frontmatter-1.1.0.json",
     "./schemas/frontmatter-1.0.0.json": "./schemas/frontmatter-1.0.0.json",
     "./package.json": "./package.json"

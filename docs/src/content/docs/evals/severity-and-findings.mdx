@@ -126,6 +126,6 @@ the judged analog of the ratchet; see
 
 {/* Verified by moose-docevals itself during `verify-docs`. Config: .doc-detective.json. */}
 
-{/* step {"description":"A warning-severity finding reports without failing the page.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/get-started/concepts.md --deterministic-only --no-generate","exitCodes":[0]}} */}
+{/* step {"description":"A warning-severity finding reports without failing the eval.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/get-started/concepts.md --deterministic-only --no-generate --eval fresh-enough","exitCodes":[0],"stdio":"[freshness/stale]"}} */}
 
 {/* step {"description":"The same check at error severity fails, and the finding carries severity, line, and rule id.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/actions/goTo.mdx --deterministic-only --no-generate","exitCodes":[1],"stdio":"[freshness/stale]"}} */}

@@ -262,6 +262,58 @@ evals:
   - The page names every required field.`,
   ],
 
+  // 1.2.0: the citations vocabulary (ADR 01045). `cites` is a page-level list
+  // of source ranges the page depends on, each pinned by a sha256 so a drift
+  // check can say which sentence went stale. Ranges, URLs and the hashing
+  // rule are the tool's to interpret; the schema pins the shape.
+  [
+    "16 a minimal citation: a source and its hash",
+    true,
+    `cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708`,
+  ],
+  [
+    "17 a full citation: commit, quote, and an unminted sibling",
+    true,
+    `cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708
+    commit: 4d1e7c0
+    quote: true
+  - id: changelog
+    src: CHANGELOG.md`,
+  ],
+  [
+    "18 a page-level commit as the default for every entry",
+    true,
+    `cite-commit: 4d1e7c0f4d1e7c0f4d1e7c0f4d1e7c0f4d1e7c0f
+cites:
+  - id: whole-file
+    src: CHANGELOG.md
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708`,
+  ],
+  [
+    "19 a URL source",
+    true,
+    `cites:
+  - id: upstream
+    src: https://github.com/o/r/blob/main/src/x.ts#L3-L9
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708`,
+  ],
+  [
+    "20 citations beside evals on one page",
+    true,
+    `evals:
+  - use: cited-sources-current
+cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708`,
+  ],
+
   [
     "N1 the 0.1 object form now fails loudly",
     false,
@@ -359,6 +411,46 @@ evals:
     assertion: Something.`,
   ],
   ["N15 an empty eval list is not a declaration", false, `evals: []`],
+
+  // 1.2.0 negatives. The `cite-` prefix is reserved the way `eval-` is, and
+  // an entry is closed: a misspelled field is an error, not metadata nobody
+  // reads. A hash that is not 64 hex characters was typed by hand, which is
+  // the failure mode the whole vocabulary exists to make loud.
+  ["N16 a typo'd cite- key is caught by the prefix reservation", false, `cite-comit: 4d1e7c0`],
+  ["N17 an empty cites list is not a declaration", false, `cites: []`],
+  [
+    "N18 a hash that is not 64 hex characters",
+    false,
+    `cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70`,
+  ],
+  [
+    "N19 an unknown entry field",
+    false,
+    `cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708
+    claim: The installer needs Node 22.`,
+  ],
+  [
+    "N20 a frontmatter entry without an id has nothing a reference can name",
+    false,
+    `cites:
+  - src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708`,
+  ],
+  [
+    "N21 a commit that is not a hex sha",
+    false,
+    `cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    commit: main`,
+  ],
+  ["N22 a cite-commit that is not a hex sha", false, `cite-commit: HEAD`],
 ];
 
 describe("docmeta:evals vocabulary ladder", () => {

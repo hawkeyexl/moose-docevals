@@ -13,7 +13,7 @@ explicable wins; see [How moose-docevals works](/moose-docevals/get-started/how-
 |---|---|---|
 | `command` | Any CLI check you supply | No |
 | `tool:remark` · `tool:markdownlint` · `tool:vale` · `tool:docmeta` · `tool:doc-structure-lint` · `tool:doc-detective` | An existing tool | No |
-| `tool:freshness` · `tool:reading-level` · `tool:differentiation` | Native checks nothing else covers | No |
+| `tool:freshness` · `tool:reading-level` · `tool:differentiation` · `tool:regex` · `tool:file-exists` · `tool:citations` | Native checks nothing else covers | No |
 | `ai` | The judge | Yes |
 | `human` | A person | No |
 
@@ -233,6 +233,46 @@ Rule ids `file-exists/missing`, `file-exists/present`. A path that climbs out of
 directory is refused. A page is content, and content naming an arbitrary path on the machine
 running the eval is the hazard the [execution grant](/moose-docevals/reference/configuration/)
 exists for.
+
+## `tool:citations`
+
+Every citation on the page (see [`cites`](/moose-docevals/reference/frontmatter/#cites)) still hashes
+to the recorded value. A file read and a sha256 per citation, no model, and no network unless a
+citation points at a URL. The walkthrough is [Cite your sources](/moose-docevals/evals/cite-your-sources/).
+
+| Option | Default | Notes |
+|---|---|---|
+| `network` | `true` | Set `false` to skip URL citations as info, for an air-gapped job. |
+
+```yaml
+docevals:
+  evals:
+    cited-sources-current:
+      assertion: Every source range this page cites still matches its hash.
+      grader: tool:citations
+      severity: warning
+```
+
+A page with no citations passes with no findings. Findings anchor to the body comment's line and
+quote the sentence beside it.
+
+| Rule id | Severity | Meaning |
+|---|---|---|
+| `citations/moved` | info | The lines are byte-identical elsewhere in the file. Carries the new `src`; `cite refresh` rewrites it. |
+| `citations/changed` | eval | The lines are not in the file. With `commit`: the subjects of commits that touched the file since, and the `git diff` command. |
+| `citations/missing` | eval | The source cannot be found, or the URL returned 404. |
+| `citations/unminted` | eval | No `sha256` yet. `cite refresh` mints it. |
+| `citations/never-true` | **diagnostic** | With `commit`: the bytes existed nowhere in the file at that commit. A hand-typed hash, or one minted against uncommitted edits. Fails at any severity. |
+| `citations/unreachable` | **diagnostic** | A URL could not be fetched, or a file could not be read for a reason other than absence. |
+| `citations/commit-unresolved` | info | The repository cannot show the recorded commit, usually a shallow clone. The drift verdict still stands. |
+| `citations/no-git` | info | git is not on PATH; commit-based checks were skipped. Once per page. |
+| `citations/network-off` | info | A URL citation skipped under `network: false`. |
+| `citations/reference-orphan` | warning | A `cite: <id>` comment names no citation on the page. |
+| `citations/quote-drift` | eval | With `quote`: the code block after the comment differs from the cited lines. |
+| `citations/quote-missing` | eval | With `quote`: no fenced code block follows the comment. |
+
+"eval" means the eval's configured severity. `warning` is the shape for a pull-request job: every
+finding is reported, the page passes, and a scheduled sweep can run the same eval at `error`.
 
 ## `ai`
 

@@ -31,6 +31,7 @@ import { graderFor } from "../graders/registry.js";
 import { checkFeasibility } from "./feasibility.js";
 import { realExec } from "../graders/exec.js";
 import { groupTargetsByEval, type ExecFn, type GraderTarget } from "../graders/types.js";
+import type { FetchLike } from "../citations/source.js";
 import { sha256 } from "../judge/cache.js";
 import { isTurnBudgetSkip } from "../judge/budget.js";
 import { resolve } from "node:path";
@@ -125,6 +126,8 @@ export interface RunOptions {
   failOnReview?: boolean;
   judgeOptions?: JudgeOptions;
   exec?: ExecFn;
+  /** Network access for URL citations; defaults to the runtime's `fetch`. */
+  fetch?: FetchLike;
   judge?: JudgeFn;
   generateScripts?: GenerateFn;
 }
@@ -619,6 +622,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
   const cwd = options.cwd ?? process.cwd();
   const config = options.config ?? loadConfig(options.configPath, cwd);
   const exec = options.exec ?? realExec;
+  const fetch = options.fetch ?? globalThis.fetch;
   const pages = discoverPages(config, options.globs ?? [], cwd);
   // Refused up front, not at the end: a re-record rebuilds the file from this
   // run's findings, so recording from a filtered run would drop every
@@ -961,7 +965,7 @@ export async function runEvals(options: RunOptions = {}): Promise<EngineReport> 
       // script generation already does above.
       let findings: Finding[];
       try {
-        findings = await grader.grade({ targets: group, config, root: cwd, exec });
+        findings = await grader.grade({ targets: group, config, root: cwd, exec, fetch });
       } catch (e) {
         const reason = e instanceof Error ? e.message : String(e);
         for (const target of group) {

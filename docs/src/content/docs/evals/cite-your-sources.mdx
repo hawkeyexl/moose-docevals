@@ -1,0 +1,180 @@
+---
+title: Cite your sources
+description: Pin the source lines a sentence depends on by hash, and hear about it when they move, change, or vanish, for the cost of one file read.
+---
+
+A page that says "the installer needs Node 22 or later" is right because `scripts/install.sh`
+checks for it, on lines 3 and 4. Six months later someone bumps the script to Node 24. Nothing
+tells the page. Until now the choices were a judge eval, three model calls to compare a sentence
+to a file on every run, or noticing by accident.
+
+A **citation** records which lines a sentence depends on and the hash of those lines. The
+`tool:citations` grader re-hashes them on every run and reports what it finds. It costs a file
+read and a sha256. No model, and no network unless you cite a URL.
+
+## Write the citation next to the sentence
+
+Put a comment on the line above the sentence, naming the source and the range. In Markdown:
+
+```markdown
+<!-- cite: src=scripts/install.sh:3-4 -->
+The installer needs Node 22 or later.
+```
+
+In an `.mdx` page use a JSX comment, because MDX forbids HTML comments:
+
+```mdx
+{/* cite: src=scripts/install.sh:3-4 */}
+The installer needs Node 22 or later.
+```
+
+Both are invisible when the site renders. The comment can also sit at the end of the sentence's
+line. Either way the sentence beside it is the **claim**, and findings quote it back to you. The
+frontmatter never repeats it.
+
+## Mint it
+
+That comment has no hash yet. `moose-docevals cite refresh` fills it in, rewriting only the
+characters inside the comment:
+
+```bash
+moose-docevals cite refresh docs/install.md
+```
+
+```markdown
+<!-- cite: src=scripts/install.sh:3-4 sha256=9f2c…e41a commit=4d1e7c0 -->
+The installer needs Node 22 or later.
+```
+
+`sha256` is the hash of exactly those two lines. `commit` is where the hash was minted, and it is
+what lets a later run tell a citation that drifted from one that was never right. Minting refuses
+a source with uncommitted changes, so the commit it records is true of the bytes it hashed; pass
+`--no-commit` to hash without one.
+
+Until a citation is minted, `run` reports `citations/unminted` at the eval's severity. A forgotten
+hash is never a silent pass.
+
+## Turn the check on
+
+The grader is an ordinary eval. `moose-docevals init` declares one at `warning` in the default
+suite; in an existing config add it and attach it through a suite:
+
+```yaml
+docevals:
+  evals:
+    cited-sources-current:
+      assertion: Every source range this page cites still matches its hash.
+      grader: tool:citations
+      severity: warning
+  suites:
+    default:
+      evals: [cited-sources-current]
+```
+
+`warning` means a pull-request job reports and passes; a scheduled sweep can run the same eval at
+`error`. A page that declares citations no `tool:citations` eval checks gets a warning problem,
+because a record nobody checks is decoration that looks like a guarantee.
+
+## What a run tells you
+
+**Nothing changed.** No finding.
+
+**The lines moved.** A license header lands above them. The content is byte-identical at lines
+9–10 now. The finding is info, the page passes, and the fix is mechanical:
+
+```text
+info:12 [citations/moved] inline-12: scripts/install.sh:3-4 is now scripts/install.sh:9-10 (unchanged content). Run `moose-docevals cite refresh docs/install.md` to update it.
+```
+
+```bash
+moose-docevals cite refresh docs/install.md
+```
+
+**The lines changed.** The floor becomes Node 24. The finding carries the claim, the commits that
+touched the file since the citation was minted, and the diff command. That one line is the repair
+brief:
+
+```text
+warning:12 [citations/changed] inline-12: scripts/install.sh:3-4 changed since 4d1e7c0. 2 commit(s) touched it: "Require Node 24"; "Tidy install script". Claim: "The installer needs Node 22 or later." Compare with: git diff 4d1e7c0 HEAD -- scripts/install.sh
+```
+
+Fix the sentence, then re-mint. `refresh` leaves a changed citation alone until you say so:
+
+```bash
+moose-docevals cite refresh docs/install.md --accept-changed
+```
+
+**The file is gone.** `citations/missing`, at the eval's severity.
+
+**The hash was never true.** Someone typed it, or minted against uncommitted edits. With `commit`
+recorded, the grader reads the file at that commit and finds the bytes were never there. That is
+`citations/never-true`, and it fails the eval at any severity, because a citation that was never
+right says nothing about drift.
+
+## The frontmatter form
+
+The same citation can live under `cites:` in frontmatter, with the body comment naming it by id:
+
+```yaml
+---
+title: Install
+cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c…e41a
+    commit: 4d1e7c0
+---
+```
+
+```markdown
+<!-- cite: node-floor -->
+The installer needs Node 22 or later.
+```
+
+`moose-docevals cite add docs/install.md scripts/install.sh:3-4` mints and appends an entry, and
+prints the comment to paste. Reach for this form when several sentences cite one range, or when tooling reads metadata without
+scanning bodies. It also fits a citation that supports the whole page rather than one sentence.
+Then no comment is needed. The tool treats both forms as one list; `refresh`
+repairs either in place.
+
+## Cite a URL, or quote the lines
+
+`src` can point outside the repository: an absolute path, a GitHub file URL with a line fragment,
+or any https URL with a `:L1-L2` suffix.
+
+```markdown
+<!-- cite: src=https://github.com/o/r/blob/main/src/x.ts#L3-L9 -->
+```
+
+Pin a GitHub URL to a branch to track it; a URL pinned to a commit never drifts. A URL that cannot
+be fetched is a diagnostic finding, and `options.network: false` on the eval skips URL citations as
+info for an air-gapped job.
+
+When the page copies the lines into a code block rather than paraphrasing them, add `quote`. The
+grader then compares the first fenced block after the comment to the cited lines. If the copy was
+edited by hand it reports `citations/quote-drift`, even when the source is unchanged. This
+page does exactly that with the fixture script that the whole corpus cites:
+
+{/* cite: src=test/fixtures/cited/greeting.sh:11-11 sha256=f97a5e58cd0887fcb42d69a60e652ca3019dc428174fda5131cd6f15ab4c4795 quote */}
+The fixture script greets by name with one line:
+
+```sh
+echo "hello, $NAME"
+```
+
+That citation is checked every time this site is verified. The full field table, the `src`
+grammar, and the hashing rule are in the
+[frontmatter reference](/moose-docevals/reference/frontmatter/#cites). Every rule id is in the
+[graders reference](/moose-docevals/reference/graders/#toolcitations). The flags are in the
+[CLI reference](/moose-docevals/reference/cli/#moose-docevals-cite-add-page-src).
+
+{/* Verified by moose-docevals itself during `verify-docs` (see .github/workflows/ci.yml),
+    against the committed fixture corpus. Config: .doc-detective.json. */}
+
+{/* step {"description":"cite add mints the fixture range and prints its hash without writing.","runShell":{"command":"npx moose-docevals cite add test/fixtures/pages/docs/get-started/installation.mdx test/fixtures/cited/greeting.sh:11-11 --dry-run --no-commit --format json","exitCodes":[0],"stdio":"f97a5e58cd0887fcb42d69a60e652ca3019dc428174fda5131cd6f15ab4c4795"}} */}
+
+{/* step {"description":"A moved range is info and the page passes.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/get-started/installation.mdx --deterministic-only --no-generate --eval cited-sources-current","exitCodes":[0],"stdio":"/citations\\/moved/"}} */}
+
+{/* step {"description":"A changed range, a missing source, and an unminted citation fail at error severity.","runShell":{"command":"npx moose-docevals run test/fixtures/pages/docs/get-started/concepts.md --deterministic-only --no-generate --eval cited-sources-current","exitCodes":[1],"stdio":"/citations\\/changed[\\s\\S]*citations\\/missing[\\s\\S]*citations\\/unminted/"}} */}
+
+{/* step {"description":"cite refresh --dry-run names the moved fixture citation and writes nothing.","runShell":{"command":"npx moose-docevals cite refresh --dry-run","exitCodes":[0],"stdio":"/rewritten[\\s\\S]*Dry run/"}} */}

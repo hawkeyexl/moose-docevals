@@ -39,6 +39,29 @@ describe("deterministic run over fixtures", () => {
     expect(concepts?.outcome).toBe("pass");
     expect(concepts?.findings?.[0]?.severity).toBe("warning");
 
+    // Citations (ADR 01045). installation.mdx cites a range that moved: the
+    // finding is info and the page passes. concepts.md cites a range that
+    // changed and a file that is gone, at error severity, so it fails, and
+    // its unminted inline citation and orphaned reference are reported too.
+    const cited = byKey.get(
+      "test/fixtures/pages/docs/get-started/installation.mdx cited-sources-current",
+    );
+    expect(cited?.outcome).toBe("pass");
+    expect(cited?.findings?.map((f) => [f.ruleId, f.severity])).toEqual([
+      ["citations/moved", "info"],
+    ]);
+    expect(cited?.findings?.[0]?.message).toContain("test/fixtures/cited/greeting.sh:7-10");
+    const stale = byKey.get(
+      "test/fixtures/pages/docs/get-started/concepts.md cited-sources-current",
+    );
+    expect(stale?.outcome).toBe("fail");
+    expect(stale?.findings?.map((f) => f.ruleId).sort()).toEqual([
+      "citations/changed",
+      "citations/missing",
+      "citations/reference-orphan",
+      "citations/unminted",
+    ]);
+
     // Missing command with generation disabled errors.
     expect(
       byKey.get(
