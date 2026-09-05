@@ -80,11 +80,19 @@ docevals:
         field: last-reviewed
         max-age-days: 365
       severity: warning
+    cited-sources-current:
+      # A page can pin the source lines a sentence depends on by hash, with
+      # "moose-docevals cite add <page> <path:L1-L2>". This reports when those
+      # lines move, change, or vanish. Warning: report-only on pull requests;
+      # raise it on a scheduled sweep. A page that cites nothing passes.
+      assertion: Every source range this page cites still matches its hash.
+      grader: tool:citations
+      severity: warning
 
   suites:
     default:
       target-pass-rate: 1.0 # regression suites target ~100%
-      evals: [no-future-promises, fresh-enough]
+      evals: [no-future-promises, fresh-enough, cited-sources-current]
 `;
 
 export function runInit(cwd = process.cwd()): string {

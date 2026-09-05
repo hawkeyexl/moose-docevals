@@ -111,7 +111,7 @@ docevals:
       assertion: Page frontmatter validates against the moose-docevals frontmatter schema.
       grader: tool:docmeta
       options:
-        schemas: ["schemas/frontmatter-1.0.0.json"]
+        schemas: ["schemas/frontmatter-1.2.0.json"]
       severity: error
 
     # remark, not markdownlint: every page here is MDX, and markdownlint has
@@ -161,15 +161,23 @@ docevals:
         max-grade: 12
       severity: warning
 
+    # The citations drift check (ADR 01045), on every docs page. A page that
+    # cites nothing passes silently; the journey page for citations cites the
+    # frozen fixture source for real, so this gate dogfoods the grader.
+    cited-sources-current:
+      assertion: Every source range this page cites still matches its hash.
+      grader: tool:citations
+      severity: error
+
   suites:
     # Deterministic only, for now — see the note above the LLM evals.
     docs-page:
       target-pass-rate: 1.0
-      evals: [commands-work, frontmatter-valid, remark]
+      evals: [commands-work, frontmatter-valid, remark, cited-sources-current]
 
     # The target state, once real pages and their cache fixtures exist.
     docs-page-full:
       target-pass-rate: 1.0
       evals:
-        [commands-work, frontmatter-valid, remark, readable, no-future-promises,
-         serves-one-journey]
+        [commands-work, frontmatter-valid, remark, cited-sources-current, readable,
+         no-future-promises, serves-one-journey]

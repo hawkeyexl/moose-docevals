@@ -65,6 +65,8 @@ Numbering starts at `01000`. The `00001`–`00999` range holds decisions that pr
 | [01042](01042-grader-isolation-is-per-eval-group-not-per-kind.md) | Grader isolation is per eval group, and the engine owns the partition | accepted |
 | [01043](01043-the-missing-provider-warning-is-about-the-judge.md) | The missing-provider warning is about the judge; generation reports its own need | accepted |
 | [01044](01044-the-prose-gate-blocks-and-the-fixture-corpus-is-exempt.md) | The prose gate blocks on the whole corpus, and the vendored fixtures are exempt | accepted |
+| [01045](01045-cites-a-citation-vocabulary-and-a-drift-grader.md) | `cites`: a citation vocabulary and a drift grader, ahead of docmeta | accepted |
+| [01046](01046-cite-mints-and-refreshes-citations.md) | `cite` mints and refreshes citations, and refuses to mint what git has not seen | accepted |
 
 ## The backfilled range
 

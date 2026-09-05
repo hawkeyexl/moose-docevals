@@ -15,6 +15,7 @@ import { readingLevelGrader } from "./native/reading-level.js";
 import { differentiationGrader } from "./native/differentiation.js";
 import { regexGrader } from "./native/regex.js";
 import { fileExistsGrader } from "./native/file-exists.js";
+import { citationsGrader } from "./native/citations.js";
 
 const GRADERS = new Map<string, Grader>(
   [
@@ -30,6 +31,7 @@ const GRADERS = new Map<string, Grader>(
     differentiationGrader,
     regexGrader,
     fileExistsGrader,
+    citationsGrader,
   ].map((g) => [g.kind, g]),
 );
 

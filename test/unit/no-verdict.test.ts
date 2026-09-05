@@ -31,6 +31,8 @@ import { docStructureLintGrader } from "../../src/graders/tools/doc-structure-li
 import { markdownlintGrader } from "../../src/graders/tools/markdownlint.js";
 import { remarkGrader } from "../../src/graders/tools/remark.js";
 import { valeGrader } from "../../src/graders/tools/vale.js";
+import { citationsGrader } from "../../src/graders/native/citations.js";
+import type { FetchLike } from "../../src/citations/source.js";
 import type { Grader, ExecFn, ExecResult, GraderTarget } from "../../src/graders/types.js";
 
 /** An eval at warning severity, so only the flag can fail it. */
@@ -165,5 +167,83 @@ describe("a real page problem is not a diagnostic", () => {
     ]);
     expect(findings).toHaveLength(1);
     expect(findings[0]?.diagnostic).toBeUndefined();
+  });
+});
+
+// `tool:citations` reads sources, not tool output, so its no-verdict shapes
+// are a source it cannot reach and a hash that was never true at the commit
+// it names. Both go through the injected fetch; git is never spawned here.
+describe("tool:citations marks a no-verdict too", () => {
+  const HASH = "0".repeat(64);
+  const URL = "https://github.com/o/r/blob/main/x.sh#L1";
+  const SOURCE = "one\ntwo\n";
+
+  function citedTarget(comment: string): { target: GraderTarget; config: ReturnType<typeof parseDocevalsConfig> } {
+    const config = parseDocevalsConfig(
+      [
+        "version: 1",
+        "evals:",
+        "  check:",
+        "    assertion: Cited sources are current.",
+        "    grader: tool:citations",
+        "    severity: warning",
+        "suites:",
+        "  s: { evals: [check] }",
+      ].join("\n"),
+      "/fake/moose.config.yaml",
+    );
+    const content = `---\ntitle: x\neval-suite: s\n---\n${comment}\nClaim.\n`;
+    const page: PageFile = {
+      file: "docs/page.md",
+      absPath: "/fake/docs/page.md",
+      content,
+      body: `${comment}\nClaim.\n`,
+      frontmatter: extractFrontmatter(content, "markdown"),
+    };
+    const plan = resolvePage(page, config);
+    if (plan.evals.length === 0) throw new Error("no eval resolved");
+    return { target: { plan, eval: plan.evals[0]! }, config };
+  }
+
+  const grade = (comment: string, fetch: FetchLike) => {
+    const { target, config } = citedTarget(comment);
+    return citationsGrader.grade({
+      targets: [target],
+      config,
+      root: "/fake",
+      exec: fakeExec({ spawnError: "ENOENT", code: null }),
+      fetch,
+    });
+  };
+
+  it("citations: source unreachable", async () => {
+    const findings = await grade(
+      `<!-- cite: src=${URL} sha256=${HASH} -->`,
+      () => Promise.reject(new Error("ECONNRESET")),
+    );
+    expect(findings.length).toBeGreaterThan(0);
+    expect(findings.every((f) => f.diagnostic === true)).toBe(true);
+    expect(findings.every((f) => f.severity === "warning")).toBe(true);
+  });
+
+  it("citations: hash never true at the recorded commit", async () => {
+    const findings = await grade(
+      `<!-- cite: src=${URL} sha256=${HASH} commit=4d1e7c0 -->`,
+      () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(SOURCE) }),
+    );
+    expect(findings.map((f) => f.ruleId)).toEqual(["citations/never-true"]);
+    expect(findings.every((f) => f.diagnostic === true)).toBe(true);
+    expect(findings.every((f) => f.severity === "warning")).toBe(true);
+  });
+
+  // The complement, as above: a source that changed is a page problem.
+  it("a changed citation is not a diagnostic", async () => {
+    const findings = await grade(
+      `<!-- cite: src=${URL} sha256=${HASH} -->`,
+      () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(SOURCE) }),
+    );
+    expect(findings.map((f) => f.ruleId)).toEqual(["citations/changed"]);
+    expect(findings[0]?.diagnostic).toBeUndefined();
+    expect(findings[0]?.severity).toBe("warning");
   });
 });

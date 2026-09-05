@@ -3,17 +3,19 @@ title: Frontmatter reference
 description: Every field an eval can carry, and how page evals resolve against config evals and suites.
 ---
 
-Eval declarations live in page frontmatter under four keys, validated by the JSON Schema this
-package publishes at `schemas/frontmatter-1.0.0.json`. That schema implements
-`docmeta:evals:1.0.0-proposal.1`, the common vocabulary docmeta proposes for per-page quality
-assertions. docmeta publishes the vocabulary, and moose-docevals implements the graders behind it.
-Verified against that schema and `src/core/resolve.ts`.
+Eval declarations live in page frontmatter under four keys, and citations under two more,
+validated by the JSON Schema this package publishes at `schemas/frontmatter-1.2.0.json`. That
+schema implements `docmeta:evals:1.0.0-proposal.2`, the common vocabulary docmeta proposes for
+per-page quality assertions. It also carries the citations vocabulary this package ships ahead of a
+docmeta proposal for it. docmeta publishes the vocabulary, and moose-docevals implements the graders behind
+it. Older schema versions stay published and byte-identical; a page valid against one is valid
+against this. Verified against that schema and `src/core/resolve.ts`.
 
-## The four page keys
+## The page keys
 
 Settings are page-level facts, not an enclosing object. The page root stays open, so a sibling
-tool's keys pass untouched. But the **`eval-` prefix is reserved**: an unrecognized `eval-*` key is
-an error, not something silently ignored.
+tool's keys pass untouched. But the **`eval-` and `cite-` prefixes are reserved**: an unrecognized
+`eval-*` or `cite-*` key is an error, not something silently ignored.
 
 | Key | Type | Meaning |
 |---|---|---|
@@ -21,6 +23,8 @@ an error, not something silently ignored.
 | `eval-suite` | string | Named suite from the config whose evals apply. An unknown name is a page error. |
 | `eval-skip` | boolean (`false`) | Skip this page entirely; it reports as skipped. |
 | `eval-provenance` | list | The machine-proposal trail `fill` writes. See below. |
+| `cites` | non-empty list | Source ranges the page depends on, pinned by hash. See [`cites`](#cites). |
+| `cite-commit` | string | Default `commit` for every `cites` entry that omits its own. |
 
 The page's own top-level `generated-by`, which is not an `eval-*` key, records the model that wrote
 the page's content. The judge reads it to warn about self-preference bias when it matches the judging
@@ -163,11 +167,78 @@ These are reported per page rather than thrown, so one bad page does not stop th
 | Unknown suite name | error |
 | Unknown eval reference | error |
 | Duplicate eval id on one page | warning |
-| Unrecognized `eval-*` page key | error |
+| Unrecognized `eval-*` or `cite-*` page key | error |
 | String shorthand matching a config eval id | warning |
 | Inline ai eval with no `examples` | warning |
+| Duplicate citation id, across frontmatter and inline comments | error |
+| A `cite:` comment that is neither an id nor `key=value` tokens | error |
+| An inline citation with a misspelled field, or a `src` that does not parse | error |
+| Citations declared, but no `tool:citations` eval applies to the page | warning |
 
-Errors carry the source line, resolved through docmeta's JSON-Pointer line map.
+Errors carry the source line, resolved through docmeta's JSON-Pointer line map, or the line of the
+body comment.
+
+## `cites`
+
+A citation pins the source lines a sentence depends on, so
+[`tool:citations`](/moose-docevals/reference/graders/#toolcitations) can say when they move, change,
+or vanish. The walkthrough is [Cite your sources](/moose-docevals/evals/cite-your-sources/). Two
+forms, one vocabulary.
+
+**In frontmatter**, under `cites`, with a body comment naming the entry by id:
+
+```yaml
+cites:
+  - id: node-floor
+    src: scripts/install.sh:3-4
+    sha256: 9f2c…e41a
+    commit: 4d1e7c0
+```
+
+```markdown
+<!-- cite: node-floor -->
+The installer needs Node 22 or later.
+```
+
+**Inline**, as the same fields written as `key=value` tokens in the comment, with no frontmatter:
+
+```markdown
+<!-- cite: src=scripts/install.sh:3-4 sha256=9f2c…e41a commit=4d1e7c0 -->
+The installer needs Node 22 or later.
+```
+
+In `.mdx` the comment is `{/* cite: … */}`, because MDX forbids HTML comments. A comment whose only
+token has no `=` is a reference; anything with `key=value` tokens is an inline citation. Inline
+entries are validated against the same definition as the list, so a misspelled field is the same
+error in both forms. The comment goes on the line above the sentence or at the end of it; that
+sentence is the **claim** findings quote. Comments inside fenced code blocks and inline code spans
+are ignored, which is how this page can show the syntax.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | kebab-case | Required on a frontmatter entry; optional inline (`id=`). Unique per page across both forms. |
+| `src` | string | Required. See the grammar below. |
+| `sha256` | 64 hex characters | Hash of the cited lines under the rule below. Absent means **unminted**: `cite refresh` fills it, and `run` reports it rather than passing. |
+| `commit` | 7–40 hex characters | Commit the hash was minted at. Overrides `cite-commit`. Enables the commit subjects in a `changed` finding and the never-true check. |
+| `quote` | boolean (`false`) | The page reproduces the cited lines verbatim in the first fenced code block after the comment; the grader compares the copy too. Inline, the bare token `quote`. |
+
+An all-digit `sha256` or `commit` must be quoted in YAML, or the parser reads it as a number. The
+writers quote it for you; the error names the fix if you write one by hand.
+
+**`src` grammar.** A range is `:L` or `:L1-L2`, 1-based and inclusive. No range means the whole
+file.
+
+| Form | Example | Read as |
+|---|---|---|
+| Relative path | `scripts/install.sh:3-4` | A file relative to the directory moose-docevals runs in, normally the repository root, so a moved page keeps its citations. |
+| Absolute path | `/srv/shared/spec.md:10-20` | That file. Not portable across machines. |
+| GitHub file URL | `https://github.com/o/r/blob/main/src/x.ts#L3-L9` | The raw file at that ref. A ref that is a commit never drifts; a branch tracks. |
+| Other https URL | `https://example.com/spec.txt:5-9` | Fetched as is. |
+
+**Hashing rule**, so any script mints the same hash. Read as UTF-8 and strip a byte-order mark.
+Normalize line endings to LF. Take lines L1..L2 inclusive and join them with LF, with no trailing
+newline and trailing whitespace preserved. `hashRange` is exported from the package for scripts that mint
+elsewhere.
 
 ## `eval-provenance`
 
@@ -204,7 +275,7 @@ A different model gets its own.
 The schema ships in the package, so any JSON Schema validator can check your pages:
 
 ```bash
-docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-1.0.0.json docs/
+docmeta validate --schema node_modules/moose-docevals/schemas/frontmatter-1.2.0.json docs/
 ```
 
 Or wire it in as an eval, so bad declarations fail the run like any other check:
@@ -216,7 +287,7 @@ docevals:
       assertion: Page frontmatter matches the moose-docevals schema.
       grader: tool:docmeta
       options:
-        schemas: ["node_modules/moose-docevals/schemas/frontmatter-1.0.0.json"]
+        schemas: ["node_modules/moose-docevals/schemas/frontmatter-1.2.0.json"]
       severity: error
 ```
 

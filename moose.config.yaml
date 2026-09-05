@@ -68,7 +68,7 @@ docevals:
       assertion: Page frontmatter validates against the moose-docevals built-in schema.
       grader: tool:docmeta
       options:
-        schemas: ["schemas/frontmatter-1.0.0.json"]
+        schemas: ["schemas/frontmatter-1.2.0.json"]
       severity: error
     remark:
       assertion: Page parses as MDX and passes remark lint rules.
@@ -103,6 +103,15 @@ docevals:
       grader: tool:reading-level
       options:
         max-grade: 12
+      severity: warning
+    cited-sources-current:
+      # The drift check (ADR 01045): a page pins the source lines a sentence
+      # depends on by hash, and this reports when they move, change, or
+      # vanish. Warning here so a moved range reports without failing; the
+      # fixture pages that attach it raise the severity where a fail is the
+      # point. Sources live under test/fixtures/cited/ and are frozen.
+      assertion: Every source range this page cites still matches its hash.
+      grader: tool:citations
       severity: warning
     distinct-action-pages:
       assertion: >

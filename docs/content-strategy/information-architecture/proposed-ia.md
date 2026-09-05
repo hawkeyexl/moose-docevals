@@ -6,10 +6,10 @@ covers_subtree: docs/src/content/docs/
 excludes: [README.md, adrs/, docs/content-strategy/]
 derived_from: ../journeys/
 companion: ia-gap-analysis.md
-page_count: 34
-pages_written: 34
+page_count: 35
+pages_written: 35
 status: complete
-priorities: { P0: 18, P1: 11, P2: 5 }
+priorities: { P0: 18, P1: 12, P2: 5 }
 ---
 
 # Proposed information architecture
@@ -105,6 +105,7 @@ in [`ia-gap-analysis.md`](ia-gap-analysis.md) §3.
 | `evals/deterministic-checks.mdx` | `cuj-orchestrate-tools`, `cuj-cheapen-evals` | ★ | `command` and `tool:*` graders; wrapping existing linters; the generate path for a plain-language command eval. |
 | `evals/named-evals-and-suites.mdx` | `cuj-eval-library` | P1 | Named evals, suites, `target-pass-rate`, resolution order, `moose-docevals list` as the dry-run. |
 | `evals/test-your-commands.mdx` | `cuj-orchestrate-tools` | P1 | The inline Doc Detective convention. See [Authoring convention](#authoring-convention-for-pages-that-show-commands). |
+| `evals/cite-your-sources.mdx` | `cuj-cheapen-evals`, `cuj-orchestrate-tools` | P1 | Pin the source lines a sentence depends on by hash (`cites`, or an inline `cite:` comment), and read the `tool:citations` findings as a repair brief. `cite refresh` before `run`. The one page that shows the sentence-level anchor; the reference pages carry the grammar and the rule ids. |
 | `evals/regression-vs-capability.mdx` | `cuj-write-judgeable-assertions`, `cuj-retrofit-corpus` | P2 | Why `regression` is the default; how pass-rate targets carry the nuance binary verdicts appear to lose. |
 | `evals/severity-and-findings.mdx` | `cuj-orchestrate-tools`, `cuj-retrofit-corpus` | P2 | `error` fails; `warning`/`info` report and pass. `severity-map`. The severity ratchet. |
 
@@ -167,7 +168,8 @@ output and over-promise.
 |---|---|
 | `reference/cli.mdx` | `src/cli.ts` |
 | `reference/configuration.mdx` | `src/core/config-schema.json`, `src/core/config.ts` |
-| `reference/frontmatter.mdx` | `schemas/frontmatter-1.0.0.json`, `src/core/resolve.ts` |
+| `reference/frontmatter.mdx` | `schemas/frontmatter-1.2.0.json`, `src/core/resolve.ts`, `src/citations/hash.ts` |
+| `evals/cite-your-sources.mdx` | `src/citations/`, `src/graders/native/citations.ts`, `src/commands/cite.ts` |
 | `reference/graders.mdx` | `src/graders/registry.ts`, each grader under `src/graders/` |
 | `reference/output-and-exit-codes.mdx` | `src/reporters/`, `src/cli.ts` |
 | `reference/files-and-state.mdx` | `src/judge/cache.ts`, `src/fill/cache.ts`, `src/core/reviews.ts`, `src/graders/scriptgen.ts` |

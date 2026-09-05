@@ -12,13 +12,14 @@
  * fragment.
  */
 import { Ajv2020 } from "ajv/dist/2020.js";
-import type { ErrorObject } from "ajv";
+import type { ErrorObject, ValidateFunction } from "ajv";
 // Pages validate against the current schema, not the oldest one still shipped:
-// 1.1.0 adds `weight`, `target`, `runs` and `model`, and validating against
-// 1.0.0 would reject every page that uses them. 1.0.0 stays published and
-// byte-frozen for consumers who pinned it; every page valid against it is
-// valid against this.
-import frontmatterSchema from "../../schemas/frontmatter-1.1.0.json" with { type: "json" };
+// 1.1.0 adds `weight`, `target`, `runs` and `model`, and 1.2.0 adds `cites`
+// and `cite-commit`; validating against an older version would reject every
+// page that uses them. The older versions stay published and byte-frozen for
+// consumers who pinned them; every page valid against one is valid against
+// this.
+import frontmatterSchema from "../../schemas/frontmatter-1.2.0.json" with { type: "json" };
 import type { EvalType, GraderKind, Severity } from "../types.js";
 import {
   normalizeEvalDef,
@@ -28,6 +29,14 @@ import {
 } from "./config.js";
 import type { PageFile } from "./discover.js";
 import type { EvalTarget } from "./target.js";
+import { scanCiteComments } from "../citations/comments.js";
+import { parseSrc } from "../citations/hash.js";
+import {
+  noCitations,
+  type Citation,
+  type CitationAnchor,
+  type PageCitations,
+} from "../citations/types.js";
 
 export interface ResolvedEval {
   /** Kebab-case id, unique per page. */
@@ -92,11 +101,26 @@ export interface ResolvedPagePlan {
   /** Unretired machine-proposal trail from `eval-provenance`. */
   provenance: EvalProvenance[];
   evals: ResolvedEval[];
+  /**
+   * Every citation on the page, from the `cites` list and from inline body
+   * comments alike, in one shape (ADR 01045).
+   */
+  citations: PageCitations;
   problems: PageProblem[];
 }
 
 const ajv = new Ajv2020({ allErrors: true, allowUnionTypes: true });
 const validateFrontmatter = ajv.compile(frontmatterSchema);
+// The same definition the `cites` list validates against, so an inline
+// comment's entry is held to exactly the frontmatter entry's rules. Compiling
+// the page schema registered its `$id`, which is what makes the ref resolve.
+const validateCitationEntry = ((): ValidateFunction => {
+  const fn = ajv.getSchema(
+    `${(frontmatterSchema as { $id: string }).$id}#/$defs/citationEntry`,
+  );
+  if (fn === undefined) throw new Error("frontmatter schema has no $defs/citationEntry");
+  return fn;
+})();
 
 interface FrontmatterEvalRef {
   use: string;
@@ -123,12 +147,23 @@ interface RawProvenanceEntry {
   confidence?: Record<string, number>;
 }
 
-/** The four page keys this vocabulary claims, plus the one it borrows. */
+/** One `cites` entry as the schema admits it. */
+interface RawCitationEntry {
+  id?: string;
+  src: string;
+  sha256?: string;
+  commit?: string;
+  quote?: boolean;
+}
+
+/** The six page keys this vocabulary claims, plus the one it borrows. */
 interface EvalFrontmatter {
   evals?: string | FrontmatterEvalEntry[];
   "eval-suite"?: string;
   "eval-skip"?: boolean;
   "eval-provenance"?: RawProvenanceEntry[];
+  cites?: RawCitationEntry[];
+  "cite-commit"?: string;
   "generated-by"?: string;
 }
 
@@ -194,17 +229,19 @@ function shorthandName(index: number, taken: ReadonlySet<string>): string {
   }
 }
 
-/** The page-level keys this vocabulary claims, for the reservation message. */
+/** The page-level keys this vocabulary claims, for the reservation messages. */
 const RESERVED_KEYS = ["eval-suite", "eval-skip", "eval-provenance"] as const;
+const RESERVED_CITE_KEYS = ["cite-commit"] as const;
 
 /**
  * A schema error, in words.
  *
- * The `eval-` prefix reservation is expressed as a `patternProperties` entry
- * whose subschema is `false`, and Ajv reports that as "boolean schema is
- * false" — which names neither the key nor the fix. The reservation exists
- * precisely to make a typo loud, so it gets a sentence rather than Ajv's
- * internals.
+ * The `eval-` and `cite-` prefix reservations are expressed as
+ * `patternProperties` entries whose subschema is `false`, and Ajv reports
+ * that as "boolean schema is false" — which names neither the key nor the
+ * fix. The reservation exists precisely to make a typo loud, so it gets a
+ * sentence rather than Ajv's internals. An unknown property is named for the
+ * same reason: "must NOT have additional properties" points at the parent.
  */
 function describeError(e: ErrorObject): string {
   if (e.keyword === "false schema" && e.instancePath.startsWith("/eval-")) {
@@ -215,7 +252,152 @@ function describeError(e: ErrorObject): string {
       `error here rather than a key nothing reads.`
     );
   }
+  if (e.keyword === "false schema" && e.instancePath.startsWith("/cite-")) {
+    const key = e.instancePath.slice(1);
+    return (
+      `unknown key "${key}". The "cite-" prefix is reserved, and the only ` +
+      `setting under it is ${RESERVED_CITE_KEYS.join(", ")} — so a typo is an ` +
+      `error here rather than a key nothing reads.`
+    );
+  }
+  if (e.keyword === "additionalProperties") {
+    const extra = (e.params as { additionalProperty?: string }).additionalProperty;
+    if (extra !== undefined) return `unknown field "${extra}"`;
+  }
+  // About one short sha in 27 is all digits, and YAML reads an unquoted one as
+  // an integer. "must be string" is true and useless; name the fix.
+  if (
+    e.keyword === "type" &&
+    (e.params as { type?: string }).type === "string" &&
+    /(^\/cite-commit$|\/commit$|\/sha256$)/.test(e.instancePath)
+  ) {
+    return "must be a string — an all-digit value is read by YAML as a number, so quote it";
+  }
   return e.message ?? "is invalid";
+}
+
+/**
+ * Both citation forms, normalized into one list.
+ *
+ * Frontmatter entries first, in list order, then inline comments in file
+ * order. Reference comments attach to whichever entry carries their id, from
+ * either form; one that names nothing is an orphan for the grader to report.
+ * Every problem found here is an error: a citation the page cannot express
+ * is a citation that checks nothing.
+ */
+function resolveCitations(
+  page: PageFile,
+  fm: EvalFrontmatter,
+  problems: PageProblem[],
+): PageCitations {
+  const entries: Citation[] = [];
+  const byId = new Map<string, Citation>();
+  const defaultCommit = fm["cite-commit"];
+
+  const claim = (c: Citation, line: number): void => {
+    if (byId.has(c.id)) {
+      problems.push({
+        message:
+          `Duplicate citation id "${c.id}" — a reference comment could name either, ` +
+          `so the page must give each citation its own id`,
+        level: "error",
+        line,
+      });
+      return;
+    }
+    byId.set(c.id, c);
+    entries.push(c);
+  };
+
+  for (const [i, raw] of (fm.cites ?? []).entries()) {
+    const line = page.frontmatter.lineFor(`/cites/${i}`) ?? 1;
+    const parsed = parseSrc(raw.src);
+    if (!parsed.ok) {
+      problems.push({
+        message: `cites[${i}] "${raw.id ?? "?"}": src "${raw.src}" — ${parsed.error}`,
+        level: "error",
+        line: page.frontmatter.lineFor(`/cites/${i}/src`) ?? line,
+      });
+      continue;
+    }
+    const c: Citation = {
+      // The schema requires `id` on a frontmatter entry; the fallback only
+      // keeps the type honest.
+      id: raw.id ?? `cites-${i}`,
+      src: raw.src,
+      spec: parsed.spec,
+      quote: raw.quote ?? false,
+      origin: "frontmatter",
+      line,
+      index: i,
+      anchors: [],
+    };
+    if (raw.sha256 !== undefined) c.sha256 = raw.sha256;
+    const commit = raw.commit ?? defaultCommit;
+    if (commit !== undefined) c.commit = commit;
+    claim(c, line);
+  }
+
+  const references: { id: string; anchor: CitationAnchor }[] = [];
+  for (const comment of scanCiteComments(page.content)) {
+    const where = `cite comment at line ${comment.line}`;
+    if (comment.kind === "invalid") {
+      problems.push({ message: `${where}: ${comment.reason}`, level: "error", line: comment.line });
+      continue;
+    }
+    const anchor: CitationAnchor = {
+      line: comment.line,
+      claim: comment.claim,
+      claimLine: comment.claimLine,
+    };
+    if (comment.kind === "reference") {
+      references.push({ id: comment.id, anchor });
+      continue;
+    }
+    if (!validateCitationEntry(comment.entry)) {
+      for (const e of validateCitationEntry.errors ?? []) {
+        const at = e.instancePath === "" ? "" : ` ${e.instancePath.slice(1)}`;
+        problems.push({
+          message: `${where}:${at} ${describeError(e)}`,
+          level: "error",
+          line: comment.line,
+        });
+      }
+      continue;
+    }
+    const raw = comment.entry as unknown as RawCitationEntry;
+    const parsed = parseSrc(raw.src);
+    if (!parsed.ok) {
+      problems.push({
+        message: `${where}: src "${raw.src}" — ${parsed.error}`,
+        level: "error",
+        line: comment.line,
+      });
+      continue;
+    }
+    const c: Citation = {
+      id: raw.id ?? `inline-${comment.line}`,
+      src: raw.src,
+      spec: parsed.spec,
+      quote: raw.quote ?? false,
+      origin: "inline",
+      line: comment.line,
+      comment: { line: comment.line, syntax: comment.syntax, span: comment.span },
+      anchors: [anchor],
+    };
+    if (raw.sha256 !== undefined) c.sha256 = raw.sha256;
+    const commit = raw.commit ?? defaultCommit;
+    if (commit !== undefined) c.commit = commit;
+    claim(c, comment.line);
+  }
+
+  const orphans: PageCitations["orphans"] = [];
+  for (const { id, anchor } of references) {
+    const target = byId.get(id);
+    if (target) target.anchors.push(anchor);
+    else orphans.push({ id, line: anchor.line });
+  }
+  return { entries, orphans };
 }
 
 /** Resolve one page's plan. Never throws; problems are collected per page. */
@@ -230,6 +412,7 @@ export function resolvePage(
     suite: null,
     provenance: [],
     evals: [],
+    citations: noCitations(),
     problems,
   };
   if (page.extractError) {
@@ -260,6 +443,7 @@ export function resolvePage(
     evals: p.evals,
     confidence: p.confidence,
   }));
+  const citations = resolveCitations(page, fm, problems);
 
   const declaredSuite = fm["eval-suite"];
   const suiteName = declaredSuite ?? config.defaults.suite;
@@ -269,7 +453,7 @@ export function resolvePage(
       level: "error",
       line: page.frontmatter.lineFor("/eval-suite") ?? 1,
     });
-    return { ...empty, skip: pageSkip, provenance };
+    return { ...empty, skip: pageSkip, provenance, citations };
   }
 
   const resolved = new Map<string, ResolvedEval>();
@@ -370,6 +554,23 @@ export function resolvePage(
     }
   }
 
+  // A citation nobody checks is decoration that looks like a guarantee. The
+  // page did its part; the config is what is missing, so say which grader.
+  if (
+    citations.entries.length > 0 &&
+    !pageSkip &&
+    ![...resolved.values()].some((ev) => ev.grader === "tool:citations" && !ev.skip)
+  ) {
+    problems.push({
+      message:
+        `Page declares ${citations.entries.length} citation(s) but no eval with ` +
+        `grader tool:citations applies to it, so nothing checks them. Define one ` +
+        `in ${config.configPath} and attach it through a suite or "use:".`,
+      level: "warning",
+      line: citations.entries[0]?.line ?? 1,
+    });
+  }
+
   return {
     page,
     skip: pageSkip,
@@ -377,6 +578,7 @@ export function resolvePage(
     generatedBy: fm["generated-by"],
     provenance,
     evals: [...resolved.values()],
+    citations,
     problems,
   };
 }

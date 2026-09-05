@@ -107,6 +107,19 @@ jobs:
             const ref = r.suites.find((s) => s.suite === "reference");
             check("reference criteria failed", ref?.criteria?.failed, 1);
             check("reference criteria suspended", ref?.criteria?.suspended, 0);
+            // Citations (ADR 01045). A range that moved is info and passes; a
+            // range that changed, a source that is gone, and an unminted
+            // citation fail at error severity.
+            const moved = find("installation.mdx", "cited-sources-current");
+            check("installation.mdx cited-sources-current", moved?.outcome, "pass");
+            check("installation.mdx citations/moved", moved?.findings?.map((f) => f.ruleId).join(","), "citations/moved");
+            const stale = find("concepts.md", "cited-sources-current");
+            check("concepts.md cited-sources-current", stale?.outcome, "fail");
+            check(
+              "concepts.md citation rule ids",
+              (stale?.findings ?? []).map((f) => f.ruleId).sort().join(","),
+              "citations/changed,citations/missing,citations/reference-orphan,citations/unminted",
+            );
           '
 
       # The HTML report is what a documentation owner actually opens, so it has
@@ -483,6 +496,88 @@ jobs:
           # A re-record from a scoped run would forgive every finding the scope
           # excluded, so the combination is refused before git is spawned.
           expect_code 2 node dist/cli.js run --deterministic-only --since HEAD --write-baseline > /dev/null
+
+      # ADR 01045 / 01046. The whole citation loop against a real git history,
+      # once per form: an unminted inline comment, and a frontmatter entry
+      # `cite add` mints. Each state the grader can report is reached by an
+      # ordinary edit and a commit, and the repair each finding names is run
+      # and shown to clear it. The last step corrupts a hash by hand, which
+      # must fail even at warning severity, because a citation that was never
+      # true says nothing about drift.
+      - name: Dogfood cite add and refresh in a scratch repository
+        shell: bash
+        run: |
+          rm -rf .ci-cite-check
+          mkdir -p .ci-cite-check/docs .ci-cite-check/src
+          cd .ci-cite-check
+          git init -q .
+          git config user.email ci@example.com
+          git config user.name ci
+          printf '%s\n' '#!/bin/sh' 'set -e' 'need node 22' 'or later' 'echo done' > src/install.sh
+          {
+            echo 'docevals:'
+            echo '  version: 1'
+            echo '  files:'
+            echo '    include: ["docs/**/*.md"]'
+            echo '  defaults:'
+            echo '    suite: default'
+            echo '  evals:'
+            echo '    cited-sources-current:'
+            echo '      assertion: Every source range this page cites still matches its hash.'
+            echo '      grader: tool:citations'
+            echo '      severity: error'
+            echo '  suites:'
+            echo '    default:'
+            echo '      evals: [cited-sources-current]'
+          } > moose.config.yaml
+          {
+            echo '---'; echo 'title: Install'; echo '---'; echo
+            echo '<!-- cite: src=src/install.sh:3-4 -->'
+            echo 'The installer needs Node 22 or later.'
+          } > docs/install.md
+          git add -A && git commit -qm "initial"
+          run() {
+            set +e
+            out=$(node ../dist/cli.js run --deterministic-only --no-generate 2>&1); code=$?
+            set -e
+          }
+          expect() {  # expect <code> <substring-or-empty> <label>
+            if [ "$code" -ne "$1" ]; then echo "::error::$3: expected exit $1, got $code"; echo "$out"; exit 1; fi
+            if [ -n "$2" ]; then case "$out" in *"$2"*) ;; *) echo "::error::$3: expected \"$2\" in output"; echo "$out"; exit 1;; esac; fi
+          }
+          # An unminted citation is a finding, never a silent pass.
+          run; expect 1 "citations/unminted" "unminted"
+          # cite add mints a frontmatter entry, with the commit it was minted at.
+          node ../dist/cli.js cite add docs/install.md src/install.sh:5 --id done-line
+          grep -q 'commit: ' docs/install.md || { echo "::error::cite add recorded no commit"; exit 1; }
+          # cite refresh mints the inline one in place.
+          node ../dist/cli.js cite refresh
+          grep -q 'sha256=' docs/install.md || { echo "::error::cite refresh did not mint the inline citation"; exit 1; }
+          run; expect 0 "" "minted"
+          git add -A && git commit -qm "cite the installer"
+          # A header lands above the cited lines: moved, info, still passing.
+          { printf '%s\n' '# license' '# header'; cat src/install.sh; } > tmp && mv tmp src/install.sh
+          git commit -qam "Add license header"
+          run; expect 0 "citations/moved" "moved"
+          node ../dist/cli.js cite refresh
+          grep -q 'src=src/install.sh:5-6' docs/install.md || { echo "::error::refresh did not rewrite the moved range"; exit 1; }
+          git commit -qam "Refresh citations"
+          run; expect 0 "" "after moved refresh"
+          case "$out" in *"citations/moved"*) echo "::error::moved finding survived the refresh"; echo "$out"; exit 1;; esac
+          # The cited lines change: exit 1, with the commit subject in the brief.
+          sed -i 's/need node 22/need node 24/' src/install.sh
+          git commit -qam "Require Node 24"
+          run; expect 1 "citations/changed" "changed"
+          expect 1 "Require Node 24" "changed names the commit"
+          # refresh alone leaves a changed citation for a human to act on.
+          node ../dist/cli.js cite refresh
+          run; expect 1 "citations/changed" "kept without --accept-changed"
+          node ../dist/cli.js cite refresh --accept-changed
+          run; expect 0 "" "re-minted"
+          # A hash typed by hand fails at any severity.
+          sed -i 's/severity: error/severity: warning/' moose.config.yaml
+          sed -i -E 's/sha256=[0-9a-f]{64}/sha256=0000000000000000000000000000000000000000000000000000000000000000/' docs/install.md
+          run; expect 1 "citations/never-true" "never-true"
 
       # ADR 01041. The silent green this repo exists to prevent, at the very
       # top of the pipeline: a corpus whose config attaches nothing resolved

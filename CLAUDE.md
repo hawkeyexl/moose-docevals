@@ -84,10 +84,11 @@ Unit tests are necessary but not sufficient. A **user-facing feature** is a grad
 `test/fixtures/pages/` is a snapshot of doc-detective's docs annotated with moose-docevals frontmatter. It is deliberately **not** all-passing, because it encodes both outcomes so the gate is meaningful:
 
 - `goTo.mdx` fails freshness at error severity (drives the expected non-zero exit).
-- `concepts.md` is stale at *warning* severity, so it reports a finding but still passes.
+- `concepts.md` is stale at *warning* severity, so that eval reports a finding but still passes. The page as a whole fails on its citations (below), so a docs step that wants the warning story must scope with `--eval fresh-enough`.
 - `installation.mdx` has a command eval with no command, which is the script-generation target.
 - `find.mdx` has a pre-generated script in `test/fixtures/pages/docs/actions/moose-docevals/`.
 - `index.mdx` is skipped at the page level.
+- `installation.mdx` cites `test/fixtures/cited/greeting.sh` twice: a frontmatter entry whose range **moved** (info, passes) and an inline `quote` citation that is current. `concepts.md` cites it at error severity with a **changed** hash, a **missing** source, an **unminted** inline citation and an orphaned reference, so it fails. The source file is frozen; editing it flips both.
 
 CI runs the built CLI against this corpus and asserts specific outcomes. A fixture change that flips one of these must update `.github/workflows/ci.yml` in the same commit.
 
@@ -167,7 +168,7 @@ Pick the commit type deliberately. It is the **only** signal that decides whethe
 - Don't use `--no-verify` to skip a failing hook; fix the cause.
 - Don't add commitizen, standard-version, release-please, or changesets, because they conflict with semantic-release.
 - Don't work in a worktree without installing into it. See ["Environment setup"](#environment-setup-required). `npm run check:deps` catches it.
-- Don't diverge `schemas/frontmatter-1.1.0.json` from `docmeta:evals:1.0.0-proposal.2` without recording why. The field names are docmeta's now, not ours (ADR 01009). 1.0.0 stays shipped and byte-frozen for consumers who pinned it.
+- Don't diverge `schemas/frontmatter-1.2.0.json` from `docmeta:evals:1.0.0-proposal.2` without recording why. The field names are docmeta's now, not ours (ADR 01009). The one recorded divergence is the citations vocabulary, `cites` and `cite-commit`, which 1.2.0 ships ahead of a docmeta proposal (ADR 01045). 1.0.0 and 1.1.0 stay shipped and byte-frozen for consumers who pinned them.
 - Don't edit a published schema in place. Its bytes are frozen; publish a new three-segment version (ADR 01009).
 
 ## Testing behavior
@@ -193,6 +194,7 @@ Note that vitest and node write diagnostics, including failures, to stderr, so `
 - `MOOSE_DOCEVALS_LIVE=1 npm test`, adding the live smoke test via the Claude CLI
 - `npm run typecheck` / `npm run lint` / `npm run build`
 - `node dist/cli.js run --deterministic-only`, a dogfood run against `test/fixtures/pages`
+- `node dist/cli.js cite add <page> <path:L1-L2>` / `node dist/cli.js cite refresh [globs]`, minting and repairing citations (ADR 01046). `cite refresh --dry-run` over the fixture corpus names the deliberately moved citation and writes nothing
 - `npm run docs:verify`, running moose-docevals over the docs site (the `verify-docs` gate). **Requires the CLI on `PATH` first**, because the pages' inline Doc Detective steps invoke `npx moose-docevals`:
 
   ```bash
@@ -212,6 +214,7 @@ Note that vitest and node write diagnostics, including failures, to stderr, so `
 - `src/judge/` is the judge stage, built on [`@hawkeyexl/inference`](https://github.com/hawkeyexl/inference) (ADR 01002). The providers, the N-run ensemble, consensus (`partial` counts as fail), confidence zones, the response cache, and the price table all live in the library. What stays here is moose-docevals' own work: the prompts and `PROMPT_VERSION`, the page-worded verdict schema, and the cache-key composition (`cache.ts`). It also covers the config → `ProviderSpec` mapping (`provider.ts`) and the orchestration in `judge.ts`. The orchestration covers bounded concurrency across targets, the turn budget, the self-judgment warning, and human-review resolution. The turn budget is claimed *before* dispatch and a cached ensemble spends nothing. The dollar ceiling it replaced could not do that under concurrency (ADR 01019). Never reimplement a provider, ensemble, cache, or price table here. Three copies of that code drifted apart once already, and a fix belongs upstream.
 - `src/graders/exec.ts` re-exports the library's `realExec`. The judge's subprocess provider and the command/tool graders were running two copies of the same cross-spawn wrapper. The Windows-specific parts now have one home: npm `.cmd` shim resolution, stdin piping past the ~32K command-line limit, and StringDecoder-backed output. `outputTail` stays local.
 - `src/graders/scriptgen.ts` + `src/core/frontmatter-edit.ts` write LLM-generated check scripts to `{docDir}/moose-docevals/`, with the command reference persisted via surgical YAML edits.
+- `src/citations/` is the citations vocabulary (ADR 01045). A page pins the source lines a sentence depends on by sha256. The pin lives in a `cites` frontmatter entry or in an inline `<!-- cite: src=… sha256=… -->` comment. `hash.ts` is the one home of the hashing rule and the `src` grammar (relative or absolute path, GitHub or https URL, `:L1-L2`). `comments.ts` scans the body; `resolvePage` normalizes both forms into `plan.citations` and nothing downstream distinguishes them. `classify.ts` is the drift verdict (current, moved, changed, missing, never-true), pure over injected readers; `readers.ts` builds those readers once. The grader (`src/graders/native/citations.ts`) and `cite refresh` (`src/commands/cite.ts`) share them, so both reach the same verdict. `mint.ts` hashes and records HEAD, and refuses a source git has not committed. `inline-edit.ts` rewrites one comment's tokens in place.
 
 ## Invariants
 
@@ -228,6 +231,10 @@ Note that vitest and node write diagnostics, including failures, to stderr, so `
 - **A baseline suppresses known findings, never the absence of a verdict.** `applyBaseline`'s outcome recompute tests `f.severity === "error" || f.diagnostic === true`, the same predicate the engine uses when it first computes the outcome. Recomputing on severity alone let a baseline turn "the grader could not run" into `pass` (ADR 01022).
 - **`--deterministic-only` must not warn about the judge provider** (ADR 01043). The warning in `src/commands/run.ts` is `!options.deterministicOnly` and nothing else. Commander defaults a `--no-generate` key to `true`, so any condition reading `options.generate === true` fires on every invocation that is not `--no-generate`. "Generation was explicitly requested" is not expressible, because no flag sets that key to `true`. Generation's own need for a provider is reported by the engine, where it is knowable, as an `error` result naming the eval.
 - Script generation must leave the page byte-identical outside the edited frontmatter node.
+- **`cite refresh` is the one body editor**, and it changes only the characters inside a `cite:` comment, or the named frontmatter entry (ADR 01046). Inline spans are offsets into the original content. Inline edits are therefore applied first, from the end of the file backwards, and the frontmatter edit second. `test/unit/citations-inline-edit.test.ts` diffs whole files, CRLF and BOM included.
+- **A citation that was never true fails at any severity** (`citations/never-true`, diagnostic; ADR 01045). With a `commit` recorded, the grader asks whether the cited bytes existed *anywhere* in the file at that commit, not at the recorded range. `cite refresh` rewrites a moved range and leaves the commit alone. The recorded range at the recorded commit is therefore the wrong question once the lines have moved. Minting refuses a source with uncommitted changes for the same reason. The commit it records must be true of the bytes it hashed. `--no-commit` is the explicit way past it, and it says so in the record by carrying no commit.
+- **An unminted citation is a finding, never a pass** (`citations/unminted`). A page that declares citations no `tool:citations` eval checks gets a warning problem in `resolvePage`. Both corpora's `frontmatter-valid` evals name the *current* schema, `schemas/frontmatter-1.2.0.json`. Leaving one on an older version would let a `cite-` typo through `tool:docmeta` while `resolvePage` rejects it.
+- Network reaches the grader only through `GraderContext.fetch`, injected the way `exec` is, so the suite stays offline. A URL that cannot be fetched is diagnostic; `options.network: false` skips URL citations as info.
 - **Never truncate content sent to a model.** `fill`, `scriptgen` and the judge each used to, or would have. Long content is split at line boundaries (`src/core/split.ts`, ported from docmeta) and the parts are merged. For the judge, each part contributes evidence and one judge answers once. Merging per-part *verdicts* is unsound. "Documents X" needs OR across parts, "never promises X" needs AND, and an assertion's text does not say which. The chunk budget is part of every cache key that covers chunked output.
 - `weight` changes how much an eval moves its suite's pass rate and **never** its own pass/fail. The binary outcome is what SARIF, JUnit and the findings baseline consume; a score leaking into it would change all three. Counts stay unweighted, the rate is weighted, and the graded set is unchanged (pass + fail + error).
 - A **criterion** (`docevals.criteria`) contributes one weighted outcome to its suite, and its members contribute none. Otherwise a group of three outvotes three standalone evals for being written as a group. A criterion whose members were not all graded is *suspended*, not failed (ADR 01018, one level down).
@@ -348,7 +355,8 @@ The last unported convention was **docs impact**. doc-detective gates behavior c
 - [docs/content-strategy/](docs/content-strategy), audiences, personas, CUJs, and the proposed IA
 - [docs/src/content/docs/](docs/src/content/docs), the published Starlight site
 - [.doc-detective.json](.doc-detective.json), Doc Detective config for the docs' inline test steps
-- [schemas/frontmatter-1.1.0.json](schemas/frontmatter-1.1.0.json), the current published frontmatter schema (1.0.0 ships beside it, frozen)
+- [schemas/frontmatter-1.2.0.json](schemas/frontmatter-1.2.0.json), the current published frontmatter schema (1.0.0 and 1.1.0 ship beside it, frozen)
+- [test/fixtures/cited/greeting.sh](test/fixtures/cited/greeting.sh), the frozen source the fixture corpus and the docs cite by hash; do not edit it
 - [scripts/check-deps.mjs](scripts/check-deps.mjs), worktree/npm-floor guard
 - [scripts/refresh-docs-cache.mjs](scripts/refresh-docs-cache.mjs), clears the committed docs judge cache, keeping its README
 - [scripts/check-docs-cache.mjs](scripts/check-docs-cache.mjs), asserts the committed docs judge cache can answer every judged eval (`npm run docs:check-cache`)
