@@ -339,3 +339,91 @@ describe("cite refresh", () => {
     expect(JSON.parse(renderCiteRefresh(report, "json"))).toMatchObject({ entries: [{ action: "minted" }] });
   });
 });
+
+// PR 29 review. Three ways `refresh` said less, or changed more, than it
+// should: a classifier detail overwritten by the generic hint, a write error
+// that escaped the loop and lost the report, and a comment re-serialized
+// rather than updated.
+describe("cite refresh: review findings", () => {
+  const read = (root: string, name = "page.md") => readFileSync(join(root, "docs", name), "utf8");
+
+  it("keeps the classifier's detail beside the --accept-changed hint", async () => {
+    // Too large for the moved search: the citation reports as changed, and
+    // the reason moved detection was skipped must survive.
+    const huge = "x\n".repeat(1_100_000) + SOURCE;
+    const root = scaffold(
+      ["---", "title: T", "---", `<!-- cite: src=src/install.sh:3-4 sha256=${HASH} -->`, "Claim.", ""],
+      huge,
+    );
+    const report = await runCiteRefresh([], { cwd: root, exec: fakeRepo(huge).exec });
+    expect(report.entries[0]).toMatchObject({ status: "changed", action: "kept" });
+    expect(report.entries[0]?.detail).toMatch(/too large/);
+    expect(report.entries[0]?.detail).toMatch(/--accept-changed/);
+  });
+
+  it("updates only the tokens that change, keeping order and an explicit quote=false", async () => {
+    const root = scaffold([
+      "---",
+      "title: T",
+      "---",
+      "<!-- cite: quote=false id=node-floor src=src/install.sh:3-4 -->",
+      "Claim.",
+      "",
+    ]);
+    await runCiteRefresh([], { cwd: root, exec: fakeRepo(SOURCE).exec });
+    expect(read(root)).toContain(
+      `<!-- cite: quote=false id=node-floor src=src/install.sh:3-4 sha256=${HASH} commit=${HEAD} -->`,
+    );
+  });
+
+  it("reports a page it could not write, carries on, and exits 2", async () => {
+    const root = scaffold(["---", "title: T", "---", "<!-- cite: src=src/install.sh:3-4 -->", "A.", ""]);
+    writeFileSync(
+      join(root, "docs", "second.md"),
+      ["---", "title: U", "---", "<!-- cite: src=src/install.sh:5 -->", "B.", ""].join("\n"),
+    );
+    const written: string[] = [];
+    const report = await runCiteRefresh([], {
+      cwd: root,
+      exec: fakeRepo(SOURCE).exec,
+      writeFile: (path, content) => {
+        if (path.endsWith("page.md")) throw new Error("EACCES: permission denied");
+        written.push(path);
+        writeFileSync(path, content);
+      },
+    });
+    // Both pages were classified, the failure is in the report, and the page
+    // after it was still written.
+    expect(report.entries.map((e) => e.file).sort()).toEqual(["docs/page.md", "docs/second.md"]);
+    expect(report.problems).toEqual([
+      { file: "docs/page.md", message: expect.stringMatching(/could not write.*EACCES/) },
+    ]);
+    expect(report.filesWritten).toEqual(["docs/second.md"]);
+    expect(written).toHaveLength(1);
+    expect(report.exitCode).toBe(2);
+    // The entry must not claim an action that did not land.
+    expect(report.entries.find((e) => e.file === "docs/page.md")?.action).toBe("kept");
+    expect(renderCiteRefresh(report, "human")).toMatch(/could not write/);
+  });
+
+  it("exits 0 when every write lands", async () => {
+    const root = scaffold(["---", "title: T", "---", "<!-- cite: src=src/install.sh:3-4 -->", "A.", ""]);
+    const report = await runCiteRefresh([], { cwd: root, exec: fakeRepo(SOURCE).exec });
+    expect(report.exitCode).toBe(0);
+  });
+});
+
+describe("cite add: a write that fails is a usage-level error, not a stack trace", () => {
+  it("raises DocevalsError naming the page", async () => {
+    const root = scaffold(PAGE);
+    await expect(
+      runCiteAdd("docs/page.md", "src/install.sh:3-4", {
+        cwd: root,
+        exec: fakeRepo(SOURCE).exec,
+        writeFile: () => {
+          throw new Error("ENOSPC: no space left on device");
+        },
+      }),
+    ).rejects.toThrow(DocevalsError);
+  });
+});

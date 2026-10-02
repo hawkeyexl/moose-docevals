@@ -65,10 +65,17 @@ every citation with the grader's own classifier and readers, and edits in place:
 | current, missing, unreachable | untouched |
 
 A mint the discipline above refuses is reported per citation and the run carries on. Frontmatter
-edits go through the `yaml` Document API and touch only the named entry. Inline edits replace the
-characters between `cite:` and the closing delimiter, from the end of the file backwards, so no
-edit shifts a later span. Everything else in the file is byte-identical, and the test diffs whole
-files to say so. Exit 0 in every case that is not operational: the gate is `run`.
+edits go through the `yaml` Document API and touch only the named entry. Inline edits update
+only the tokens that change. A value is replaced where it stands, and a new `sha256` or `commit`
+is inserted beside the token it belongs with. The comment is never re-serialized, so the author's
+token order and an explicit `quote=false` survive. Edits go in from the end of the file
+backwards, so no edit shifts a later span. Everything else in the file is byte-identical, and the
+test diffs whole files to say so.
+
+Drift is never an exit code here, because the gate is `run`. A page that could not be written is
+different. It is recorded in the report, and the actions that did not land are taken back. The
+remaining pages are still processed, and the command exits 2. `cite add` raises the same failure
+as a usage-level error rather than a stack trace.
 
 **Why the commit stays on a move.** A moved rewrite changes where the bytes are, not what they
 are. The recorded commit still names the version the hash was minted from. The never-true check
@@ -82,7 +89,7 @@ is move-tolerant for exactly this reason (ADR 01045).
   the grader reports is a status `refresh` acts on the same way.
 - Good, because an author can write `<!-- cite: src=path:3-4 -->` and run one command.
 - Bad, because `refresh` is the first body editor in the codebase. Accepted, with the
-  only-the-comment invariant tested by whole-file diffs.
+  only-the-changed-tokens invariant tested by whole-file diffs.
 - Bad, because a repository with a dirty working tree cannot mint with a commit. Accepted: that
   is the point, and `--no-commit` is the documented way past it.
 - Bad, and accepted: `--accept-changed` re-mints without reading the claim. It is a flag a person

@@ -30,6 +30,11 @@ import type { Citation } from "../citations/types.js";
 
 const runtimeFetch = (): FetchLike | undefined => globalThis.fetch;
 
+/** How a page is written. Injected the way `exec` and `fetch` are. */
+export type WriteFile = (absPath: string, content: string) => void;
+
+const errorText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
 // ---------------------------------------------------------------- cite add
 
 export interface CiteAddOptions {
@@ -43,6 +48,8 @@ export interface CiteAddOptions {
   dryRun?: boolean;
   exec?: ExecFn;
   fetch?: FetchLike;
+  /** Test seam for the page write; defaults to `writeFileSync`. */
+  writeFile?: WriteFile;
 }
 
 export interface CiteEntry {
@@ -136,7 +143,15 @@ export async function runCiteAdd(
   }
 
   const updated = appendPageCites(page.content, page.file, [entry]);
-  if (!options.dryRun) writeFileSync(absPage, updated);
+  if (!options.dryRun) {
+    // A bare Error here would escape the CLI's DocevalsError funnel as a
+    // stack trace and exit 1, which reads as "findings". It is operational.
+    try {
+      (options.writeFile ?? writeFileSync)(absPage, updated);
+    } catch (e) {
+      throw new DocevalsError(`could not write ${page.file}: ${errorText(e)}`);
+    }
+  }
   const referenced = plan.citations.orphans.some((o) => o.id === id);
   const result: CiteAddResult = { file: page.file, entry, written: !options.dryRun };
   if (!referenced) result.referenceHint = commentFor(page.file, id);
@@ -173,6 +188,8 @@ export interface CiteRefreshOptions {
   dryRun?: boolean;
   exec?: ExecFn;
   fetch?: FetchLike;
+  /** Test seam for the page write; defaults to `writeFileSync`. */
+  writeFile?: WriteFile;
 }
 
 export type RefreshStatus = DriftStatus | "never-true";
@@ -193,9 +210,18 @@ export interface CiteRefreshEntry {
 export interface CiteRefreshReport {
   entries: CiteRefreshEntry[];
   filesWritten: string[];
-  /** Pages skipped for an error-level resolution problem. */
+  /**
+   * Pages `refresh` could not finish: skipped for an error-level resolution
+   * problem, or classified and then not written.
+   */
   problems: { file: string; message: string }[];
   dryRun: boolean;
+  /**
+   * 0, or 2 when a page could not be written. Drift is never an exit code
+   * here (the gate is `run`), but a repair the command reported and did not
+   * land is operational, and exit 0 would say it had.
+   */
+  exitCode: 0 | 2;
 }
 
 export async function runCiteRefresh(
@@ -214,7 +240,9 @@ export async function runCiteRefresh(
     filesWritten: [],
     problems: [],
     dryRun: options.dryRun === true,
+    exitCode: 0,
   };
+  const writeFile = options.writeFile ?? writeFileSync;
   const mint = (spec: SourceSpec) =>
     mintCitation(spec, { root: cwd, exec, fetch, noCommit: options.noCommit });
 
@@ -231,16 +259,15 @@ export async function runCiteRefresh(
     const inlineEdits: InlineEdit[] = [];
     const frontmatterEdits: { id: string; updates: CiteUpdates }[] = [];
 
-    const stage = (c: Citation, updates: CiteUpdates): void => {
+    // Entries whose action depends on this page being written.
+    const staged: CiteRefreshEntry[] = [];
+
+    const stage = (c: Citation, updates: CiteUpdates, entry: CiteRefreshEntry): void => {
+      staged.push(entry);
       if (c.origin === "inline" && c.comment) {
-        const fields = {
-          id: c.id.startsWith("inline-") ? undefined : c.id,
-          src: updates.src ?? c.src,
-          sha256: updates.sha256 ?? c.sha256,
-          commit: updates.commit ?? c.commit,
-          quote: c.quote,
-        };
-        inlineEdits.push({ span: c.comment.span, entry: fields });
+        // Only the tokens that change. The comment is never rebuilt, so the
+        // author's token order and anything else they wrote survive.
+        inlineEdits.push({ span: c.comment.span, updates });
       } else {
         frontmatterEdits.push({ id: c.id, updates });
       }
@@ -264,13 +291,13 @@ export async function runCiteRefresh(
         }
         const updates: CiteUpdates = { sha256: minted.sha256 };
         if (minted.commit !== undefined) updates.commit = minted.commit;
-        stage(c, updates);
+        stage(c, updates, entry);
         entry.action = status === "unminted" ? "minted" : "re-minted";
         continue;
       }
       if (status === "moved" && verdict.movedTo) {
         const newSrc = formatSrc({ ...c.spec, range: verdict.movedTo });
-        stage(c, { src: newSrc });
+        stage(c, { src: newSrc }, entry);
         entry.action = "rewritten";
         entry.newSrc = newSrc;
         if ((verdict.movedMatches ?? 1) > 1) {
@@ -278,9 +305,12 @@ export async function runCiteRefresh(
         }
         continue;
       }
+      // The classifier's own detail first (why the moved search was skipped,
+      // say), then the hint. Assigning the hint over it lost the reason.
       if (verdict.detail !== undefined) entry.detail = verdict.detail;
       if (status === "changed" || status === "never-true") {
-        entry.detail = "pass --accept-changed to re-mint";
+        const hint = "pass --accept-changed to re-mint";
+        entry.detail = entry.detail !== undefined ? `${entry.detail}; ${hint}` : hint;
       }
     }
 
@@ -292,8 +322,22 @@ export async function runCiteRefresh(
       content = updatePageCite(content, file, id, updates);
     }
     if (!options.dryRun) {
-      writeFileSync(plan.page.absPath, content);
-      report.filesWritten.push(file);
+      // One page failing to write must not lose the report or the pages
+      // after it. Record it, take back the actions that did not land, and
+      // carry on.
+      try {
+        writeFile(plan.page.absPath, content);
+        report.filesWritten.push(file);
+      } catch (e) {
+        const reason = `could not write: ${errorText(e)}`;
+        report.problems.push({ file, message: reason });
+        report.exitCode = 2;
+        for (const entry of staged) {
+          entry.action = "kept";
+          entry.detail = reason;
+          delete entry.newSrc;
+        }
+      }
     }
   }
   return report;

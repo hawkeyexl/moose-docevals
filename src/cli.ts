@@ -536,6 +536,7 @@ cite
         dryRun: opts.dryRun as boolean | undefined,
       });
       console.log(renderCiteRefresh(report, opts.format as SummaryFormat));
+      process.exitCode = report.exitCode;
     } catch (e) {
       fail(e);
     }

@@ -262,7 +262,8 @@ paste above the sentence it supports. See [Cite your sources](/moose-docevals/ev
 Repairs every citation on the discovered pages in place, in either form. An unminted one is minted
 and a moved range is rewritten. A changed or never-true one is re-minted only under
 `--accept-changed`. Missing sources are reported and never rewritten. Only the named frontmatter
-entry, or the characters inside the comment, change.
+entry, or the tokens that change inside the comment, are touched. A comment keeps its token
+order and anything else its author wrote.
 
 | Flag | Effect |
 |---|---|
@@ -270,7 +271,9 @@ entry, or the characters inside the comment, change.
 | `--no-commit` | Mint without recording a commit. |
 | `--dry-run` | Report every action and write nothing. |
 
-One line per citation with its status and action. Exit 0; the gate is `run`.
+One line per citation with its status and action. Exit 0, because the gate is `run`. The one
+exception is a page that could not be written. That is reported, the other pages are still
+processed, and the command exits 2.
 
 ## `moose-docevals init`
 
