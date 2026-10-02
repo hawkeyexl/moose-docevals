@@ -26,7 +26,7 @@ import { rewriteInlineCitations, serializeInlineTokens, type InlineEdit } from "
 import { mintCitation } from "../citations/mint.js";
 import { makeReaders } from "../citations/readers.js";
 import type { FetchLike } from "../citations/source.js";
-import type { Citation } from "../citations/types.js";
+import { NO_COMMIT, type Citation } from "../citations/types.js";
 
 const runtimeFetch = (): FetchLike | undefined => globalThis.fetch;
 
@@ -144,6 +144,9 @@ export async function runCiteAdd(
 
   const entry: CiteEntry = { id, src, sha256: minted.sha256 };
   if (minted.commit !== undefined) entry.commit = minted.commit;
+  // No commit was recorded, but the page has a default the new entry would
+  // inherit. That commit was never checked against these bytes; say so.
+  else if (plan.citations.defaultCommit !== undefined) entry.commit = NO_COMMIT;
   if (options.quote) entry.quote = true;
 
   if (options.inline) {
@@ -306,11 +309,19 @@ export async function runCiteRefresh(
         }
         const updates: CiteUpdates = { sha256: minted.sha256 };
         if (minted.commit !== undefined) updates.commit = minted.commit;
-        // A re-mint that records no commit (--no-commit, a branch-pinned URL)
-        // must drop the old one. Left beside the new hash, the next change
-        // would be checked against a commit the new bytes never existed at,
-        // and reported as never-true instead of changed.
-        else if (status !== "unminted" && c.commit !== undefined) updates.commit = null;
+        // A mint that records no commit (--no-commit, a branch-pinned URL)
+        // must not leave the citation attached to one. Beside the new hash,
+        // the next change would be checked against a commit the new bytes
+        // never existed at, and reported as never-true instead of changed.
+        else if (c.commitSource === "page") {
+          // Inherited from `cite-commit`: nothing at the entry to remove, so
+          // the entry opts out of the default.
+          updates.commit = NO_COMMIT;
+        } else if (c.commitSource === "entry" && c.commit !== undefined && status !== "unminted") {
+          // Its own commit, now stale. Removing it would fall back to the
+          // page default where there is one, which is no better.
+          updates.commit = plan.citations.defaultCommit !== undefined ? NO_COMMIT : null;
+        }
         stage(c, updates, entry);
         entry.action = status === "unminted" ? "minted" : "re-minted";
         continue;

@@ -304,6 +304,16 @@ cites:
     sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708`,
   ],
   [
+    "20b an entry that opts out of the page commit with commit: none",
+    true,
+    `cite-commit: 4d1e7c0
+cites:
+  - id: minted-without-a-commit
+    src: scripts/install.sh:3-4
+    sha256: 9f2c0a4b1d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708
+    commit: none`,
+  ],
+  [
     "20 citations beside evals on one page",
     true,
     `evals:
@@ -451,6 +461,9 @@ cites:
     commit: main`,
   ],
   ["N22 a cite-commit that is not a hex sha", false, `cite-commit: HEAD`],
+  // `none` is an entry opting out of a default. A default of "none" is a
+  // default that says nothing; omit the key instead.
+  ["N23 none is an entry's answer, not a page default", false, `cite-commit: none`],
 ];
 
 describe("docmeta:evals vocabulary ladder", () => {

@@ -207,6 +207,139 @@ describe("re-minting without a commit drops the stale one", () => {
   });
 });
 
+// The stale-commit fix above removes an entry's own commit. It could not help
+// a citation that *inherits* its commit from the page's `cite-commit`: there
+// is nothing at the entry to remove, so a hash minted with no commit quietly
+// re-inherited one it was never checked against. `commit: none` is the entry
+// saying so, and every commit-less mint writes it when a page default applies.
+describe("a commit-less mint on a page with cite-commit", () => {
+  const PAGE_COMMIT = "bbbbbbb";
+  const edited = SOURCE.replace("need node 22", "need node 24");
+  const EDITED_HASH = hashRange(edited, { start: 3, end: 4 })!;
+
+  const CONFIG = parseDocevalsConfig(`version: 1
+evals:
+  cited-sources-current:
+    assertion: Cited sources are current.
+    grader: tool:citations
+`);
+  function pageOf(frontmatter: string, body: string): PageFile {
+    const content = `---\nevals:\n  - use: cited-sources-current\n${frontmatter}\n---\n${body}`;
+    return {
+      file: "docs/page.md",
+      absPath: "/fake/docs/page.md",
+      content,
+      body: stripFrontmatterBlock(content),
+      frontmatter: extractFrontmatter(content, "markdown"),
+    };
+  }
+
+  it("resolves commit: none as no commit, without inheriting the page default", () => {
+    const plan = resolvePage(
+      pageOf(
+        `cite-commit: ${PAGE_COMMIT}\ncites:\n  - id: a\n    src: a.sh\n    commit: none\n  - id: b\n    src: b.sh`,
+        "<!-- cite: src=c.sh commit=none -->\nC.\n<!-- cite: src=d.sh -->\nD.\n",
+      ),
+      CONFIG,
+    );
+    expect(plan.problems).toEqual([]);
+    expect(plan.citations.entries.map((c) => [c.src, c.commit])).toEqual([
+      ["a.sh", undefined],
+      ["b.sh", PAGE_COMMIT],
+      ["c.sh", undefined],
+      ["d.sh", PAGE_COMMIT],
+    ]);
+  });
+
+  it("does not accept none as the page default itself", () => {
+    const plan = resolvePage(pageOf("cite-commit: none", "Body.\n"), CONFIG);
+    expect(plan.problems[0]?.level).toBe("error");
+  });
+
+  it("re-mint: an inline citation that inherited the page commit gains commit=none", async () => {
+    const root = scaffold(
+      { "page.md": ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "---", `<!-- cite: src=src/install.sh:3-4 sha256=${HASH} -->`, "Claim.", ""] },
+      edited,
+    );
+    await runCiteRefresh([], { cwd: root, exec: noGit, acceptChanged: true, noCommit: true });
+    expect(read(root, "page.md")).toContain(
+      `<!-- cite: src=src/install.sh:3-4 sha256=${EDITED_HASH} commit=none -->`,
+    );
+  });
+
+  it("re-mint: a frontmatter entry that inherited the page commit gains commit: none", async () => {
+    const root = scaffold(
+      { "page.md": ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "cites:", "  - id: a", "    src: src/install.sh:3-4", `    sha256: ${HASH}`, "---", "Body.", ""] },
+      edited,
+    );
+    await runCiteRefresh([], { cwd: root, exec: noGit, acceptChanged: true, noCommit: true });
+    const page = read(root, "page.md");
+    expect(page).toContain("    commit: none\n");
+    expect(page).toContain(`cite-commit: ${PAGE_COMMIT}\n`);
+  });
+
+  it("re-mint: an entry's own commit becomes none rather than falling back to the page's", async () => {
+    const root = scaffold(
+      { "page.md": ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "---", `<!-- cite: src=src/install.sh:3-4 sha256=${HASH} commit=aaaaaaa -->`, "Claim.", ""] },
+      edited,
+    );
+    await runCiteRefresh([], { cwd: root, exec: noGit, acceptChanged: true, noCommit: true });
+    expect(read(root, "page.md")).toContain(`sha256=${EDITED_HASH} commit=none -->`);
+  });
+
+  it("mint: an unminted citation minted with --no-commit does not inherit the page commit", async () => {
+    const root = scaffold({
+      "page.md": ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "---", "<!-- cite: src=src/install.sh:3-4 -->", "Claim.", ""],
+    });
+    await runCiteRefresh([], { cwd: root, exec: noGit, noCommit: true });
+    expect(read(root, "page.md")).toContain(`<!-- cite: src=src/install.sh:3-4 sha256=${HASH} commit=none -->`);
+  });
+
+  it("a later mint with a commit replaces none", async () => {
+    const root = scaffold(
+      { "page.md": ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "---", `<!-- cite: src=src/install.sh:3-4 sha256=${HASH} commit=none -->`, "Claim.", ""] },
+      edited,
+    );
+    await runCiteRefresh([], { cwd: root, exec: fakeRepo(edited), acceptChanged: true });
+    expect(read(root, "page.md")).toContain(`sha256=${EDITED_HASH} commit=${HEAD} -->`);
+  });
+
+  it("cite add --no-commit writes commit: none, in both forms", async () => {
+    const page = ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "---", "Body.", ""];
+    const root = scaffold({ "page.md": page });
+    const added = await runCiteAdd("docs/page.md", "src/install.sh:3-4", { cwd: root, exec: noGit, noCommit: true });
+    expect(added.entry.commit).toBe("none");
+    expect(read(root, "page.md")).toContain("    commit: none\n");
+
+    const inline = await runCiteAdd("docs/page.md", "src/install.sh:5", { cwd: root, exec: noGit, noCommit: true, inline: true });
+    expect(inline.inlineComment).toMatch(/ commit=none -->$/);
+  });
+
+  it("cite add --no-commit on a page with no cite-commit records no commit at all", async () => {
+    const root = scaffold({ "page.md": ["---", "title: T", "---", "Body.", ""] });
+    const added = await runCiteAdd("docs/page.md", "src/install.sh:3-4", { cwd: root, exec: noGit, noCommit: true });
+    expect(added.entry.commit).toBeUndefined();
+    expect(read(root, "page.md")).not.toContain("commit");
+  });
+
+  it("the grader reports changed, never never-true, and does not consult git", async () => {
+    const root = scaffold(
+      { "page.md": ["---", "title: T", `cite-commit: ${PAGE_COMMIT}`, "---", `<!-- cite: src=src/install.sh:3-4 sha256=${HASH} commit=none -->`, "Claim.", ""] },
+      edited,
+    );
+    const calls: string[][] = [];
+    const spy: ExecFn = (cmd) => {
+      calls.push(cmd);
+      // A history in which the bytes never existed: exactly what would turn
+      // an inherited commit into a false never-true.
+      return Promise.resolve({ ...OK, stdout: "nothing like it\n" });
+    };
+    const report = await runEvals({ cwd: root, generate: false, exec: spy });
+    expect(report.evalResults[0]?.findings?.map((f) => f.ruleId)).toEqual(["citations/changed"]);
+    expect(calls).toEqual([]);
+  });
+});
+
 describe("a line fragment on a URL that is not a GitHub file URL", () => {
   it("is an error, not a silent whole-file citation", () => {
     const r = parseSrc("https://gitlab.com/o/r/-/raw/main/x.ts#L5-L9");

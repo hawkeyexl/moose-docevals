@@ -25,8 +25,19 @@ export interface Citation {
   spec: SourceSpec;
   /** Absent means unminted: the citation has not been hashed yet. */
   sha256?: string;
-  /** The entry's own `commit`, else the page's `cite-commit`. */
+  /**
+   * The commit the hash was minted at: the entry's own `commit`, else the
+   * page's `cite-commit`. Absent when neither is written, and when the entry
+   * says `commit: none`.
+   */
   commit?: string;
+  /**
+   * Where `commit` — or its explicit absence — was written. `entry` with no
+   * `commit` is the `none` case: the citation opted out of the page default.
+   * `cite refresh` reads this to know whether there is an entry-level value
+   * to replace, or an inherited one it must override.
+   */
+  commitSource?: "entry" | "page";
   quote: boolean;
   origin: "frontmatter" | "inline";
   /** 1-based file line of the declaration: the entry, or the comment. */
@@ -43,7 +54,17 @@ export interface Citation {
   anchors: CitationAnchor[];
 }
 
+/**
+ * The `commit` value that means "no commit, and do not inherit the page's".
+ * A hash minted without a commit (`--no-commit`, a branch-pinned URL) on a
+ * page with `cite-commit` would otherwise inherit a commit it was never
+ * checked against, and the next change would read as never-true.
+ */
+export const NO_COMMIT = "none";
+
 export interface PageCitations {
+  /** The page's `cite-commit`, when it has one. */
+  defaultCommit?: string;
   entries: Citation[];
   /** Reference comments naming an id no entry has. */
   orphans: { id: string; line: number }[];

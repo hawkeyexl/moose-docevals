@@ -126,8 +126,8 @@
         },
         "commit": {
           "type": "string",
-          "pattern": "^[0-9a-f]{7,40}$",
-          "description": "Commit the hash was minted at. Overrides the page's `cite-commit`. With it a tool can show what changed since, and can tell a citation that drifted from one that was never true — a hash typed by hand, or minted against uncommitted edits."
+          "pattern": "^([0-9a-f]{7,40}|none)$",
+          "description": "Commit the hash was minted at. Overrides the page's `cite-commit`. With it a tool can show what changed since, and can tell a citation that drifted from one that was never true — a hash typed by hand, or minted against uncommitted edits. The literal `none` says this citation records no commit and does not inherit `cite-commit`: the hash was minted without one, so a page-level default was never checked against these bytes and must not be applied to them."
         },
         "quote": {
           "type": "boolean",

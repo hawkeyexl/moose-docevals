@@ -219,7 +219,7 @@ are ignored, which is how this page can show the syntax.
 | `id` | kebab-case | Required on a frontmatter entry; optional inline (`id=`). Unique per page across both forms. |
 | `src` | string | Required. See the grammar below. |
 | `sha256` | 64 hex characters | Hash of the cited lines under the rule below. Absent means **unminted**: `cite refresh` fills it, and `run` reports it rather than passing. |
-| `commit` | 7–40 hex characters | Commit the hash was minted at. Overrides `cite-commit`. Enables the commit subjects in a `changed` finding and the never-true check. |
+| `commit` | 7–40 hex characters, or `none` | Commit the hash was minted at. Overrides `cite-commit`. Enables the commit subjects in a `changed` finding and the never-true check. `none` says the citation has no commit and does not inherit `cite-commit`. The tool writes it when it mints without a commit on a page that has a default. |
 | `quote` | boolean (`false`) | The page reproduces the cited lines verbatim in the first fenced code block after the comment; the grader compares the copy too. It needs a comment to find the block. A block indented with a list item compares without that indentation. Inline, the bare token `quote`. |
 
 An all-digit `sha256` or `commit` must be quoted in YAML, or the parser reads it as a number. The

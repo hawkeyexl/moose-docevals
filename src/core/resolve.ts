@@ -32,6 +32,7 @@ import type { EvalTarget } from "./target.js";
 import { scanCiteComments } from "../citations/comments.js";
 import { parseSrc } from "../citations/hash.js";
 import {
+  NO_COMMIT,
   noCitations,
   type Citation,
   type CitationAnchor,
@@ -333,8 +334,7 @@ function resolveCitations(
       anchors: [],
     };
     if (raw.sha256 !== undefined) c.sha256 = raw.sha256;
-    const commit = raw.commit ?? defaultCommit;
-    if (commit !== undefined) c.commit = commit;
+    applyCommit(c, raw.commit, defaultCommit);
     claim(c, line);
   }
 
@@ -394,8 +394,7 @@ function resolveCitations(
       anchors: [anchor],
     };
     if (raw.sha256 !== undefined) c.sha256 = raw.sha256;
-    const commit = raw.commit ?? defaultCommit;
-    if (commit !== undefined) c.commit = commit;
+    applyCommit(c, raw.commit, defaultCommit);
     claim(c, comment.line);
   }
 
@@ -405,7 +404,22 @@ function resolveCitations(
     if (target) target.anchors.push(anchor);
     else orphans.push({ id, line: anchor.line });
   }
-  return { entries, orphans };
+  return defaultCommit !== undefined ? { defaultCommit, entries, orphans } : { entries, orphans };
+}
+
+/**
+ * The commit a citation carries: its own, else the page's `cite-commit`.
+ * `commit: none` is the entry opting out of the default, so it resolves to no
+ * commit while still recording that the entry spoke.
+ */
+function applyCommit(c: Citation, own: string | undefined, pageDefault: string | undefined): void {
+  if (own !== undefined) {
+    c.commitSource = "entry";
+    if (own !== NO_COMMIT) c.commit = own;
+  } else if (pageDefault !== undefined) {
+    c.commit = pageDefault;
+    c.commitSource = "page";
+  }
 }
 
 /** Resolve one page's plan. Never throws; problems are collected per page. */

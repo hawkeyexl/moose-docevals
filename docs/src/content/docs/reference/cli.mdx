@@ -268,7 +268,7 @@ order and anything else its author wrote.
 | Flag | Effect |
 |---|---|
 | `--accept-changed` | Re-mint citations whose source changed or whose hash was never true. A flag you pass after reading the finding, not one a scheduled job passes. |
-| `--no-commit` | Mint without recording a commit. A re-mint under this flag also removes the citation's old commit, which would no longer match the new hash. |
+| `--no-commit` | Mint without recording a commit. A re-mint under this flag also removes the citation's old commit, which would no longer match the new hash. On a page with `cite-commit` the citation gets `commit: none`, so it does not inherit a commit it was never checked against. |
 | `--dry-run` | Report every action and write nothing. |
 
 One line per citation with its status and action. Exit 0, because the gate is `run`. The one

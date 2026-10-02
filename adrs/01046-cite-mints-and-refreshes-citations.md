@@ -82,6 +82,13 @@ to a branch, a re-mint writes a new hash and no commit. The old commit is remove
 in place, the next change would be checked against a commit the new bytes never existed at. It
 would be reported as never-true instead of changed.
 
+**A mint that records no commit never inherits one.** The paragraph above covers an entry's own
+commit. A citation can also take its commit from the page's `cite-commit`, and then there is
+nothing at the entry to remove. Every commit-less mint on such a page writes `commit: none`
+instead. That holds for `cite add --no-commit`, for minting an unminted citation, and for a
+re-mint. An entry's own stale commit becomes `none` too, because removing it would fall back to
+the page default.
+
 **`cite add` records a portable path.** On Windows a typed path arrives with backslashes. It is
 written with forward slashes, because a backslash path resolves only on Windows.
 

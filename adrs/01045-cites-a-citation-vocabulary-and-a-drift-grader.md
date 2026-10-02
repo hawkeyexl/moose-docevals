@@ -58,7 +58,9 @@ page-level default commit. A `cite-*` key that is not `cite-commit` is an error,
 property `eval-` already has. `src` is `path`, `path:L`, `path:L1-L2` (relative to the directory
 moose-docevals runs in, or absolute), a GitHub blob URL with `#L1-L2`, or another https URL with a
 `:L1-L2` suffix. `sha256` may be absent: that is an *unminted* citation, which `cite refresh`
-fills and `run` reports, never a pass.
+fills and `run` reports, never a pass. An entry's `commit` may be the literal `none`. That says
+the citation records no commit and does not inherit `cite-commit`. A hash minted without a
+commit was never checked against the page default, so the default must not apply to it.
 
 **The body comment.** `<!-- cite: BODY -->` in Markdown, the same tokens in a JSX comment in MDX.
 A body of one kebab token is a *reference* to a frontmatter entry. A body of `key=value` tokens
