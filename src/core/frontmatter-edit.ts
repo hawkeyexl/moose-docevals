@@ -374,7 +374,8 @@ export interface NewCiteEntry {
 export interface CiteUpdates {
   src?: string;
   sha256?: string;
-  commit?: string;
+  /** A string sets it; `null` removes the field. */
+  commit?: string | null;
 }
 
 /**
@@ -493,7 +494,8 @@ export function updatePageCite(
   }
   if (updates.src !== undefined) node.set("src", updates.src);
   if (updates.sha256 !== undefined) node.set("sha256", stringScalar(doc, updates.sha256));
-  if (updates.commit !== undefined) node.set("commit", stringScalar(doc, updates.commit));
+  if (updates.commit === null) node.delete("commit");
+  else if (updates.commit !== undefined) node.set("commit", stringScalar(doc, updates.commit));
   let newBlock = doc.toString();
   if (eol === "\r\n") newBlock = newBlock.replace(/(?<!\r)\n/g, "\r\n");
   return open + newBlock + suffix;

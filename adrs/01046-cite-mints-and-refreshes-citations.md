@@ -77,6 +77,14 @@ different. It is recorded in the report, and the actions that did not land are t
 remaining pages are still processed, and the command exits 2. `cite add` raises the same failure
 as a usage-level error rather than a stack trace.
 
+**A re-mint that records no commit drops the old one.** Under `--no-commit`, or for a URL pinned
+to a branch, a re-mint writes a new hash and no commit. The old commit is removed with it. Left
+in place, the next change would be checked against a commit the new bytes never existed at. It
+would be reported as never-true instead of changed.
+
+**`cite add` records a portable path.** On Windows a typed path arrives with backslashes. It is
+written with forward slashes, because a backslash path resolves only on Windows.
+
 **Why the commit stays on a move.** A moved rewrite changes where the bytes are, not what they
 are. The recorded commit still names the version the hash was minted from. The never-true check
 is move-tolerant for exactly this reason (ADR 01045).

@@ -10,7 +10,7 @@
  * "the source changed" is a fact about the page someone has to act on.
  */
 import { writeFileSync } from "node:fs";
-import { basename, extname, resolve } from "node:path";
+import { basename, extname, resolve, sep as pathSep } from "node:path";
 import pc from "picocolors";
 import { DocevalsError } from "../types.js";
 import { loadConfig } from "../core/config.js";
@@ -71,6 +71,17 @@ export interface CiteAddResult {
   referenceHint?: string;
 }
 
+/**
+ * A `src` as it should be recorded. On Windows a typed or tab-completed path
+ * arrives with backslashes; committed that way it resolves only on Windows,
+ * and the Linux leg of CI reports the source missing. A URL is left alone,
+ * and so is a POSIX path, where a backslash is a legal filename character.
+ */
+export function portableSrc(src: string, separator: string = pathSep): string {
+  if (separator !== "\\" || /^[a-z][a-z0-9+.-]*:\/\//i.test(src)) return src;
+  return src.replace(/\\/g, "/");
+}
+
 /** `scripts/install.sh:3-4` → `install-3-4`. */
 function defaultId(spec: SourceSpec): string {
   const name = spec.kind === "file" ? basename(spec.path) : basename(new URL(spec.url).pathname);
@@ -90,9 +101,10 @@ function commentFor(file: string, tokens: string): string {
 
 export async function runCiteAdd(
   pagePath: string,
-  src: string,
+  rawSrc: string,
   options: CiteAddOptions = {},
 ): Promise<CiteAddResult> {
+  const src = portableSrc(rawSrc);
   const cwd = options.cwd ?? process.cwd();
   const exec = options.exec ?? realExec;
   const fetch = options.fetch ?? runtimeFetch();
@@ -118,7 +130,10 @@ export async function runCiteAdd(
   if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     throw new DocevalsError(`--id "${id}" must be kebab-case (lowercase letters, digits, hyphens)`);
   }
-  if (plan.citations.entries.some((c) => c.id === id)) {
+  // An inline comment carries an id only when the author asked for one, so
+  // a derived id it will never write cannot collide with anything.
+  const writesId = !options.inline || options.id !== undefined;
+  if (writesId && plan.citations.entries.some((c) => c.id === id)) {
     throw new DocevalsError(
       `${page.file} already has a citation "${id}"; pass --id to name this one differently`,
     );
@@ -132,8 +147,8 @@ export async function runCiteAdd(
   if (options.quote) entry.quote = true;
 
   if (options.inline) {
-    const { id: _omitted, ...fields } = entry;
-    void _omitted;
+    const { id: derivedId, ...unnamed } = entry;
+    const fields = options.id !== undefined ? { id: derivedId, ...unnamed } : unnamed;
     return {
       file: page.file,
       entry,
@@ -291,6 +306,11 @@ export async function runCiteRefresh(
         }
         const updates: CiteUpdates = { sha256: minted.sha256 };
         if (minted.commit !== undefined) updates.commit = minted.commit;
+        // A re-mint that records no commit (--no-commit, a branch-pinned URL)
+        // must drop the old one. Left beside the new hash, the next change
+        // would be checked against a commit the new bytes never existed at,
+        // and reported as never-true instead of changed.
+        else if (status !== "unminted" && c.commit !== undefined) updates.commit = null;
         stage(c, updates, entry);
         entry.action = status === "unminted" ? "minted" : "re-minted";
         continue;
@@ -315,28 +335,39 @@ export async function runCiteRefresh(
     }
 
     if (inlineEdits.length === 0 && frontmatterEdits.length === 0) continue;
-    // Inline spans are offsets into the original content, so they go first;
-    // the frontmatter edit then re-serializes only the block above the body.
-    let content = rewriteInlineCitations(plan.page.content, inlineEdits);
-    for (const { id, updates } of frontmatterEdits) {
-      content = updatePageCite(content, file, id, updates);
+    // One page failing must not lose the report or the pages after it.
+    // Record it, take back the actions that did not land, and carry on. That
+    // holds for the edit as much as the write: a page whose frontmatter
+    // cannot be edited in place (TOML, say) throws before anything is written.
+    const failed = (reason: string): void => {
+      report.problems.push({ file, message: reason });
+      report.exitCode = 2;
+      for (const entry of staged) {
+        entry.action = "kept";
+        entry.detail = reason;
+        delete entry.newSrc;
+      }
+    };
+
+    let content: string;
+    try {
+      // Inline spans are offsets into the original content, so they go
+      // first; the frontmatter edit then re-serializes only the block above
+      // the body.
+      content = rewriteInlineCitations(plan.page.content, inlineEdits);
+      for (const { id, updates } of frontmatterEdits) {
+        content = updatePageCite(content, file, id, updates);
+      }
+    } catch (e) {
+      failed(`could not edit: ${errorText(e)}`);
+      continue;
     }
     if (!options.dryRun) {
-      // One page failing to write must not lose the report or the pages
-      // after it. Record it, take back the actions that did not land, and
-      // carry on.
       try {
         writeFile(plan.page.absPath, content);
         report.filesWritten.push(file);
       } catch (e) {
-        const reason = `could not write: ${errorText(e)}`;
-        report.problems.push({ file, message: reason });
-        report.exitCode = 2;
-        for (const entry of staged) {
-          entry.action = "kept";
-          entry.detail = reason;
-          delete entry.newSrc;
-        }
+        failed(`could not write: ${errorText(e)}`);
       }
     }
   }

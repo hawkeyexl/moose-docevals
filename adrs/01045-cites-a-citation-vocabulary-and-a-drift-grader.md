@@ -68,7 +68,9 @@ against the same `$defs/citationEntry` the `cites` list uses, and appends it to 
 the frontmatter entries. Nothing downstream knows which form a citation came from except
 `cite refresh`, which has to know where to write. The sentence beside the comment, the *claim*, is
 what findings quote back. Comments inside fenced code blocks and inline code spans are ignored, so
-a page that documents the syntax declares nothing.
+a page that documents the syntax declares nothing. A fence line that carries an info string
+never closes a block. An unnamed inline citation is named for its line, and a second one on the
+same line gets a numbered suffix.
 
 **The hashing rule** is stated once, in `src/citations/hash.ts`. Read as UTF-8 and strip a
 byte-order mark. Normalize line endings to LF. Join lines L1..L2 inclusive (1-based) with LF, no

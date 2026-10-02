@@ -220,7 +220,7 @@ are ignored, which is how this page can show the syntax.
 | `src` | string | Required. See the grammar below. |
 | `sha256` | 64 hex characters | Hash of the cited lines under the rule below. Absent means **unminted**: `cite refresh` fills it, and `run` reports it rather than passing. |
 | `commit` | 7–40 hex characters | Commit the hash was minted at. Overrides `cite-commit`. Enables the commit subjects in a `changed` finding and the never-true check. |
-| `quote` | boolean (`false`) | The page reproduces the cited lines verbatim in the first fenced code block after the comment; the grader compares the copy too. Inline, the bare token `quote`. |
+| `quote` | boolean (`false`) | The page reproduces the cited lines verbatim in the first fenced code block after the comment; the grader compares the copy too. It needs a comment to find the block. A block indented with a list item compares without that indentation. Inline, the bare token `quote`. |
 
 An all-digit `sha256` or `commit` must be quoted in YAML, or the parser reads it as a number. The
 writers quote it for you; the error names the fix if you write one by hand.
@@ -230,10 +230,10 @@ file.
 
 | Form | Example | Read as |
 |---|---|---|
-| Relative path | `scripts/install.sh:3-4` | A file relative to the directory moose-docevals runs in, normally the repository root, so a moved page keeps its citations. |
+| Relative path | `scripts/install.sh:3-4` | A file relative to the directory moose-docevals runs in, normally the repository root, so a moved page keeps its citations. Always forward slashes; `cite add` converts a Windows path. |
 | Absolute path | `/srv/shared/spec.md:10-20` | That file. Not portable across machines. |
 | GitHub file URL | `https://github.com/o/r/blob/main/src/x.ts#L3-L9` | The raw file at that ref. A ref that is a commit never drifts; a branch tracks. |
-| Other https URL | `https://example.com/spec.txt:5-9` | Fetched as is. |
+| Other https URL | `https://example.com/spec.txt:5-9` | Fetched as is. A `#` fragment is an error here, so a `#L5-L9` copied from another host is never read as the whole file. |
 
 **Hashing rule**, so any script mints the same hash. Read as UTF-8 and strip a byte-order mark.
 Normalize line endings to LF. Take lines L1..L2 inclusive and join them with LF, with no trailing

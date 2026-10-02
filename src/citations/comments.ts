@@ -50,6 +50,10 @@ export type ScannedCite =
 const KEBAB = /^[a-z0-9][a-z0-9-]*$/;
 const COMMENT = /(<!--|\{\/\*)(\s*cite:\s*)([^\n]*?)(\s*)(-->|\*\/\})/g;
 const FENCE = /^\s*(`{3,}|~{3,})/;
+// A closing fence carries no info string. A line like "```bash" inside an
+// open block is content, not the end of it; treating it as a close inverted
+// the fence state for the rest of the file.
+const FENCE_CLOSE = /^\s*(`{3,}|~{3,})\s*$/;
 const CODE_SPAN = /`+[^`\n]*`+/g;
 
 /** Every cite comment in `content`, in file order. */
@@ -64,11 +68,8 @@ export function scanCiteComments(content: string): ScannedCite[] {
     const line = rawLine.replace(/\r?\n$/, "");
     const fenceMatch = FENCE.exec(line);
     if (fence) {
-      if (
-        fenceMatch &&
-        fenceMatch[1]![0] === fence.char &&
-        fenceMatch[1]!.length >= fence.length
-      ) {
+      const close = FENCE_CLOSE.exec(line);
+      if (close && close[1]![0] === fence.char && close[1]!.length >= fence.length) {
         fence = undefined;
       }
       offset += rawLine.length;
@@ -93,7 +94,9 @@ export function scanCiteComments(content: string): ScannedCite[] {
         line: i + 1,
         syntax: open === "<!--" ? "html" : "mdx",
         span: { start: tokenStart, end: tokenStart + body.length },
-        ...claimFor(lines, i, line.slice(0, at) + line.slice(at + whole.length)),
+        // The rest of the line, minus any *other* citation's comment: two
+        // cited sentences can share one unwrapped paragraph line.
+        ...claimFor(lines, i, (line.slice(0, at) + line.slice(at + whole.length)).replace(COMMENT, "")),
       };
       found.push(classify(base, body));
     }
@@ -181,6 +184,10 @@ export function parseInlineTokens(
  * The first fenced code block whose opening fence is on a line after
  * `fromLine` and at or before `toLine` (both 1-based). Returns the block's
  * content lines joined by LF, and the fence's line.
+ *
+ * Content lines lose up to the opening fence's own indentation, as Markdown
+ * removes it when rendering. A block inside a list item is indented with the
+ * list, and comparing it raw would call a faithful copy a drifted one.
  */
 export function fencedBlockAfter(
   lines: string[],
@@ -192,10 +199,13 @@ export function fencedBlockAfter(
     if (!open) continue;
     const char = open[1]![0]!;
     const length = open[1]!.length;
+    const indent = /^\s*/.exec(lines[i]!)?.[0].length ?? 0;
+    const dedent = new RegExp(`^[ \\t]{0,${String(indent)}}`);
     for (let j = i + 1; j < lines.length; j++) {
-      const close = FENCE.exec(lines[j]!);
+      const close = FENCE_CLOSE.exec(lines[j]!);
       if (close && close[1]![0] === char && close[1]!.length >= length) {
-        return { text: lines.slice(i + 1, j).join("\n"), line: i + 1 };
+        const body = lines.slice(i + 1, j).map((l) => l.replace(dedent, ""));
+        return { text: body.join("\n"), line: i + 1 };
       }
     }
     return undefined;

@@ -375,8 +375,16 @@ function resolveCitations(
       });
       continue;
     }
+    // An unnamed inline citation is named for its line. Two can share a
+    // line (two cited sentences in one unwrapped paragraph), and an author
+    // may have used the derived spelling already, so step past any id taken.
+    let id = raw.id;
+    if (id === undefined) {
+      id = `inline-${comment.line}`;
+      for (let n = 2; byId.has(id); n++) id = `inline-${comment.line}-${n}`;
+    }
     const c: Citation = {
-      id: raw.id ?? `inline-${comment.line}`,
+      id,
       src: raw.src,
       spec: parsed.spec,
       quote: raw.quote ?? false,

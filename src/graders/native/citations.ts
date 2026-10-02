@@ -190,8 +190,20 @@ export const citationsGrader: Grader = {
         // that finding already covers it.
         if (c.quote && (verdict.status === "current" || verdict.status === "moved")) {
           const expected = sliceRange(verdict.sourceLines ?? [], verdict.movedTo ?? c.spec.range);
-          const anchors = c.anchors.length > 0 ? c.anchors : [{ line: c.line }];
-          for (const anchor of anchors) {
+          // The block is "the first one after the comment". With no comment
+          // there is no block to mean; searching from the frontmatter line
+          // would compare whichever code block the page happens to open with.
+          if (c.anchors.length === 0) {
+            push({
+              ruleId: "citations/quote-missing",
+              message:
+                `${c.id}: quote is true, but no cite comment names this citation, ` +
+                `so there is no code block to compare`,
+              severity: ev.severity,
+              line: c.line,
+            });
+          }
+          for (const anchor of c.anchors) {
             const block = fencedBlockAfter(pageLines, anchor.line, boundAfter(anchor.line));
             if (block === undefined) {
               push({

@@ -40,11 +40,15 @@ export function serializeInlineTokens(entry: InlineEntryFields): string {
   return tokens.join(" ");
 }
 
-/** The fields `cite refresh` ever changes. */
+/**
+ * The fields `cite refresh` ever changes. `commit: null` removes the token:
+ * a re-mint that records no commit must not leave the old one beside the new
+ * hash, or the next change reads as "never true at that commit".
+ */
 export interface InlineUpdates {
   src?: string;
   sha256?: string;
-  commit?: string;
+  commit?: string | null;
 }
 
 // Applied in this order, so a freshly inserted `sha256` exists by the time
@@ -77,6 +81,18 @@ export function updateInlineTokens(text: string, updates: InlineUpdates): string
   for (const key of UPDATE_ORDER) {
     const value = updates[key];
     if (value === undefined) continue;
+    if (value === null) {
+      // Remove the token and one separator: the whitespace before it, or
+      // after it when it leads.
+      const gone = findToken(out, key);
+      if (gone) {
+        out =
+          gone.start > 0
+            ? out.slice(0, gone.start).replace(/\s+$/, "") + out.slice(gone.end)
+            : out.slice(gone.end).replace(/^\s+/, "");
+      }
+      continue;
+    }
     const token = `${key}=${value}`;
     const existing = findToken(out, key);
     if (existing) {

@@ -57,6 +57,15 @@ export interface Classification {
 /** Above this many characters the moved search is skipped; the file is reported as changed. */
 export const MOVED_SEARCH_MAX_CHARS = 2_000_000;
 
+/**
+ * The most characters a moved search may hash. The search hashes every
+ * same-length window, so its cost is windows times window size, and the file
+ * size alone does not bound it: a 15,000-line range in a 30,000-line file is
+ * 15,001 windows of half the file each. Past this budget the search is
+ * skipped and the citation reports as changed, with the reason.
+ */
+export const MOVED_SEARCH_MAX_WORK = 50_000_000;
+
 export async function classifyCitation(
   c: Citation,
   readers: ClassifyReaders,
@@ -84,23 +93,36 @@ export async function classifyCitation(
       detail: `source is too large (${read.text.length} chars) to search for moved lines`,
     };
   } else {
-    const matches = findWindows(lines, range.end - range.start + 1, c.sha256, range.start);
-    result =
-      matches.length > 0
-        ? {
-            status: "moved",
-            sourceLines: lines,
-            movedTo: { start: matches[0]!, end: matches[0]! + (range.end - range.start) },
-            movedMatches: matches.length,
-          }
-        : { status: "changed", sourceLines: lines };
+    const length = range.end - range.start + 1;
+    const matches = findWindows(lines, length, c.sha256, range.start);
+    if (matches === undefined) {
+      result = {
+        status: "changed",
+        sourceLines: lines,
+        detail:
+          `a ${String(length)}-line range in ${String(lines.length)} lines is too large ` +
+          `to search for moved lines`,
+      };
+    } else {
+      result =
+        matches.length > 0
+          ? {
+              status: "moved",
+              sourceLines: lines,
+              movedTo: { start: matches[0]!, end: matches[0]! + (range.end - range.start) },
+              movedMatches: matches.length,
+            }
+          : { status: "changed", sourceLines: lines };
+    }
   }
 
   if (c.commit !== undefined && readers.readAtCommit !== undefined) {
     const then = await readers.readAtCommit(c.spec, c.commit);
     if (!then.ok) {
       result.commitUnresolved = `${c.commit}: ${then.detail}`;
-    } else if (!existedAt(normalizeLines(then.text), range, c.sha256)) {
+    } else if (existedAt(normalizeLines(then.text), range, c.sha256) === false) {
+      // Only on evidence. A search too large to run is "unknown", and unknown
+      // is not an accusation.
       result.neverTrue = true;
     }
   }
@@ -118,15 +140,35 @@ export async function classifyCitation(
  * the wrong question once the lines have moved. Never-true means the bytes
  * were never there at all.
  */
-function existedAt(linesThen: string[], range: LineRange | undefined, hash: string): boolean {
+function existedAt(
+  linesThen: string[],
+  range: LineRange | undefined,
+  hash: string,
+): boolean | undefined {
   const at = sliceRange(linesThen, range);
   if (at !== undefined && hashLines(at) === hash) return true;
   if (range === undefined) return false;
-  return findWindows(linesThen, range.end - range.start + 1, hash, 0).length > 0;
+  const matches = findWindows(linesThen, range.end - range.start + 1, hash, 0);
+  return matches === undefined ? undefined : matches.length > 0;
 }
 
-/** 1-based start lines of every `length`-line window hashing to `hash`, except `skipStart`. */
-function findWindows(lines: string[], length: number, hash: string, skipStart: number): number[] {
+/**
+ * 1-based start lines of every `length`-line window hashing to `hash`, except
+ * `skipStart`. Undefined when the search would exceed the size cap or the
+ * work budget, which the caller must treat as "not searched", never as
+ * "not found".
+ */
+function findWindows(
+  lines: string[],
+  length: number,
+  hash: string,
+  skipStart: number,
+): number[] | undefined {
+  const windows = lines.length - length + 1;
+  if (windows <= 0) return [];
+  const totalChars = lines.reduce((sum, l) => sum + l.length + 1, 0);
+  if (totalChars > MOVED_SEARCH_MAX_CHARS) return undefined;
+  if (windows * (totalChars / lines.length) * length > MOVED_SEARCH_MAX_WORK) return undefined;
   const found: number[] = [];
   for (let start = 1; start + length - 1 <= lines.length; start++) {
     if (start === skipStart) continue;

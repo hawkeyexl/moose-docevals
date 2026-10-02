@@ -142,6 +142,27 @@ function parseUrl(src: string): ParsedSrc {
     return { ok: true, spec };
   }
 
+  // Only a github.com file URL reads its fragment as a range. Dropping one
+  // anywhere else would turn `…/x.ts#L5-L9` into a citation of the whole
+  // file without a word, so say what to write instead.
+  if (fragment !== undefined) {
+    const lineFragment = GITHUB_FRAGMENT.exec(fragment);
+    if (lineFragment) {
+      const r = rangeOf(lineFragment[1]!, lineFragment[2]);
+      const suffix = "error" in r ? "L1-L2" : rangeText(r);
+      return {
+        ok: false,
+        error:
+          `a "${fragment}" line fragment is only read on github.com file URLs; ` +
+          `write the range as ${withoutFragment}:${suffix}`,
+      };
+    }
+    return {
+      ok: false,
+      error: `"${fragment}" is not part of the fetched file; remove it from the URL`,
+    };
+  }
+
   // A `:L1-L2` suffix. A port is `host:NNNN` *before* the path, so requiring
   // a path component after the host keeps `https://x.io:8080/spec.txt` whole.
   let url = withoutFragment;
